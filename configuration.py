@@ -1,9 +1,10 @@
-from re import S
 from typing import Union
+from copy import deepcopy
 
 
 class Configuration:
     def __init__(self, config: dict):
+        self.config = config
         for key in config.keys():
             setattr(self, key, config[key])
 
@@ -16,17 +17,20 @@ class ConfigurationBuilder:
         self.config = config
         if type(config) == dict:
             for key in config.keys():
-                setattr(self, key, lambda v: ConfigurationBuilder._setter(self, key, v))
+                setattr(self, key, self._setter(key))
         elif type(config) == list:
             for key in config:
-                setattr(self, key, lambda v: ConfigurationBuilder._setter(self, key, v))
+                setattr(self, key, self._setter(key))
+            self.config = {k:None for k in config}
         else:
             raise TypeError("config must be dict or list")
 
-    @staticmethod
-    def _setter(self, key, value):
-        self.config[key] = value
-        return self
+    def _setter(self, key):
+        def _set(value):
+            self.config[key] = value
+            return self
+
+        return _set
 
     def build(self):
         return Configuration(self.config)

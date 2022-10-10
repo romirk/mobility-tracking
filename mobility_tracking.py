@@ -4,6 +4,7 @@ from lane_tracker import LaneTracker, IMG_HEIGHT
 from time import sleep
 import numpy as np
 import argparse
+import queue
 
 
 class MobilityTracking:
@@ -14,12 +15,13 @@ class MobilityTracking:
         self.scan_w: int = args.scan_width
         self.scan_h: int = args.scan_height
         self.fps: int = args.frame_rate
+        self.alpha_t: float = args.alpha
         self.direction: str = args.direction
-        self.pipeline, self.config = MobilityTracking._create_pipeline(
+        self.pipeline, self.pipeline_config = MobilityTracking._create_pipeline(
             640, 480, self.fps
         )  # TODO: use args
 
-        self.pipeline.start(self.config)
+        self.pipeline.start(self.pipeline_config)
 
         self.count = multiprocessing.Value("i", 0)
 
@@ -30,16 +32,20 @@ class MobilityTracking:
 
         self.lane_trackers: list[LaneTracker] = []
         self.processes: list[multiprocessing.Process] = []
-        self.barrier = multiprocessing.Barrier(self.n + 1)
+        self.barrier = multiprocessing.Barrier(self.n)
         for i in range(self.n):
-            config = LaneTracker.build_configuration({"fps": self.fps})
+            config = LaneTracker.build_configuration(
+                {"fps": self.fps, "alpha_t": self.alpha_t}
+            )
+
             if self.direction == "horizontal":
                 (
-                    config.scan_x(self.scan_x + i * self.lane_width)
+                    config.scan_x(self.scan_y + i * self.lane_width)
                     .scan_y(self.scan_y)
                     .scan_w(self.lane_width)
                     .scan_h(self.scan_h)
                 )
+
             else:
                 (
                     config.scan_x(self.scan_x)
@@ -99,7 +105,7 @@ class MobilityTracking:
             "-H", "--height", default=10, type=int, help="Camera height (m)"
         )
         parser.add_argument(
-            "-w", "--scan-width", default=100, type=int, help="Scan width (px)"
+            "-w", "--scan-width", default=400, type=int, help="Scan width (px)"
         )
         parser.add_argument(
             "-l", "--scan-height", default=IMG_HEIGHT, type=int, help="Scan height (px)"
@@ -139,6 +145,7 @@ class MobilityTracking:
 
     def run(self):
         # start lane trackers
+        f = 0
         try:
             for process in self.processes:
                 process.start()
@@ -146,24 +153,36 @@ class MobilityTracking:
                 frames = np.asanyarray(
                     self.pipeline.wait_for_frames().get_color_frame().get_data()
                 )
+                s = "\r"
                 for tracker in self.lane_trackers:
-                    tracker.q.put(frames)
-        except Exception as e:
-            print("===")
+                    try:
+                        tracker.q.put(frames, timeout=1)
+                    except queue.Full:
+                        pass
+                    with tracker.b.get_lock():
+                        s += "".join(str(e) for e in tracker.b) + " "
+                with self.count.get_lock():
+                    print(s + f"{self.count.value} {f}", end="")
+                f += 1
+        except KeyboardInterrupt:
             pass
+
         finally:
             print("Stopping lane trackers...")
             for tracker in self.lane_trackers:
-                tracker.q.put(None)
+                try:
+                    tracker.q.put(None, timeout=1)
+                except queue.Full:
+                    pass
             self.pipeline.stop()
 
-        # for process in self.processes:
-        #     process.join()
-        self.barrier.wait()
-        for process in self.processes:
-            process.terminate()
-        print("Done")
-        print(self.count.value)
+            # for process in self.processes:
+            #     process.join()
+            # self.barrier.wait()
+            for process in self.processes:
+                process.terminate()
+
+            print(f"Count: {self.count.value}")
 
 
 if __name__ == "__main__":

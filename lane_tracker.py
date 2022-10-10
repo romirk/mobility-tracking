@@ -12,6 +12,7 @@ filter background subtraction to detect the presence of a vehicle in the lane.
 """
 
 import argparse
+import ctypes
 import multiprocessing
 from operator import mul
 from time import sleep
@@ -57,9 +58,9 @@ class LaneTracker:
         "scan_h": IMG_HEIGHT,
         "scan_x": -1,
         "scan_y": -1,
-        "camera_h": 0,
+        "camera_h": 10,
         "fps": 30,
-        "roi": 0.0,
+        "roi": 0.01,
     }
 
     def __init__(
@@ -84,20 +85,20 @@ class LaneTracker:
         self.barrier = barrier
 
         # args
-        self.frame_rate: int = config.fps
+        self.frame_rate: int = int(config.fps)
         self.camera_height: float = config.camera_h
-        self.scan_width: int = config.scan_w
-        self.scan_height: int = config.scan_h
-        self.alpha_threshold: int = config.alpha_t
-        self.min_time_period = config.min_t
-        self.max_time_period = config.max_t
-        self.rate_of_influence = config.roi
-        self.scan_x = (
+        self.scan_width: int = int(config.scan_w)
+        self.scan_height: int = int(config.scan_h)
+        self.alpha_threshold: float = config.alpha_t
+        self.min_time_period: float = config.min_t
+        self.max_time_period: float = config.max_t
+        self.rate_of_influence: float = config.roi
+        self.scan_x = int(
             config.scan_x
             if config.scan_x >= 0
             else (IMG_WIDTH // 2 - self.scan_width // 2)
         )
-        self.scan_y = (
+        self.scan_y = int(
             config.scan_y if config.scan_y >= 0 else (IMG_HEIGHT - self.scan_height)
         )
         self.buffer_size = config.buffer_size or int(
@@ -116,6 +117,7 @@ class LaneTracker:
 
         # object counter
         self.buffer = np.asarray([0] * self.buffer_size, dtype=np.int32)
+        self.b = multiprocessing.Array("B", [0] * self.buffer_size)
 
         self.pattern = re.compile(r"0+(1{" + str(self.spike_size) + r"}1*)0+")
 
@@ -131,19 +133,8 @@ class LaneTracker:
             c.update(config)
         return ConfigurationBuilder(c)
 
-    def setup_pipeline(self):
-
-        # Start streaming
-        self.pipeline.start(self.config)
-
-    def setup_imgs(self):
-        frames = self.pipeline.wait_for_frames()
-        color_frame = np.asarray(frames.get_color_frame().get_data())
-        self.raw_bg_avg = np.zeros((self.scan_height, self.scan_width), np.float32)
-        color_img = self.process_img(color_frame)
-
-    def process_img(self, frame):
-        color_image = cv2.cvtColor(
+    def crop_and_grayscale(self, frame):
+        return cv2.cvtColor(
             frame[
                 self.scan_y : self.scan_y + self.scan_height,
                 self.scan_x : self.scan_x + self.scan_width,
@@ -151,7 +142,29 @@ class LaneTracker:
             cv2.COLOR_BGR2GRAY,
         )
 
-        # backgoround subtraction taken from
+    def setup_pipeline(self):
+
+        # Start streaming
+        self.pipeline.start(self.config)
+
+    def setup_imgs(self):
+        frames = self.pipeline.wait_for_frames()
+        frame = np.asarray(frames.get_color_frame().get_data())
+        color_img = self.crop_and_grayscale(frame)
+        self.raw_bg_avg = np.float32(color_img)
+
+        i = 0
+        while i < 10:
+            frames = self.pipeline.wait_for_frames()
+            frame = np.asarray(frames.get_color_frame().get_data())
+            color_img = self.crop_and_grayscale(frame)
+            cv2.accumulateWeighted(color_img, self.raw_bg_avg, self.rate_of_influence)
+            i += 1
+
+    def process_img(self, frame):
+        color_image = self.crop_and_grayscale(frame)
+
+        # background subtraction taken from
         # https://github.com/andresberejnoi/ComputerVision/blob/398abab2e73b50890865a3996ebaafc0b7208074
         cv2.accumulateWeighted(color_image, self.raw_bg_avg, self.rate_of_influence)
         background_avg = cv2.convertScaleAbs(
@@ -159,58 +172,66 @@ class LaneTracker:
         )  # reference background average image
         subtracted_img = cv2.absdiff(background_avg, color_image)
 
+        # print(background_avg)
+
         # apply filter
         subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
         subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
         subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
         subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
 
-        _, threshold_img = cv2.threshold(subtracted_img, 10, 255, 0)
+        _, threshold_img = cv2.threshold(subtracted_img, 30, 255, 0)
 
-        # dilated_img = cv2.dilate(threshold_img, None)
-        # dilated_img = cv2.dilate(dilated_img, None)
-        # dilated_img = cv2.dilate(dilated_img, None)
-        # dilated_img = cv2.dilate(dilated_img, None)
+        dilated_img = cv2.dilate(threshold_img, None)
+        dilated_img = cv2.dilate(dilated_img, None)
+        dilated_img = cv2.dilate(dilated_img, None)
+        dilated_img = cv2.dilate(dilated_img, None)
 
-        # dilated_img = cv2.dilate(dilated_img, None)
+        dilated_img = cv2.dilate(dilated_img, None)
 
-        return threshold_img
+        view_img = np.hstack(
+            (
+                color_image,
+                background_avg,
+                subtracted_img,
+                threshold_img,
+                dilated_img,
+            )
+        )
+
+        return dilated_img, view_img
 
     def __call__(self):
+        setup_period = False
         while True:
             try:
-                frames = self.q.get()
+                try:
+                    frames = self.q.get()
+                except Exception as e:
+                    print(f"Error reading frame in lane tracker {self._id}: {e}")
+                    frames = None
                 if frames is None:
                     # poison pill
-                    print(f"poison pill {self._id}")
+                    print(f"lane {self._id} tracking stopped")
+                    self.barrier.wait()
                     break
-                print(f"{self._id}: Processing frame ...")
-                # depth_frame = frames.get_depth_frame()
 
-                subtracted_img = self.process_img(frames)
+                subtracted_img, view_img = self.process_img(frames)
 
-                # view_img = np.hstack(
-                #     (
-                #         color_image,
-                #         background_avg,
-                #         subtracted_img,
-                #         threshold_img,
-                #         dilated_img,
-                #     )
-                # )
+                if not self._id:
+                    cv2.namedWindow("RealSense", cv2.WINDOW_AUTOSIZE)
+                    cv2.imshow("RealSense", view_img)
 
-                # cv2.namedWindow("RealSense", cv2.WINDOW_AUTOSIZE)
-                # cv2.imshow("RealSense", view_img)
-                # if cv2.waitKey(1) & 0xFF == ord("q"):
-                #     break
-                # sum
+                    if cv2.waitKey(1) & 0xFF == ord("q"):
+                        break
 
                 alpha = np.sum(subtracted_img) / (self.scan_height * self.scan_width)
-                # if setup_period:
-                #     if alpha < 3:
-                #         setup_period = False
-                #     else:
-                #         return
+                if setup_period:
+                    if alpha < 3:
+                        setup_period = False
+                        self.b = "--"
+                    else:
+                        return
 
                 self.alphas.append(alpha)
                 cv2.accumulateWeighted(
@@ -232,6 +253,10 @@ class LaneTracker:
                 b = np.array2string(
                     self.buffer, separator="", max_line_width=self.buffer_size + 5
                 )[1:-1]
+                # print(b)
+                with self.b.get_lock():
+                    for i, e in enumerate(self.buffer):
+                        self.b[i] = e
                 # print(
                 #     f"\r{b} | {self.counter} | {alpha} | {self.alpha_threshold}",
                 #     end=" ",
@@ -244,17 +269,4 @@ class LaneTracker:
                     with self.counter.get_lock():
                         self.counter.value += 1
             except KeyboardInterrupt:
-                print("Stopping lane tracker ...")
                 pass
-        self.barrier.wait()
-
-    # except KeyboardInterrupt:
-    #     print("eyboardInterrupt")
-
-    # print(f"\nfound \033[96m{self.counter}\033[0m objects\n")
-    # cv2.destroyAllWindows()
-    # with open("alphas.txt", "w") as f:
-    #     f.write(" ".join(map(str, self.alphas)))
-    #     print("saved alphas to alphas.txt")
-
-    # plt.plot(self.alphas)
