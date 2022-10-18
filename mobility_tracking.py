@@ -10,8 +10,8 @@ import queue
 class MobilityTracking:
     def __init__(self, args):
         self.n: int = args.n
-        self.scan_x: int = args.scan_x
-        self.scan_y: int = args.scan_y
+        self.scan_x: int = args.scan_x if args.scan_x >= 0 else 0
+        self.scan_y: int = args.scan_y if args.scan_y >= 0 else 0
         self.scan_w: int = args.scan_width
         self.scan_h: int = args.scan_height
         self.fps: int = args.frame_rate
@@ -45,6 +45,7 @@ class MobilityTracking:
                     .scan_w(self.lane_width)
                     .scan_h(self.scan_h)
                 )
+                print(config.config["scan_x"])
 
             else:
                 (
@@ -159,8 +160,8 @@ class MobilityTracking:
                         tracker.q.put(frames, timeout=1)
                     except queue.Full:
                         pass
-                    with tracker.b.get_lock():
-                        s += "".join(str(e) for e in tracker.b) + " "
+                    # with tracker.b.get_lock():
+                    #     s += "".join(str(e) for e in tracker.b) + " "
                 with self.count.get_lock():
                     print(s + f"{self.count.value} {f}", end="")
                 f += 1

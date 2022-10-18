@@ -11,17 +11,15 @@ filter background subtraction to detect the presence of a vehicle in the lane.
 @author: Romir Kulshrestha <romir@imagifight.in>, Tony Nikolaidis <tony@infopelago.gr>
 """
 
-import argparse
-import ctypes
 import multiprocessing
-from operator import mul
 from time import sleep
 import pyrealsense2 as rs
 import numpy as np
 import cv2
 import math
 import re
-from matplotlib import pyplot as plt
+
+# from matplotlib import pyplot as plt
 from configuration import Configuration, ConfigurationBuilder
 
 
@@ -212,20 +210,29 @@ class LaneTracker:
                     frames = None
                 if frames is None:
                     # poison pill
-                    print(f"lane {self._id} tracking stopped")
+                    fname = f"lane_tracker_{self._id}.txt"
+                    print(f"lane {self._id} tracking stopped\n writing to file {fname}")
+                    with open(fname, "w") as f:
+                        f.write("\n".join(map(lambda e: str(int(e * 100)), self.alphas)))
                     self.barrier.wait()
                     break
 
                 subtracted_img, view_img = self.process_img(frames)
 
-                if not self._id:
-                    cv2.namedWindow("RealSense", cv2.WINDOW_AUTOSIZE)
-                    cv2.imshow("RealSense", view_img)
+                # if True:
+                #     cv2.namedWindow("RealSense", cv2.WINDOW_AUTOSIZE)
+                #     cv2.imshow("RealSense", view_img)
 
-                    if cv2.waitKey(1) & 0xFF == ord("q"):
-                        break
+                #     if cv2.waitKey(1) & 0xFF == ord("q"):
+                #         break
 
                 alpha = np.sum(subtracted_img) / (self.scan_height * self.scan_width)
+
+                cv2.accumulateWeighted(
+                    alpha, self.raw_alpha_avg, self.rate_of_influence
+                )
+                alpha -= self.raw_alpha_avg
+
                 if setup_period:
                     if alpha < 3:
                         setup_period = False
@@ -234,10 +241,7 @@ class LaneTracker:
                         return
 
                 self.alphas.append(alpha)
-                cv2.accumulateWeighted(
-                    alpha, self.raw_alpha_avg, self.rate_of_influence
-                )
-                alpha -= self.raw_alpha_avg
+
                 if alpha > self.max_alpha:
                     self.max_alpha = alpha
 
@@ -250,23 +254,9 @@ class LaneTracker:
                 self.buffer[-1] = beta
 
                 # process buffer
-                b = np.array2string(
-                    self.buffer, separator="", max_line_width=self.buffer_size + 5
-                )[1:-1]
-                # print(b)
-                with self.b.get_lock():
-                    for i, e in enumerate(self.buffer):
-                        self.b[i] = e
-                # print(
-                #     f"\r{b} | {self.counter} | {alpha} | {self.alpha_threshold}",
-                #     end=" ",
-                # )
 
-                m = re.match(self.pattern, b)
-                if m:
-                    span = m.span(1)
-                    self.buffer[span[0] : span[1]] = 0
-                    with self.counter.get_lock():
-                        self.counter.value += 1
             except KeyboardInterrupt:
                 pass
+
+    def __str__(self) -> str:
+        pass
