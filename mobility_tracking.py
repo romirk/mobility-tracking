@@ -167,9 +167,10 @@ class MobilityTracking:
                 f += 1
         except KeyboardInterrupt:
             pass
-
+        except Exception as e:
+            print(f"ERR: {e}")
         finally:
-            print("Stopping lane trackers...")
+            print("\nStopping lane trackers...")
             for tracker in self.lane_trackers:
                 try:
                     tracker.q.put(None, timeout=1)

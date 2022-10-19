@@ -76,7 +76,6 @@ class LaneTracker:
             config = config.build()
         if type(config) is not Configuration:
             raise ValueError("Invalid configuration type")
-        self.pipeline = pipeline
 
         self.q = multiprocessing.Queue(maxsize=1)
         self.counter = counter
@@ -119,8 +118,7 @@ class LaneTracker:
 
         self.pattern = re.compile(r"0+(1{" + str(self.spike_size) + r"}1*)0+")
 
-        self.pipeline = pipeline
-        self.setup_imgs()
+        self.setup_imgs(pipeline)
 
         self.alphas = []
 
@@ -140,20 +138,20 @@ class LaneTracker:
             cv2.COLOR_BGR2GRAY,
         )
 
-    def setup_pipeline(self):
+    def setup_pipeline(self, pipeline):
 
         # Start streaming
-        self.pipeline.start(self.config)
+        pipeline.start(self.config)
 
-    def setup_imgs(self):
-        frames = self.pipeline.wait_for_frames()
+    def setup_imgs(self, pipeline):
+        frames = pipeline.wait_for_frames()
         frame = np.asarray(frames.get_color_frame().get_data())
         color_img = self.crop_and_grayscale(frame)
         self.raw_bg_avg = np.float32(color_img)
 
         i = 0
         while i < 10:
-            frames = self.pipeline.wait_for_frames()
+            frames = pipeline.wait_for_frames()
             frame = np.asarray(frames.get_color_frame().get_data())
             color_img = self.crop_and_grayscale(frame)
             cv2.accumulateWeighted(color_img, self.raw_bg_avg, self.rate_of_influence)
