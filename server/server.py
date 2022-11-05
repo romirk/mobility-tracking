@@ -1,14 +1,16 @@
 import argparse
 from datetime import datetime
+from queue import Full
 from threading import Thread
 from time import sleep
 from uuid import uuid4
+
 import cv2
 import imagezmq
 import numpy as np
 from flask import Flask, Response, render_template
-from queue import Full
-from detect import RAW_IMG_Q, detect
+
+from detect import PROCESSED_Q, RAW_IMG_Q, detect
 
 last_active = {}
 
@@ -20,7 +22,11 @@ app = Flask(__name__)
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--weights", nargs="+", type=str, default="../ignore/yolov7.pt", help="model.pt path(s)"
+        "--weights",
+        nargs="+",
+        type=str,
+        default="../ignore/yolov7.pt",
+        help="model.pt path(s)",
     )
     parser.add_argument(
         "--source", type=str, default="inference/images", help="source"
@@ -105,6 +111,12 @@ def video_feed():
     )
 
 
+def process_detections():
+    while True:
+        pred, dets, frame_block = PROCESSED_Q.get(block=True)
+        print(f"[{frame_block['timestamp']}] {pred} {dets}")
+
+
 def dummy_img():
     try:
         while True:
@@ -126,7 +138,10 @@ if __name__ == "__main__":
     opt = parse_arguments()
     dummy_thread = Thread(target=dummy_img)
     dummy_thread.start()
+    proc_thread = Thread(target=process_detections)
+    proc_thread.start()
     detect_thread = Thread(target=detect, args=(opt,))
     detect_thread.daemon = True
     detect_thread.start()
+    app.run("0.0.0.0", 8080)
     dummy_thread.join()

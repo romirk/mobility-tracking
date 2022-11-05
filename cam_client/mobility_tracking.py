@@ -5,6 +5,10 @@ from time import sleep
 import numpy as np
 import argparse
 import queue
+import imagezmq
+import argparse
+import socket
+import time
 
 
 class MobilityTracking:
@@ -21,8 +25,9 @@ class MobilityTracking:
             640, 480, self.fps
         )  # TODO: use args
 
-        self.pipeline.start(self.pipeline_config)
+        self.server = args.server
 
+        self.sender = imagezmq.ImageSender(connect_to=self.server)
         self.count = multiprocessing.Value("i", 0)
 
         if self.direction == "horizontal":
@@ -141,7 +146,9 @@ class MobilityTracking:
         )
         parser.add_argument("-n", default=1, type=int, help="Number of lanes")
         parser.add_argument("-d", "--direction", default="horizontal", help="Direction")
-
+        parser.add_argument(
+            "--server", default="tcp://localhost:5555", help="yolo server address"
+        )
         return parser
 
     def run(self):
@@ -154,6 +161,7 @@ class MobilityTracking:
                 frames = np.asanyarray(
                     self.pipeline.wait_for_frames().get_color_frame().get_data()
                 )
+                self.sender.send_image(self.name, frames)
                 s = "\r"
                 for tracker in self.lane_trackers:
                     try:
