@@ -208,7 +208,7 @@ class LaneTracker:
                     frames = None
                 if frames is None:
                     # poison pill
-                    fname = f"lane_tracker_{self._id}.txt"
+                    fname = f"lane_tracker_{self._id}.alphas"
                     print(f"lane {self._id} tracking stopped\n writing to file {fname}")
                     with open(fname, "w") as f:
                         f.write("\n".join(map(lambda e: str(int(e * 100)), self.alphas)))
