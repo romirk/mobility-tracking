@@ -1,14 +1,12 @@
+import argparse
 import multiprocessing
-import pyrealsense2 as rs
-from lane_tracker import LaneTracker, IMG_HEIGHT
-from time import sleep
-import numpy as np
-import argparse
 import queue
-import imagezmq
-import argparse
 import socket
-import time
+
+import imagezmq
+import numpy as np
+import pyrealsense2 as rs
+from lane_tracker import IMG_HEIGHT, LaneTracker
 
 
 class MobilityTracking:

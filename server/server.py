@@ -2,15 +2,13 @@ import argparse
 from datetime import datetime
 from queue import Full
 from threading import Thread
-from time import sleep
 from uuid import uuid4
 
 import cv2
 import imagezmq
-import numpy as np
 from detect import PROCESSED_Q, RAW_IMG_Q, detect
-from flask import Flask, Response, render_template
-
+from flask import Flask, render_template
+from flask.wrappers import Response
 from utils.plots import plot_one_box
 
 last_active = {}
@@ -76,14 +74,10 @@ def parse_arguments():
 
 
 def receive_frames():
-    # img = cv2.imread("./static/img/ss.jpg")
-    # hostname = "localhost"
     while True:
         (hostname, frame) = imageHub.recv_image()
         # print(f"Received frame from {hostname}")
         imageHub.send_reply(b"OK")
-
-        
 
         if hostname not in last_active:
             print(f"[INFO] receiving data from {hostname}...")
@@ -100,6 +94,7 @@ def receive_frames():
         except Full:
             # print("[INFO] dropping frame from queue")
             pass
+
 
 @app.route("/")
 def index():
@@ -127,39 +122,15 @@ def process_detections():
                     color=data["color"],
                     line_thickness=3,
                 )
-        # PROCESSED_Q.task_done()
         encoded = cv2.imencode(".jpg", frame)[1]
         yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + encoded.tobytes() + b"\r\n"
-
-        
-
-
-def dummy_img():
-    img = cv2.imread("./static/img/horses,jpg")
-    try:
-        while True:
-            ret, buffer = cv2.imencode(".jpg", img)
-            frame = buffer.tobytes()
-            RAW_IMG_Q.put_nowait(
-                {
-                    "frame": frame,
-                    "source": "dummy",
-                    "timestamp": datetime.now(),
-                }
-            )
-            sleep(1)
-    except KeyboardInterrupt:
-        RAW_IMG_Q.put_nowait(None)
 
 
 if __name__ == "__main__":
     opt = parse_arguments()
-    # dummy_thread = Thread(target=dummy_img)
-    # dummy_thread.start()
     proc_thread = Thread(target=receive_frames)
     proc_thread.start()
     detect_thread = Thread(target=detect, args=(opt,))
     detect_thread.daemon = True
     detect_thread.start()
     app.run("0.0.0.0", 8080)
-    # dummy_thread.join()
