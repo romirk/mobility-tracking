@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime
 from queue import Full
+from multiprocessing import Process
 from threading import Thread
 from uuid import uuid4
 
@@ -16,6 +17,7 @@ last_active = {}
 
 imageHub = imagezmq.ImageHub()
 app = Flask(__name__)
+running = True
 
 
 def parse_arguments():
@@ -74,7 +76,7 @@ def parse_arguments():
 
 
 def receive_frames():
-    while True:
+    while running:
         (hostname, frame) = imageHub.recv_image()
         # print(f"Received frame from {hostname}")
         imageHub.send_reply(b"OK")
@@ -94,6 +96,7 @@ def receive_frames():
         except Full:
             # print("[INFO] dropping frame from queue")
             pass
+    print("[INFO] stopping frame receiver")
 
 
 @app.route("/")
@@ -111,6 +114,8 @@ def video_feed():
 def process_detections():
     while True:
         processed: dict = PROCESSED_Q.get(block=True)
+        if processed is None:
+            break
         frame = processed["frame"]
         dets = processed["detections"]
         for cl, data in dets.items():
@@ -124,13 +129,24 @@ def process_detections():
                 )
         encoded = cv2.imencode(".jpg", frame)[1]
         yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + encoded.tobytes() + b"\r\n"
+    print("[INFO] stopping detection process")
 
 
 if __name__ == "__main__":
     opt = parse_arguments()
     proc_thread = Thread(target=receive_frames)
-    proc_thread.start()
     detect_thread = Thread(target=detect, args=(opt,))
-    detect_thread.daemon = True
-    detect_thread.start()
-    app.run("0.0.0.0", 8080)
+    app_thread = Process(target=app.run, kwargs={"host": "0.0.0.0", "port": 5000})
+    try:
+        proc_thread.start()
+        detect_thread.daemon = True
+        detect_thread.start()
+        app_thread.start()
+        app_thread.join()
+    except KeyboardInterrupt:
+        print("[INFO] exiting...")
+        running = False
+        RAW_IMG_Q.put(None)
+        PROCESSED_Q.put(None)
+        app_thread.terminate()
+        exit(0)

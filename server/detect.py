@@ -198,10 +198,9 @@ def detect(opt, save_img=False):
         try:
             PROCESSED_Q.put_nowait(dets)
         except queue.Full:
-            print("Processed Queue is full")
-            pass
+            print("Processed Queue is full! Dropping detections")
 
-    # print(f"Done. ({time.time() - t0:.3f}s)")
+    print(f"Done. ({time.time() - t0:.3f}s)")
 
 
 if __name__ == "__main__":
