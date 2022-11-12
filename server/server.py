@@ -8,9 +8,10 @@ from uuid import uuid4
 import cv2
 import imagezmq
 import numpy as np
+from detect import PROCESSED_Q, RAW_IMG_Q, detect
 from flask import Flask, Response, render_template
 
-from detect import PROCESSED_Q, RAW_IMG_Q, detect
+from utils.plots import plot_one_box
 
 last_active = {}
 
@@ -74,12 +75,15 @@ def parse_arguments():
     return opt
 
 
-def generate_frames():
+def receive_frames():
+    # img = cv2.imread("./static/img/ss.jpg")
+    # hostname = "localhost"
     while True:
         (hostname, frame) = imageHub.recv_image()
+        # print(f"Received frame from {hostname}")
         imageHub.send_reply(b"OK")
 
-        frame = cv2.imencode(frame)
+        
 
         if hostname not in last_active:
             print(f"[INFO] receiving data from {hostname}...")
@@ -94,10 +98,8 @@ def generate_frames():
         try:
             RAW_IMG_Q.put_nowait(entry)
         except Full:
-            print("[INFO] dropping frame from queue")
-
-        yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + frame.tobytes() + b"\r\n"
-
+            # print("[INFO] dropping frame from queue")
+            pass
 
 @app.route("/")
 def index():
@@ -107,21 +109,37 @@ def index():
 @app.route("/live")
 def video_feed():
     return Response(
-        generate_frames(), mimetype="multipart/x-mixed-replace; boundary=frame"
+        process_detections(), mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
 
 def process_detections():
     while True:
-        pred, dets, frame_block = PROCESSED_Q.get(block=True)
-        print(f"[{frame_block['timestamp']}] {pred} {dets}")
+        processed: dict = PROCESSED_Q.get(block=True)
+        frame = processed["frame"]
+        dets = processed["detections"]
+        for cl, data in dets.items():
+            for box, conf in zip(data["boxes"], data["confidences"]):
+                plot_one_box(
+                    box,
+                    frame,
+                    label=f"{cl}: {conf:.2f}",
+                    color=data["color"],
+                    line_thickness=3,
+                )
+        # PROCESSED_Q.task_done()
+        encoded = cv2.imencode(".jpg", frame)[1]
+        yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + encoded.tobytes() + b"\r\n"
+
+        
 
 
 def dummy_img():
+    img = cv2.imread("./static/img/horses,jpg")
     try:
         while True:
-            frame = np.zeros((640, 480, 3), np.uint8)
-
+            ret, buffer = cv2.imencode(".jpg", img)
+            frame = buffer.tobytes()
             RAW_IMG_Q.put_nowait(
                 {
                     "frame": frame,
@@ -136,12 +154,12 @@ def dummy_img():
 
 if __name__ == "__main__":
     opt = parse_arguments()
-    dummy_thread = Thread(target=dummy_img)
-    dummy_thread.start()
-    proc_thread = Thread(target=process_detections)
+    # dummy_thread = Thread(target=dummy_img)
+    # dummy_thread.start()
+    proc_thread = Thread(target=receive_frames)
     proc_thread.start()
     detect_thread = Thread(target=detect, args=(opt,))
     detect_thread.daemon = True
     detect_thread.start()
     app.run("0.0.0.0", 8080)
-    dummy_thread.join()
+    # dummy_thread.join()

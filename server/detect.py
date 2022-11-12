@@ -31,8 +31,8 @@ from utils.torch_utils import (
     time_synchronized,
 )
 
-RAW_IMG_Q = Queue(100)
-PROCESSED_Q = Queue(100)
+RAW_IMG_Q = Queue(10)
+PROCESSED_Q = Queue(10)
 
 
 def detect(opt, save_img=False):
@@ -107,8 +107,14 @@ def detect(opt, save_img=False):
         old_img_w = old_img_h = imgsz
         old_img_b = 1
 
-        preds = []
-
+        dets = {
+            "source": source,
+            "frame": frame,
+            "uuid": entry["uuid"],
+            "detections": {},
+            "colors": colors,
+            "captured": entry["timestamp"],
+        }
         t0 = time.time()
         for img, im0s, _ in dataset:
             img = torch.from_numpy(img).to(device)
@@ -149,10 +155,9 @@ def detect(opt, save_img=False):
             if classify:
                 pred = apply_classifier(pred, modelc, img, im0s)
 
-            dets = {}
             # Process detections
             for i, det in enumerate(pred):  # detections per image
-                
+
                 s, im0, frame = "", im0s, getattr(dataset, "frame", 0)
 
                 gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
@@ -166,20 +171,37 @@ def detect(opt, save_img=False):
                     for c in det[:, -1].unique():
                         n = (det[:, -1] == c).sum()  # detections per class
                         s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
-                        dets[names[int(c)]] = n
+                        dets["detections"][names[int(c)]] = {
+                            "class": int(c),
+                            "color": colors[int(c)],
+                            "count": n.item(),
+                            "boxes": [],
+                            "confidences": [],
+                        }
+
+                    for d in det:
+                        c = d[-1]
+                        dets["detections"][names[int(c)]]["boxes"].append(
+                            d[:4].tolist()
+                        )
+                        dets["detections"][names[int(c)]]["confidences"].append(
+                            d[4].tolist()
+                        )
 
                 # Print time (inference + NMS)
-                print(
-                    f"{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS"
-                )
-        processed = (pred, dets, entry)
+                dets["inference_t"] = 1e3 * (t2 - t1)
+                dets["nms_t"] = 1e3 * (t3 - t2)
+                # print(
+                #     f"{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS",
+                #     dets,
+                # )
         try:
-            PROCESSED_Q.put_nowait(processed)
+            PROCESSED_Q.put_nowait(dets)
         except queue.Full:
             print("Processed Queue is full")
             pass
 
-    print(f"Done. ({time.time() - t0:.3f}s)")
+    # print(f"Done. ({time.time() - t0:.3f}s)")
 
 
 if __name__ == "__main__":

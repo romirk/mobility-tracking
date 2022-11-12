@@ -13,6 +13,7 @@ import time
 
 class MobilityTracking:
     def __init__(self, args):
+        self.name = socket.gethostname()
         self.n: int = args.n
         self.scan_x: int = args.scan_x if args.scan_x >= 0 else 0
         self.scan_y: int = args.scan_y if args.scan_y >= 0 else 0
@@ -50,8 +51,6 @@ class MobilityTracking:
                     .scan_w(self.lane_width)
                     .scan_h(self.scan_h)
                 )
-                print(config.config["scan_x"])
-
             else:
                 (
                     config.scan_x(self.scan_x)
@@ -60,7 +59,9 @@ class MobilityTracking:
                     .scan_h(self.lane_width)
                 )
 
-            tracker = LaneTracker(config, self.pipeline, self.count, self.barrier, i)
+            tracker = LaneTracker(
+                config.build(), self.pipeline, self.count, self.barrier, i
+            )
             self.lane_trackers.append(tracker)
             self.processes.append(multiprocessing.Process(target=tracker, daemon=True))
 
@@ -92,6 +93,7 @@ class MobilityTracking:
         config.enable_stream(rs.stream.depth, width, height, rs.format.z16, fps)
         # enable RGB stream
         config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
+        pipeline.start(config)
         return pipeline, config
 
     @staticmethod
