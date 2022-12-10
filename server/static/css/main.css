@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+
 :root {
     --y-blue: #029FE3;
     --y-dblue: rgb(40, 58, 89);
@@ -10,6 +12,8 @@ body {
     margin: 0;
     height: 100vh;
     width: 100vw;
+
+    font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
 }
 
 .bi {
@@ -33,6 +37,8 @@ body {
     left: 20px;
     bottom: 20px;
 
+    height: 60px;
+
     /*background: var(--y-dblue-transparent);*/
     border: 2px solid var(--y-blue);
     /* component */
@@ -44,6 +50,41 @@ body {
     border-radius: var(--y-border-radius);
 
     z-index: 5;
+}
+
+#stats {
+    color: rgba(255, 255, 255, 0.25);
+    box-sizing: border-box;
+
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+
+    height: 60px;
+
+    background: var(--y-dblue-transparent);
+    border: 2px solid var(--y-blue);
+    /* component */
+
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(20px);
+    /* Note: backdrop-filter has minimal browser support */
+
+    border-radius: var(--y-border-radius);
+
+    z-index: 5;
+
+    font-size: 1.5rem;
+}
+
+.divider {
+    height: 100%;
+    width: 2px;
+    background-color: var(--y-blue);
+}
+
+#stats > div {
+    color: white;
 }
 
 #selector button {
