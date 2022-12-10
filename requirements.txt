@@ -1,8 +1,4 @@
 pyrealsense2
-opencv-python
-numpy
-scipy
-matplotlib
 scikit-learn
 flask
 imagiz

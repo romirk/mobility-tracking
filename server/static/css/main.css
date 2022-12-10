@@ -1,0 +1,79 @@
+:root {
+    --y-blue: #029FE3;
+    --y-dblue: rgb(40, 58, 89);
+    --y-dblue-transparent: rgba(40, 58, 89, 0.8);
+    --y-border-radius: 15px;
+    --y-button-radius: 13px;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    width: 100vw;
+}
+
+.bi {
+    font-size: x-large;
+}
+
+#main, #sidebar {
+    height: 100%;
+}
+
+#sidebar {
+    position: relative;
+    z-index: 5;
+    width: 4.5rem;
+}
+
+#selector {
+    box-sizing: border-box;
+
+    position: absolute;
+    left: 20px;
+    bottom: 20px;
+
+    /*background: var(--y-dblue-transparent);*/
+    border: 2px solid var(--y-blue);
+    /* component */
+
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(20px);
+    /* Note: backdrop-filter has minimal browser support */
+
+    border-radius: var(--y-border-radius);
+
+    z-index: 5;
+}
+
+#selector button {
+    background: var(--y-dblue-transparent);
+    border: 0;
+}
+
+#selector button:hover {
+    background: var(--y-blue);
+}
+
+#viewer {
+    height: 100%;
+    z-index: 5;
+}
+
+.video-container video {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    object-fit: cover;
+    z-index: 0;
+}
+
+#test {
+    color: red;
+}
+
+.svg {
+    transform: scale(0.70);
+}
