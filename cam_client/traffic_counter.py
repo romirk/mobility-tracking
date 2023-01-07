@@ -274,14 +274,14 @@ class TrafficCounter(object):
         self._vid_height = img.shape[0]
 
         # Show setup window
-        k = None
-        cv2.namedWindow("setup2", 1)
-        cv2.imshow("setup2", img)
-        while k != ord("q") and k != ord("Q") and k != 27 and k != "\n":
-            cv2.setMouseCallback("setup2", self._click_mask_event)
-            k = cv2.waitKey(0) & 0xFF
+        # k = None
+        # cv2.namedWindow("setup2", 1)
+        # cv2.imshow("setup2", img)
+        # while k != ord("q") and k != ord("Q") and k != 27 and k != "\n":
+        #     cv2.setMouseCallback("setup2", self._click_mask_event)
+        #     k = cv2.waitKey(0) & 0xFF
 
-        cv2.destroyWindow("setup2")
+        # cv2.destroyWindow("setup2")
 
         roi_points = np.array([self.mask_points])
         self.black_mask = None
@@ -375,19 +375,19 @@ class TrafficCounter(object):
             self.bind_objects(img, dilated_img)
 
             # Showing Frames
-            cv2.imshow(
-                "Masked Frame", working_img
-            )  # working_img is the frame after being cropped and masked
-            cv2.imshow(
-                "Background-Subtracted", subtracted_img
-            )  # subtracted_img is the frame after the background has been subtracted from it
-            cv2.imshow(
-                "Threshold Applied", dilated_img
-            )  # dilated_img is threshold_img plus the noise reduction functions
-            cv2.imshow("Running Avg of Background", background_avg)
-            cv2.line(
-                img, self.p1_count_line, self.p2_count_line, (0, 0, 255), 1
-            )  # counting line
+            # cv2.imshow(
+            #     "Masked Frame", working_img
+            # )  # working_img is the frame after being cropped and masked
+            # cv2.imshow(
+            #     "Background-Subtracted", subtracted_img
+            # )  # subtracted_img is the frame after the background has been subtracted from it
+            # cv2.imshow(
+            #     "Threshold Applied", dilated_img
+            # )  # dilated_img is threshold_img plus the noise reduction functions
+            # cv2.imshow("Running Avg of Background", background_avg)
+            # cv2.line(
+            #     img, self.p1_count_line, self.p2_count_line, (0, 0, 255), 1
+            # )  # counting line
 
             # cv2.putText(img,f"Total cars: {self.counter}",(15,self._vid_height-15),self.font,1,(0,0,0),7)
             cv2.putText(
@@ -399,7 +399,7 @@ class TrafficCounter(object):
                 (255, 255, 255),
                 3,
             )
-            cv2.imshow("Motion Detection", img)
+            # cv2.imshow("Motion Detection", img)
 
             self.make_collage_of_four(subtracted_img, background_avg, dilated_img, img)
             cv2.putText(
@@ -411,61 +411,61 @@ class TrafficCounter(object):
                 (255, 255, 255),
                 3,
             )
-            cv2.imshow("Traffic Counter", self.collage_frame)
+            # cv2.imshow("Traffic Counter", self.collage_frame)
 
             # Termination Conditions
-            k = cv2.waitKey(25) & 0xFF
-            if k == 27 or k == ord("q") or k == ord("Q"):
-                break
-            elif k == ord("s") or k == ord(
-                    "S"
-            ):  # if the letter s/S is pressed, a screenshot of the current frame on each window will be saved to the
-                # current folder
-                cv2.imwrite(
-                    os.path.join(
-                        self.screenshot_folder, f"{frame_id}_masked_frame.jpeg"
-                    ),
-                    working_img,
-                )
-                cv2.imwrite(
-                    os.path.join(
-                        self.screenshot_folder, f"{frame_id}_background_subtracted.jpeg"
-                    ),
-                    subtracted_img,
-                )
-                cv2.imwrite(
-                    os.path.join(
-                        self.screenshot_folder, f"{frame_id}_threshold_applied.jpeg"
-                    ),
-                    dilated_img,
-                )
-                cv2.imwrite(
-                    os.path.join(
-                        self.screenshot_folder, f"{frame_id}_background_average.jpeg"
-                    ),
-                    background_avg,
-                )
-                cv2.imwrite(
-                    os.path.join(
-                        self.screenshot_folder, f"{frame_id}_car_counting.jpeg"
-                    ),
-                    img,
-                )
-                cv2.imwrite(
-                    os.path.join(self.screenshot_folder, f"{frame_id}_collage.jpeg"),
-                    self.collage_frame,
-                )
-            if k == ord(" "):  # if spacebar is pressed
-                paused_key = cv2.waitKey(0) & 0xFF  # program is paused for a while
-                if paused_key == ord(" "):  # pressing space again unpauses the program
-                    pass
+            # k = cv2.waitKey(25) & 0xFF
+            # if k == 27 or k == ord("q") or k == ord("Q"):
+            #     break
+            # elif k == ord("s") or k == ord(
+            #         "S"
+            # ):  # if the letter s/S is pressed, a screenshot of the current frame on each window will be saved to the
+            #     # current folder
+            #     cv2.imwrite(
+            #         os.path.join(
+            #             self.screenshot_folder, f"{frame_id}_masked_frame.jpeg"
+            #         ),
+            #         working_img,
+            #     )
+            #     cv2.imwrite(
+            #         os.path.join(
+            #             self.screenshot_folder, f"{frame_id}_background_subtracted.jpeg"
+            #         ),
+            #         subtracted_img,
+            #     )
+            #     cv2.imwrite(
+            #         os.path.join(
+            #             self.screenshot_folder, f"{frame_id}_threshold_applied.jpeg"
+            #         ),
+            #         dilated_img,
+            #     )
+            #     cv2.imwrite(
+            #         os.path.join(
+            #             self.screenshot_folder, f"{frame_id}_background_average.jpeg"
+            #         ),
+            #         background_avg,
+            #     )
+            #     cv2.imwrite(
+            #         os.path.join(
+            #             self.screenshot_folder, f"{frame_id}_car_counting.jpeg"
+            #         ),
+            #         img,
+            #     )
+            #     cv2.imwrite(
+            #         os.path.join(self.screenshot_folder, f"{frame_id}_collage.jpeg"),
+            #         self.collage_frame,
+            #     )
+            # if k == ord(" "):  # if spacebar is pressed
+            #     paused_key = cv2.waitKey(0) & 0xFF  # program is paused for a while
+            #     if paused_key == ord(" "):  # pressing space again unpauses the program
+            #         pass
 
-            if self.video_out:
-                self.out_bg_subtracted.write(subtracted_img)
-                self.out_threshold.write(dilated_img)
-                self.out_bg_average.write(background_avg)
-                self.out_bounding_boxes.write(img)
-                self.out_collage.write(self.collage_frame)
+            # if self.video_out:
+            #     self.out_bg_subtracted.write(subtracted_img)
+            #     self.out_threshold.write(dilated_img)
+            #     self.out_bg_average.write(background_avg)
+            #     self.out_bounding_boxes.write(img)
+            #     self.out_collage.write(self.collage_frame)
 
         self.video_source.release()
         if self.video_out:

@@ -122,6 +122,7 @@ def main(opts):
     num_cnts = int(opts.numCount)
     video_params = make_video_params_dict(opts.video_params)
     starting_frame = opts.starting_frame
+    img_server  = opts.server
     tc = TrafficCounter(
         video_source,
         line_direction,
@@ -132,6 +133,7 @@ def main(opts):
         num_cnts,
         video_params,
         starting_frame,
+        img_server
     )
 
     tc.main_loop()
