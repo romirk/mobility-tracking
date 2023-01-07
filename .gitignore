@@ -5,3 +5,4 @@ ignore/
 .vscode/
 *.pt
 venv/
+/cam_client/data/
