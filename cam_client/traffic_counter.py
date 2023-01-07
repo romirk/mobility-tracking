@@ -407,4 +407,5 @@ def count(secs):
     while secs:
         print(secs, end=' ')
         sleep(1)
+        secs -= 1
     print('0')
