@@ -17,7 +17,7 @@ class TrafficCounter(object):
 
     def __init__(
             self,
-            video_source=0,
+            # video_source=0,
             line_direction="H",
             line_position=0.5,
             video_width=640,
@@ -27,6 +27,7 @@ class TrafficCounter(object):
             out_video_params=None,
             starting_frame=10,
             img_server=None):
+        self.name = "test"
         if out_video_params is None:
             out_video_params = {}
         self.crop_rect = []  # stores the click coordinates where to crop the frame
@@ -42,7 +43,7 @@ class TrafficCounter(object):
         self.min_area = min_area
         self.num_contours = num_contours
         self.starting_frame = starting_frame
-        self.video_source = cv2.VideoCapture(video_source)
+        # self.video_source = cv2.VideoCapture(video_source)
         self.pipeline, self.pipeline_config = _rs_pipeline_setup(video_width, 480, 30)
         self.screenshot_folder = "_screenshots"
         self.video_out_folder = "_videos"
@@ -411,6 +412,8 @@ class TrafficCounter(object):
                 (255, 255, 255),
                 3,
             )
+            self.sender.send_image(self.name, self.collage_frame)
+
             # cv2.imshow("Traffic Counter", self.collage_frame)
 
             # Termination Conditions
@@ -467,10 +470,10 @@ class TrafficCounter(object):
             #     self.out_bounding_boxes.write(img)
             #     self.out_collage.write(self.collage_frame)
 
-        self.video_source.release()
-        if self.video_out:
-            self._release_video_writers()
-        cv2.destroyAllWindows()
+        # self.video_source.release()
+        # if self.video_out:
+        #     self._release_video_writers()
+        # cv2.destroyAllWindows()
 
 
 def _rs_pipeline_setup(width, height, fps):

@@ -4,6 +4,7 @@ flask
 imagiz
 imagezmq
 imutils
+flask-socketio
 
 # Base ----------------------------------------
 matplotlib>=3.2.2

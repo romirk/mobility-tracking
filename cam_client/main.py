@@ -15,14 +15,15 @@ def CLI():
     parser = argparse.ArgumentParser(
         description="Finds the contours on a video file"
     )  # creates a parser object
-    parser.add_argument(
-        "-p",
-        "--path",
-        type=str,
-        help="""A video filename or path.
-    Works better with .avi files.
-    If no path or name is provided, the camera will be used instead.""",
-    )  # instead of using metavar='--path', just type '--path'. For some reason the metavar argument was causing
+    # parser.add_argument(
+    #     "-p",
+    #     "--path",
+    #     type=str,
+    #     help="""A video filename or path.
+    # Works better with .avi files.
+    # If no path or name is provided, the camera will be used instead.""",
+    # )
+    # instead of using metavar='--path', just type '--path'. For some reason the metavar argument was causing
     # problems
     parser.add_argument(
         "-a",
@@ -113,7 +114,7 @@ def main(opts):
     """
     main
     """
-    video_source = opts.path
+    # video_source = opts.path
     line_direction = opts.direction[0]
     line_position = float(opts.direction[1])
     video_width = opts.video_width
@@ -124,7 +125,7 @@ def main(opts):
     starting_frame = opts.starting_frame
     img_server  = opts.server
     tc = TrafficCounter(
-        video_source,
+        # video_source,
         line_direction,
         line_position,
         video_width,

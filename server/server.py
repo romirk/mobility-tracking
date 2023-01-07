@@ -1,20 +1,20 @@
 import argparse
 from datetime import datetime
 from queue import Full
-from multiprocessing import Process
 from threading import Thread, Lock
 from uuid import uuid4
 
 import cv2
 import imagezmq
-from detect import PROCESSED_Q, RAW_IMG_Q, detect
+import numpy as np
 from flask import Flask, render_template
 from flask.wrappers import Response
 from flask_socketio import SocketIO, emit
+
+from detect import PROCESSED_Q, RAW_IMG_Q, detect
 from utils.plots import plot_one_box
 
 last_active = {}
-
 
 imageHub = imagezmq.ImageHub()
 app = Flask(__name__)
@@ -79,7 +79,17 @@ def parse_arguments():
     return opt
 
 
+last_entry = {
+    "uuid": 0,
+    "frame": np.random.random((640, 480)) * 255,
+    "source": "test",
+    "timestamp": 0,
+}
+last_frame = last_entry["frame"]
+
+
 def receive_frames():
+    global last_entry
     while running:
         (hostname, frame) = imageHub.recv_image()
         # print(f"Received frame from {hostname}")
@@ -95,6 +105,7 @@ def receive_frames():
             "source": hostname,
             "timestamp": last_active[hostname],
         }
+        last_entry = entry
         try:
             RAW_IMG_Q.put_nowait(entry)
         except Full:
@@ -111,8 +122,14 @@ def index():
 @app.route("/live")
 def video_feed():
     return Response(
-        process_detections(), mimetype="multipart/x-mixed-replace; boundary=frame"
+        gen_frames(), mimetype="multipart/x-mixed-replace; boundary=frame"
     )
+
+
+def gen_frames():
+    while running:
+        encoded = cv2.imencode(".jpg", last_frame)[1]
+        yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + encoded.tobytes() + b"\r\n"
 
 
 @socketio.on('connect')
@@ -140,6 +157,7 @@ def test_sockets():
 
 
 def process_detections():
+    global last_frame
     while True:
         processed: dict = PROCESSED_Q.get(block=True)
         if processed is None:
@@ -155,8 +173,7 @@ def process_detections():
                     color=data["color"],
                     line_thickness=3,
                 )
-        encoded = cv2.imencode(".jpg", frame)[1]
-        yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + encoded.tobytes() + b"\r\n"
+        last_frame = frame
     print("[INFO] stopping detection process")
 
 
@@ -164,17 +181,15 @@ if __name__ == "__main__":
     opt = parse_arguments()
     proc_thread = Thread(target=receive_frames)
     detect_thread = Thread(target=detect, args=(opt,))
-    app_thread = Process(target=app.run, kwargs={"host": "0.0.0.0", "port": 5000})
+    # app_thread = Process(target=app.run, kwargs={"host": "0.0.0.0", "port": 5000})
     try:
         proc_thread.start()
         detect_thread.daemon = True
         detect_thread.start()
-        app_thread.start()
-        app_thread.join()
+        app.run()
     except KeyboardInterrupt:
         print("[INFO] exiting...")
         running = False
         RAW_IMG_Q.put(None)
         PROCESSED_Q.put(None)
-        app_thread.terminate()
         exit(0)
