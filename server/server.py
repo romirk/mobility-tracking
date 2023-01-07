@@ -2,7 +2,7 @@ import argparse
 from datetime import datetime
 from queue import Full
 from multiprocessing import Process
-from threading import Thread
+from threading import Thread, Lock
 from uuid import uuid4
 
 import cv2
@@ -10,6 +10,7 @@ import imagezmq
 from detect import PROCESSED_Q, RAW_IMG_Q, detect
 from flask import Flask, render_template
 from flask.wrappers import Response
+from flask_socketio import SocketIO, emit
 from utils.plots import plot_one_box
 
 last_active = {}
@@ -17,6 +18,9 @@ last_active = {}
 
 imageHub = imagezmq.ImageHub()
 app = Flask(__name__)
+socketio = SocketIO(app, async_mode=None)
+thread_lock = Lock()
+thread = None
 running = True
 
 
@@ -109,6 +113,30 @@ def video_feed():
     return Response(
         process_detections(), mimetype="multipart/x-mixed-replace; boundary=frame"
     )
+
+
+@socketio.on('connect')
+def connect():
+    emit('connect', {'data': 'Connected to client!'})
+    global thread
+    with thread_lock:
+        if thread is None:
+            thread = socketio.start_background_task(test_sockets)
+
+
+@socketio.on('disconnect')
+def disconnect():
+    print('Client disconnected!')
+
+
+def test_sockets():
+    counter = 0
+
+    while True:
+        counter = counter + 1
+        socketio.emit('traffic_data', {'data': 'Car count', 'count': counter})
+        print(counter)
+        socketio.sleep(1)
 
 
 def process_detections():
