@@ -106,6 +106,7 @@ def receive_frames():
             "timestamp": last_active[hostname],
         }
         last_entry = entry
+        last_frame = last_entry["frame"]
         try:
             RAW_IMG_Q.put_nowait(entry)
         except Full:
