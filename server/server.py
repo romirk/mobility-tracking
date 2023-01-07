@@ -23,6 +23,8 @@ thread_lock = Lock()
 thread = None
 running = True
 
+def update_count(new_count, frame, box):
+    ...
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -89,7 +91,7 @@ last_frame = last_entry["frame"]
 
 
 def receive_frames():
-    global last_entry
+    global last_entry, last_frame
     while running:
         (hostname, frame) = imageHub.recv_image()
         # print(f"Received frame from {hostname}")
@@ -123,7 +125,7 @@ def index():
 @app.route("/live")
 def video_feed():
     return Response(
-        gen_frames(), mimetype="multipart/x-mixed-replace; boundary=frame"
+        process_detections(), mimetype="multipart/x-mixed-replace; boundary=frame"
     )
 
 
@@ -175,6 +177,8 @@ def process_detections():
                     line_thickness=3,
                 )
         last_frame = frame
+        encoded = cv2.imencode(".jpg", last_frame)[1]
+        yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + encoded.tobytes() + b"\r\n"
     print("[INFO] stopping detection process")
 
 

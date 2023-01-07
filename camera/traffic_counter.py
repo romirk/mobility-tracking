@@ -1,7 +1,6 @@
 """
 Traffic Counting
 """
-import os
 from time import sleep
 
 import cv2
@@ -46,8 +45,6 @@ class TrafficCounter(object):
         self.starting_frame = starting_frame
         # self.video_source = cv2.VideoCapture(video_source)
         self.pipeline, self.pipeline_config = _rs_pipeline_setup(video_width, 480, 30)
-        self.screenshot_folder = "_screenshots"
-        self.video_out_folder = "_videos"
 
         self._vid_width = video_width
         self._vid_height = None  # PLACEHOLDER
@@ -65,79 +62,6 @@ class TrafficCounter(object):
         # Getting frame dimensions
         self._compute_frame_dimensions()
         self._set_up_line(line_direction, line_position)
-        self.collage_frame = self._create_collage_frame()
-
-        # Setting up video writers for output
-        self.out_video_params = out_video_params
-        if len(video_out) < 1:
-            self.video_out = False
-        else:
-            self.video_out = True
-            self._out_vid_base_name = video_out
-            self._set_video_writers()
-
-    def _set_video_writers(self):
-        fps = self.video_source.get(cv2.CAP_PROP_FPS)
-        video_ext = self.out_video_params.get("extension", "avi")
-        string_fourcc = self.out_video_params.get("codec", "mjpg")
-        fourcc = cv2.VideoWriter_fourcc(*string_fourcc)
-        video_res = (self._vid_width, self._vid_height)
-        collage_res = (self.collage_width, self.collage_height)
-
-        # print(f"Video Writer Params:\nFPS -> {fps}\nFOURCC -> {fourcc}\nVideo res -> {video_res}")
-
-        self.out_bg_subtracted = cv2.VideoWriter(
-            os.path.join(
-                self.video_out_folder,
-                self._out_vid_base_name + "_bg_subtracted" + "." + video_ext,
-            ),
-            fourcc,
-            fps,
-            video_res,
-        )
-        self.out_threshold = cv2.VideoWriter(
-            os.path.join(
-                self.video_out_folder,
-                self._out_vid_base_name + "_threshold" + "." + video_ext,
-            ),
-            fourcc,
-            fps,
-            video_res,
-        )
-        self.out_bg_average = cv2.VideoWriter(
-            os.path.join(
-                self.video_out_folder,
-                self._out_vid_base_name + "_bg_average" + "." + video_ext,
-            ),
-            fourcc,
-            fps,
-            video_res,
-        )
-        self.out_bounding_boxes = cv2.VideoWriter(
-            os.path.join(
-                self.video_out_folder,
-                self._out_vid_base_name + "_bounding_boxes" + "." + video_ext,
-            ),
-            fourcc,
-            fps,
-            video_res,
-        )
-        self.out_collage = cv2.VideoWriter(
-            os.path.join(
-                self.video_out_folder,
-                self._out_vid_base_name + "_collage" + "." + video_ext,
-            ),
-            fourcc,
-            fps,
-            collage_res,
-        )
-
-    def _release_video_writers(self):
-        self.out_bg_subtracted.release()
-        self.out_threshold.release()
-        self.out_bg_average.release()
-        self.out_bounding_boxes.release()
-        self.out_collage.release()
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -151,29 +75,11 @@ class TrafficCounter(object):
         else:
             raise ValueError('Expected an "H" or a "V" only for line direction')
 
-    def _create_collage_frame(self):
-        self.collage_width = self._vid_width * 2
-        self.collage_height = self._vid_height * 2
-        collage_frame = np.zeros(
-            (self.collage_height, self.collage_width, 3), dtype=np.uint8
-        )
-        return collage_frame
-
     def _compute_frame_dimensions(self):
         frame = self.pipeline.wait_for_frames().get_color_frame()
         img = imutils.resize(np.asanyarray(frame.get_data()), width=self._vid_width)
         self._vid_height = img.shape[0]
         self._vid_width = img.shape[1]
-
-    def _click_crop_event(self, event, x, y, _, __):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            self.crop_rect.append(
-                (y, x)
-            )  # Numpy manages the coordinates as (y,x) instead of (x,y)
-
-    def _click_mask_event(self, event, x, y, _, __):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            self.mask_points.append((x, y))
 
     def _draw_bounding_boxes(
             self, frame, contour_id, bounding_points, cx, cy, prev_cx, prev_cy
@@ -196,6 +102,7 @@ class TrafficCounter(object):
                     cy <= self.p1_count_line[1] <= prev_cy
             ):
                 self.counter += 1
+                # remote.update_count(self.counter)
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
                 is_crossed = True
 
@@ -289,39 +196,6 @@ class TrafficCounter(object):
             self.raw_avg = np.float32(img)
 
         self.raw_avg = cv2.resize(self.raw_avg, (self._vid_width, self._vid_height))
-
-    def make_collage_of_four(
-            self, up_left_img, up_right_img, down_left_img, down_right_img
-    ):
-        middle_width = self._vid_width
-        middle_height = self._vid_height
-        total_height = self.collage_frame.shape[0]
-        total_width = self.collage_frame.shape[1]
-        # print(f"Collage shape: {self.collage_frame.shape}")
-        if len(up_left_img.shape) < 3:
-            up_l = cv2.cvtColor(up_left_img, cv2.COLOR_GRAY2BGR)
-        else:
-            up_l = up_left_img
-
-        if len(up_right_img.shape) < 3:
-            up_r = cv2.cvtColor(up_right_img, cv2.COLOR_GRAY2BGR)
-        else:
-            up_r = up_right_img
-
-        if len(down_left_img.shape) < 3:
-            down_l = cv2.cvtColor(down_left_img, cv2.COLOR_GRAY2BGR)
-        else:
-            down_l = down_left_img
-
-        if len(down_right_img.shape) < 3:
-            down_r = cv2.cvtColor(down_right_img, cv2.COLOR_GRAY2BGR)
-        else:
-            down_r = down_right_img
-
-        self.collage_frame[0:middle_height, 0:middle_width] = up_l  # setting up_left image
-        self.collage_frame[0:middle_height, middle_width:total_width] = up_r
-        self.collage_frame[middle_height:total_height, 0:middle_width] = down_l
-        self.collage_frame[middle_height:total_height, middle_width:total_width] = down_r
 
     def main_loop(self):
         self._set_up_masks()

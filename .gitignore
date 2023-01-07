@@ -6,4 +6,4 @@ ignore/
 *.pt
 *.so
 venv/
-/cam_client/data/
+/camera/data/
