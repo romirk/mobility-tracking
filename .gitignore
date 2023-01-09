@@ -4,5 +4,6 @@ __pycache__
 ignore/
 .vscode/
 *.pt
+*.so
 venv/
-/cam_client/data/
+/camera/data/

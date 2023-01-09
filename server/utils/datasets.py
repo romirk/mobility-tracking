@@ -19,14 +19,6 @@ import torch.nn.functional as F
 from PIL import Image, ExifTags
 from torch.utils.data import Dataset
 from tqdm import tqdm
-
-import pickle
-from copy import deepcopy
-
-# from pycocotools import mask as maskUtils
-from torchvision.utils import save_image
-from torchvision.ops import roi_pool, roi_align, ps_roi_pool, ps_roi_align
-
 from utils.general import (
     check_requirements,
     xyxy2xywh,
@@ -39,6 +31,8 @@ from utils.general import (
     clean_str,
 )
 from utils.torch_utils import torch_distributed_zero_first
+
+# from pycocotools import mask as maskUtils
 
 # Parameters
 help_url = "https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data"
@@ -92,22 +86,22 @@ def exif_size(img):
 
 
 def create_dataloader(
-    path,
-    imgsz,
-    batch_size,
-    stride,
-    opt,
-    hyp=None,
-    augment=False,
-    cache=False,
-    pad=0.0,
-    rect=False,
-    rank=-1,
-    world_size=1,
-    workers=8,
-    image_weights=False,
-    quad=False,
-    prefix="",
+        path,
+        imgsz,
+        batch_size,
+        stride,
+        opt,
+        hyp=None,
+        augment=False,
+        cache=False,
+        pad=0.0,
+        rect=False,
+        rank=-1,
+        world_size=1,
+        workers=8,
+        image_weights=False,
+        quad=False,
+        prefix="",
 ):
     # Make sure only the first process in DDP process the dataset first, and the following others can use the cache
     with torch_distributed_zero_first(rank):
@@ -184,7 +178,6 @@ class _RepeatSampler(object):
 
 class LoadImage:  # for inference
     def __init__(self, img, img_size=640, stride=32):
-
         self.img_size = img_size
         self.stride = stride
         self.img = img
@@ -300,7 +293,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
             print(f"{i + 1}/{n}: {s}... ", end="")
             url = eval(s) if s.isnumeric() else s
             if "youtube.com/" in str(url) or "youtu.be/" in str(
-                url
+                    url
             ):  # if source is YouTube video
                 check_requirements(("pafy", "youtube_dl"))
                 import pafy
@@ -327,7 +320,7 @@ class LoadStreams:  # multiple IP or RTSP cameras
             0,
         )  # shapes
         self.rect = (
-            np.unique(s, axis=0).shape[0] == 1
+                np.unique(s, axis=0).shape[0] == 1
         )  # rect inference if all shapes equal
         if not self.rect:
             print(
@@ -390,19 +383,19 @@ def img2label_paths(img_paths):
 
 class LoadImagesAndLabels(Dataset):  # for training/testing
     def __init__(
-        self,
-        path,
-        img_size=640,
-        batch_size=16,
-        augment=False,
-        hyp=None,
-        rect=False,
-        image_weights=False,
-        cache_images=False,
-        single_cls=False,
-        stride=32,
-        pad=0.0,
-        prefix="",
+            self,
+            path,
+            img_size=640,
+            batch_size=16,
+            augment=False,
+            hyp=None,
+            rect=False,
+            image_weights=False,
+            cache_images=False,
+            single_cls=False,
+            stride=32,
+            pad=0.0,
+            prefix="",
     ):
         self.img_size = img_size
         self.augment = augment
@@ -410,7 +403,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.image_weights = image_weights
         self.rect = False if image_weights else rect
         self.mosaic = (
-            self.augment and not self.rect
+                self.augment and not self.rect
         )  # load 4 images at a time into a mosaic (only during training)
         self.mosaic_border = [-img_size // 2, -img_size // 2]
         self.stride = stride
@@ -471,7 +464,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
             d = f"Scanning '{cache_path}' images and labels... {nf} found, {nm} missing, {ne} empty, {nc} corrupted"
             tqdm(None, desc=prefix + d, total=n, initial=n)  # display cache results
         assert (
-            nf > 0 or not augment
+                nf > 0 or not augment
         ), f"{prefix}No labels in {cache_path}. Can not train without labels. See {help_url}"
 
         # Read cache
@@ -516,8 +509,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     shapes[i] = [1, 1 / mini]
 
             self.batch_shapes = (
-                np.ceil(np.array(shapes) * img_size / stride + pad).astype(np.int)
-                * stride
+                    np.ceil(np.array(shapes) * img_size / stride + pad).astype(np.int)
+                    * stride
             )
 
         # Cache images into memory for faster training (WARNING: large datasets may exceed system RAM)
@@ -567,7 +560,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 segments = []  # instance segments
                 assert (shape[0] > 9) & (shape[1] > 9), f"image size {shape} <10 pixels"
                 assert (
-                    im.format.lower() in img_formats
+                        im.format.lower() in img_formats
                 ), f"invalid image format {im.format}"
 
                 # verify labels
@@ -589,10 +582,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                         assert l.shape[1] == 5, "labels require 5 columns each"
                         assert (l >= 0).all(), "negative labels"
                         assert (
-                            l[:, 1:] <= 1
+                                l[:, 1:] <= 1
                         ).all(), "non-normalized or out of bounds coordinate labels"
                         assert (
-                            np.unique(l, axis=0).shape[0] == l.shape[0]
+                                np.unique(l, axis=0).shape[0] == l.shape[0]
                         ), "duplicate labels"
                     else:
                         ne += 1  # label empty
@@ -778,16 +771,16 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     2,
                 )
                 l = (
-                    torch.cat(
-                        (
-                            label[i],
-                            label[i + 1] + ho,
-                            label[i + 2] + wo,
-                            label[i + 3] + ho + wo,
-                        ),
-                        0,
-                    )
-                    * s
+                        torch.cat(
+                            (
+                                label[i],
+                                label[i + 1] + ho,
+                                label[i + 2] + wo,
+                                label[i + 3] + ho + wo,
+                            ),
+                            0,
+                        )
+                        * s
                 )
             img4.append(im)
             label4.append(l)
@@ -978,14 +971,14 @@ def load_mosaic9(self, index):
         segments9.extend(segments)
 
         # Image
-        img9[y1:y2, x1:x2] = img[y1 - pady :, x1 - padx :]  # img9[ymin:ymax, xmin:xmax]
+        img9[y1:y2, x1:x2] = img[y1 - pady:, x1 - padx:]  # img9[ymin:ymax, xmin:xmax]
         hp, wp = h, w  # height, width previous
 
     # Offset
     yc, xc = [
         int(random.uniform(0, s)) for _ in self.mosaic_border
     ]  # mosaic center x, y
-    img9 = img9[yc : yc + 2 * s, xc : xc + 2 * s]
+    img9 = img9[yc: yc + 2 * s, xc: xc + 2 * s]
 
     # Concat/clip labels
     labels9 = np.concatenate(labels9, 0)
@@ -1164,13 +1157,13 @@ def sample_segments(img, labels, segments, probability=0.5):
             cv2.drawContours(
                 mask, [segments[j].astype(np.int32)], -1, (255, 255, 255), cv2.FILLED
             )
-            sample_masks.append(mask[box[1] : box[3], box[0] : box[2], :])
+            sample_masks.append(mask[box[1]: box[3], box[0]: box[2], :])
 
             result = cv2.bitwise_and(src1=img, src2=mask)
             i = result > 0  # pixels to replace
             mask[i] = result[i]  # cv2.imwrite('debug.jpg', img)  # debug
             # print(box)
-            sample_images.append(mask[box[1] : box[3], box[0] : box[2], :])
+            sample_images.append(mask[box[1]: box[3], box[0]: box[2], :])
 
     return sample_labels, sample_images, sample_masks
 
@@ -1195,13 +1188,13 @@ def replicate(img, labels):
 
 
 def letterbox(
-    img,
-    new_shape=(640, 640),
-    color=(114, 114, 114),
-    auto=True,
-    scaleFill=False,
-    scaleup=True,
-    stride=32,
+        img,
+        new_shape=(640, 640),
+        color=(114, 114, 114),
+        auto=True,
+        scaleFill=False,
+        scaleup=True,
+        stride=32,
 ):
     # Resize and pad image while meeting stride-multiple constraints
     shape = img.shape[:2]  # current shape [height, width]
@@ -1238,15 +1231,15 @@ def letterbox(
 
 
 def random_perspective(
-    img,
-    targets=(),
-    segments=(),
-    degrees=10,
-    translate=0.1,
-    scale=0.1,
-    shear=10,
-    perspective=0.0,
-    border=(0, 0),
+        img,
+        targets=(),
+        segments=(),
+        degrees=10,
+        translate=0.1,
+        scale=0.1,
+        shear=10,
+        perspective=0.0,
+        border=(0, 0),
 ):
     # torchvision.transforms.RandomAffine(degrees=(-10, 10), translate=(.1, .1), scale=(.9, 1.1), shear=(-10, 10))
     # targets = [cls, xyxy]
@@ -1280,10 +1273,10 @@ def random_perspective(
     # Translation
     T = np.eye(3)
     T[0, 2] = (
-        random.uniform(0.5 - translate, 0.5 + translate) * width
+            random.uniform(0.5 - translate, 0.5 + translate) * width
     )  # x translation (pixels)
     T[1, 2] = (
-        random.uniform(0.5 - translate, 0.5 + translate) * height
+            random.uniform(0.5 - translate, 0.5 + translate) * height
     )  # y translation (pixels)
 
     # Combined rotation matrix
@@ -1356,17 +1349,17 @@ def random_perspective(
 
 
 def box_candidates(
-    box1, box2, wh_thr=2, ar_thr=20, area_thr=0.1, eps=1e-16
+        box1, box2, wh_thr=2, ar_thr=20, area_thr=0.1, eps=1e-16
 ):  # box1(4,n), box2(4,n)
     # Compute candidate boxes: box1 before augment, box2 after augment, wh_thr (pixels), aspect_ratio_thr, area_ratio
     w1, h1 = box1[2] - box1[0], box1[3] - box1[1]
     w2, h2 = box2[2] - box2[0], box2[3] - box2[1]
     ar = np.maximum(w2 / (h2 + eps), h2 / (w2 + eps))  # aspect ratio
     return (
-        (w2 > wh_thr)
-        & (h2 > wh_thr)
-        & (w2 * h2 / (w1 * h1 + eps) > area_thr)
-        & (ar < ar_thr)
+            (w2 > wh_thr)
+            & (h2 > wh_thr)
+            & (w2 * h2 / (w1 * h1 + eps) > area_thr)
+            & (ar < ar_thr)
     )  # candidates
 
 
@@ -1380,7 +1373,7 @@ def bbox_ioa(box1, box2):
 
     # Intersection area
     inter_area = (np.minimum(b1_x2, b2_x2) - np.maximum(b1_x1, b2_x1)).clip(0) * (
-        np.minimum(b1_y2, b2_y2) - np.maximum(b1_y1, b2_y1)
+            np.minimum(b1_y2, b2_y2) - np.maximum(b1_y1, b2_y1)
     ).clip(0)
 
     # box2 area
@@ -1396,7 +1389,7 @@ def cutout(image, labels):
 
     # create random masks
     scales = (
-        [0.5] * 1 + [0.25] * 2 + [0.125] * 4 + [0.0625] * 8 + [0.03125] * 16
+            [0.5] * 1 + [0.25] * 2 + [0.125] * 4 + [0.0625] * 8 + [0.03125] * 16
     )  # image size fraction
     for s in scales:
         mask_h = random.randint(1, int(h * s))
@@ -1426,7 +1419,7 @@ def pastein(image, labels, sample_labels, sample_images, sample_masks):
 
     # create random masks
     scales = (
-        [0.75] * 2 + [0.5] * 4 + [0.25] * 4 + [0.125] * 4 + [0.0625] * 6
+            [0.75] * 2 + [0.5] * 4 + [0.25] * 4 + [0.125] * 4 + [0.0625] * 6
     )  # image size fraction
     for s in scales:
         if random.random() < 0.2:
@@ -1447,10 +1440,10 @@ def pastein(image, labels, sample_labels, sample_images, sample_masks):
             ioa = np.zeros(1)
 
         if (
-            (ioa < 0.30).all()
-            and len(sample_labels)
-            and (xmax > xmin + 20)
-            and (ymax > ymin + 20)
+                (ioa < 0.30).all()
+                and len(sample_labels)
+                and (xmax > xmin + 20)
+                and (ymax > ymin + 20)
         ):  # allow 30% obscuration of existing labels
             sel_ind = random.randint(0, len(sample_labels) - 1)
             # print(len(sample_labels))
@@ -1467,7 +1460,7 @@ def pastein(image, labels, sample_labels, sample_images, sample_masks):
             if (r_w > 10) and (r_h > 10):
                 r_mask = cv2.resize(sample_masks[sel_ind], (r_w, r_h))
                 r_image = cv2.resize(sample_images[sel_ind], (r_w, r_h))
-                temp_crop = image[ymin : ymin + r_h, xmin : xmin + r_w]
+                temp_crop = image[ymin: ymin + r_h, xmin: xmin + r_w]
                 m_ind = r_mask > 0
                 if m_ind.astype(np.int).sum() > 60:
                     temp_crop[m_ind] = r_image[m_ind]
@@ -1484,7 +1477,7 @@ def pastein(image, labels, sample_labels, sample_images, sample_masks):
                     else:
                         labels = np.array([[sample_labels[sel_ind], *box]])
 
-                    image[ymin : ymin + r_h, xmin : xmin + r_w] = temp_crop
+                    image[ymin: ymin + r_h, xmin: xmin + r_w] = temp_crop
 
     return labels
 
@@ -1541,13 +1534,13 @@ def flatten_recursive(path="../coco"):
 
 
 def extract_boxes(
-    path="../coco/",
+        path="../coco/",
 ):  # from utils.datasets import *; extract_boxes('../coco128')
     # Convert detection dataset into classification dataset, with one directory per class
 
     path = Path(path)  # images dir
     shutil.rmtree(path / "classifier") if (
-        path / "classifier"
+            path / "classifier"
     ).is_dir() else None  # remove existing
     files = list(path.rglob("*.*"))
     n = len(files)  # number of files
@@ -1569,9 +1562,9 @@ def extract_boxes(
                 for j, x in enumerate(lb):
                     c = int(x[0])  # class
                     f = (
-                        (path / "classifier")
-                        / f"{c}"
-                        / f"{path.stem}_{im_file.stem}_{j}.jpg"
+                            (path / "classifier")
+                            / f"{c}"
+                            / f"{path.stem}_{im_file.stem}_{j}.jpg"
                     )  # new filename
                     if not f.parent.is_dir():
                         f.parent.mkdir(parents=True)
@@ -1584,7 +1577,7 @@ def extract_boxes(
                     b[[0, 2]] = np.clip(b[[0, 2]], 0, w)  # clip boxes outside of image
                     b[[1, 3]] = np.clip(b[[1, 3]], 0, h)
                     assert cv2.imwrite(
-                        str(f), im[b[1] : b[3], b[0] : b[2]]
+                        str(f), im[b[1]: b[3], b[0]: b[2]]
                     ), f"box failure in {f}"
 
 
@@ -1618,7 +1611,7 @@ def autosplit(path="../coco", weights=(0.9, 0.1, 0.0), annotated_only=False):
     )
     for i, img in tqdm(zip(indices, files), total=n):
         if (
-            not annotated_only or Path(img2label_paths([str(img)])[0]).exists()
+                not annotated_only or Path(img2label_paths([str(img)])[0]).exists()
         ):  # check label
             with open(path / txt[i], "a") as f:
                 f.write(str(img) + "\n")  # add image to txt file
