@@ -2,6 +2,7 @@
 
 :root {
     --y-blue: #029FE3;
+    --y-blue-transparent: rgba(2, 159, 227, 0.5);
     --y-dblue: rgb(40, 58, 89);
     --y-dblue-transparent: rgba(40, 58, 89, 0.8);
     --y-border-radius: 15px;
@@ -39,7 +40,7 @@ body {
 
     height: 60px;
 
-    /*background: var(--y-dblue-transparent);*/
+    background: var(--y-dblue-transparent);
     border: 2px solid var(--y-blue);
     /* component */
 
@@ -50,6 +51,14 @@ body {
     border-radius: var(--y-border-radius);
 
     z-index: 5;
+}
+
+.nav-link {
+    padding: 0 var(--bs-btn-padding-x);
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--y-blue);
 }
 
 #stats {
@@ -88,12 +97,16 @@ body {
 }
 
 #selector button {
-    background: var(--y-dblue-transparent);
     border: 0;
 }
 
 #selector button:hover {
+    background: var(--y-blue-transparent);
+}
+
+#selector .nav-link.active:hover {
     background: var(--y-blue);
+    cursor: default;
 }
 
 #viewer {
@@ -109,6 +122,12 @@ body {
     left: 0;
     object-fit: cover;
     z-index: 0;
+}
+
+#nav-stats {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 #test {
