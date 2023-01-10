@@ -1,6 +1,7 @@
-import ctypes
 import datetime
-from multiprocessing import Value, Process, Array
+from multiprocessing import Value
+from multiprocessing.shared_memory import SharedMemory
+from threading import Thread
 
 import cv2
 import numpy as np
@@ -9,8 +10,10 @@ from flask_socketio import emit, SocketIO
 from imagezmq import ImageHub
 
 
-def receive_frames(running, last: Array):
+def receive_frames(running, loc: str):
     frame: np.ndarray
+    mem = SharedMemory(name=loc)
+    last = np.ndarray(Server.IMG_SIZE, dtype=np.uint8, buffer=mem.buf)
     image_hub = ImageHub()
     last_active = {}
     while running.value:
@@ -21,12 +24,7 @@ def receive_frames(running, last: Array):
             print(f"[INFO] receiving data from {hostname}...")
         last_active[hostname] = datetime.datetime.now()
 
-        frame = frame.flatten()
-        # print(frame)
-        with last.get_lock():
-            # print(f"last: {last}")
-            for i in range(len(last)):
-                last[i] = frame[i]
+        np.copyto(last, frame)
 
     print("[INFO] stopping frame receiver")
 
@@ -36,17 +34,18 @@ class Server:
     app: Flask
     socketio: SocketIO
 
-    __SIZE = (480, 640, 3)
+    IMG_SIZE = (480, 640, 3)
 
     def __init__(self):
         self.__running = Value("b", True)
         self.__last_active = {}
 
-        self.__last_frame: Array = Array(ctypes.c_uint8, Server.__SIZE[0] * Server.__SIZE[1] * 3)
+        self.__mem = SharedMemory(create=True, size=Server.IMG_SIZE[0] * Server.IMG_SIZE[1] * Server.IMG_SIZE[2])
+        self.__last_frame: np.ndarray = np.ndarray(Server.IMG_SIZE, dtype=np.uint8, buffer=self.__mem.buf)
 
         print(self.__last_frame)
 
-        self.receiver = Process(target=receive_frames, args=(self.__running, self.__last_frame,), daemon=True)
+        self.receiver = Thread(target=receive_frames, args=(self.__running, self.__mem.name), daemon=True)
         print("Server initialized")
 
     def kill(self):
@@ -55,7 +54,7 @@ class Server:
     def __gen_frames(self):
         while self.__running.value:
             yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + \
-                cv2.imencode(".jpg", np.asarray(self.__last_frame).reshape(Server.__SIZE))[1].tobytes() + b"\r\n"
+                cv2.imencode(".jpg", np.asarray(self.__last_frame).reshape(Server.IMG_SIZE))[1].tobytes() + b"\r\n"
 
     def create_server(self):
         app = Flask(__name__)

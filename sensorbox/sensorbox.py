@@ -55,6 +55,5 @@ class SensorBox:
 
 if __name__ == "__main__":
     opts = parse_args()
-    print(opts)
     box = SensorBox(opts)
     box.run()
