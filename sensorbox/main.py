@@ -25,7 +25,7 @@ def main(opts):
         img_server,
     )
 
-    tc.main_loop()
+    tc.main_loop(Value(bool, True))
 
 
 if __name__ == "__main__":

@@ -1,18 +1,16 @@
 import argparse
 
 
-def parse_args_counter():
+def parse_args_counter(parser=argparse.ArgumentParser(
+    description="traffic counter",
+)):
     min_area_default = 200
     direction_default = ["H", "0.5"]
     num_count_default = 10
     video_width_default = 640
-    video_params_default = ["mjpg", "avi"]
     starting_frame_default = 10
     server_default = "tcp://localhost:5555"
 
-    parser = argparse.ArgumentParser(
-        description="Finds the contours on a video file"
-    )
     parser.add_argument(
         "-a",
         "--min_area",
@@ -34,7 +32,7 @@ def parse_args_counter():
     )
     parser.add_argument(
         "-n",
-        "--numCount",
+        "--num_contours",
         type=int,
         default=num_count_default,
         help=f"""The number of contours to be detected by the program (default is {num_count_default}).""",
@@ -59,18 +57,46 @@ def parse_args_counter():
              f"that will still be used for the background average",
     )
     parser.add_argument(
-        "--server", default=server_default, help="img server address"
+        "-i",
+        "--iserver", default=server_default, help="img server address"
     )
-    parser.add_argument("--port", default="/dev/ttyACM0", help="arduino port")
+    return parser
+
+
+def parse_args_sensorbox(parser=argparse.ArgumentParser(
+    description="sensorbox",
+)):
+    baud_default = 115200
+    server_default = ("localhost", 5000)
+    port_default = "COM4"
+
+    parser.add_argument(
+        "-p",
+        "--port",
+        type=str,
+        help=f"Serial port (default is {port_default})",
+        default=port_default,
+    )
+    parser.add_argument(
+        "-s",
+        "--server",
+        type=str,
+        default=server_default,
+        help=f"Server address (default is {server_default})",
+    )
+    parser.add_argument(
+        "-b",
+        "--baud",
+        type=int,
+        default=baud_default,
+        help=f"Serial baud rate (default is {baud_default})",
+    )
+    return parser
+
+
+def parse_args(parser=argparse.ArgumentParser(
+    description="sensorbox",
+)):
+    parser = parse_args_counter(parser)
+    parser = parse_args_sensorbox(parser)
     return parser.parse_args()
-
-
-def make_video_params_dict(video_params):
-    codec = video_params[0]
-    extension = video_params[1]
-
-    params_dict = {
-        "codec": codec,
-        "extension": extension,
-    }
-    return params_dict

@@ -1,6 +1,7 @@
 """
 Traffic Counting
 """
+from multiprocessing import Value
 from time import sleep
 
 import cv2
@@ -15,16 +16,8 @@ class TrafficCounter(object):
     Traffic Counter class.
     """
 
-    def __init__(
-            self,
-            line_direction="H",
-            line_position=0.5,
-            video_width=640,
-            min_area=200,
-            num_contours=10,
-            starting_frame=10,
-            img_server=None):
-        self.name = "test"
+    def __init__(self, config):
+        self.name = __name__
         self.crop_rect = []  # stores the click coordinates where to crop the frame
         self.mask_points = (
             []
@@ -33,14 +26,14 @@ class TrafficCounter(object):
         self.p1_count_line = None
         self.p2_count_line = None
         self.counter = 0
-        self.line_direction = line_direction
-        self.line_position = line_position
-        self.min_area = min_area
-        self.num_contours = num_contours
-        self.starting_frame = starting_frame
-        self.pipeline, self.pipeline_config = _rs_pipeline_setup(video_width, 480, 30)
+        self.line_direction = config.direction[0]
+        self.line_position = float(config.direction[1])
+        self.min_area = config.min_area
+        self.num_contours = config.num_contours
+        self.starting_frame = config.starting_frame
+        self.pipeline, self.pipeline_config = _rs_pipeline_setup(config.video_width, 480, 30)
 
-        self._vid_width = video_width
+        self._vid_width = config.video_width
         self._vid_height = None  # PLACEHOLDER
         self.black_mask = (
             None  # PLACEHOLDER, user creates it by clicking on several points
@@ -50,12 +43,12 @@ class TrafficCounter(object):
             []
         )  # this will contain the coordinates of the centers in the previous
 
-        self.server = img_server
+        self.server = config.iserver
         self.sender = imagezmq.ImageSender(connect_to=self.server)
 
         # Getting frame dimensions
         self._compute_frame_dimensions()
-        self._set_up_line(line_direction, line_position)
+        self._set_up_line(config.direction[0], float(config.direction[1]))
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -191,11 +184,11 @@ class TrafficCounter(object):
 
         self.raw_avg = cv2.resize(self.raw_avg, (self._vid_width, self._vid_height))
 
-    def main_loop(self):
+    def main_loop(self, running: Value):
         self._set_up_masks()
         rate_of_influence = 0.01
 
-        while True:
+        while running.value:
             frame = self.pipeline.wait_for_frames().get_color_frame()
             frame_id = int(frame.frame_number)  # get current frame index
             img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
@@ -238,6 +231,8 @@ class TrafficCounter(object):
             self.bind_objects(img, dilated_img)
 
             self.sender.send_image(self.name, img)
+
+        print("[Camera] Stopping counter...")
 
 
 def _rs_pipeline_setup(width, height, fps):
