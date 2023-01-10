@@ -1,4 +1,5 @@
 from multiprocessing import Process, Value
+from time import sleep
 
 import requests
 import serial
@@ -27,6 +28,7 @@ class SensorBox:
     def serial_listener(self, running: Value):
         print(f"[SensorBox] Starting serial listener on port {self.port}...")
         self.serial = serial.Serial(self.port, self.baud)
+        print(self.serial.is_open())
         while running.value:
             print("[SensorBox] Waiting for data...")
             if self.serial.in_waiting > 0:
@@ -36,6 +38,7 @@ class SensorBox:
                 requests.post(f"http://{self.server[0]}:{self.server[1]}/sensors",
                               json={"pm10": pm10, "pm25": pm25, "pm50": pm50, "pm100": pm100, "tmp": tmp, "hmd": hmd,
                                     "co2": co2})
+            sleep(3.0)
         print("[SensorBox] Stopping serial listener...")
 
     def count_traffic(self, running: Value):
@@ -45,10 +48,10 @@ class SensorBox:
     def run(self):
         try:
             self.sensor_process.start()
-            self.count_process.start()
+            # self.count_process.start()
 
             self.sensor_process.join()
-            self.count_process.join()
+            # self.count_process.join()
         except KeyboardInterrupt:
             print("[SensorBox] Stopping...")
             self.running.value = False
