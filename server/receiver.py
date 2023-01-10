@@ -1,7 +1,6 @@
 import datetime
-from multiprocessing import Value
+from multiprocessing import Value, Process
 from multiprocessing.shared_memory import SharedMemory
-from threading import Thread
 
 import cv2
 import numpy as np
@@ -45,7 +44,7 @@ class Server:
 
         print(self.__last_frame)
 
-        self.receiver = Thread(target=receive_frames, args=(self.__running, self.__mem.name), daemon=True)
+        self.receiver = Process(target=receive_frames, args=(self.__running, self.__mem.name), daemon=True)
         print("Server initialized")
 
     def kill(self):

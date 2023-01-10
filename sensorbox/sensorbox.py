@@ -15,7 +15,7 @@ class SensorBox:
     def __init__(self, config):
         self.port: str = config.port
         self.baud: int = config.baud
-        self.server: tuple[str, int] = config.server
+        self.server: str = config.server
         self.config = config
 
         print("[SensorBox] Starting...")
@@ -28,17 +28,16 @@ class SensorBox:
     def serial_listener(self, running: Value):
         print(f"[SensorBox] Starting serial listener on port {self.port}...")
         self.serial = serial.Serial(self.port, self.baud)
-        print(self.serial.is_open())
+        print(self.serial.is_open)
         while running.value:
-            print("[SensorBox] Waiting for data...")
             if self.serial.in_waiting > 0:
                 pm10, pm25, pm50, pm100, tmp, hmd, co2 = tuple(map(float, self.serial.readline().decode(
                     "utf-8").strip().split(',')))
                 print(pm10, pm25, pm50, pm100, tmp, hmd, co2)
-                requests.post(f"http://{self.server[0]}:{self.server[1]}/sensors",
+                requests.post(f"{self.server}/sensors",
                               json={"pm10": pm10, "pm25": pm25, "pm50": pm50, "pm100": pm100, "tmp": tmp, "hmd": hmd,
                                     "co2": co2})
-            sleep(3.0)
+            sleep(1.5)
         print("[SensorBox] Stopping serial listener...")
 
     def count_traffic(self, running: Value):
@@ -59,5 +58,6 @@ class SensorBox:
 
 if __name__ == "__main__":
     opts = parse_args()
+    print(opts)
     box = SensorBox(opts)
     box.run()
