@@ -17,19 +17,14 @@ class TrafficCounter(object):
 
     def __init__(
             self,
-            # video_source=0,
             line_direction="H",
             line_position=0.5,
             video_width=640,
             min_area=200,
-            video_out="",
             num_contours=10,
-            out_video_params=None,
             starting_frame=10,
             img_server=None):
         self.name = "test"
-        if out_video_params is None:
-            out_video_params = {}
         self.crop_rect = []  # stores the click coordinates where to crop the frame
         self.mask_points = (
             []
@@ -43,7 +38,6 @@ class TrafficCounter(object):
         self.min_area = min_area
         self.num_contours = num_contours
         self.starting_frame = starting_frame
-        # self.video_source = cv2.VideoCapture(video_source)
         self.pipeline, self.pipeline_config = _rs_pipeline_setup(video_width, 480, 30)
 
         self._vid_width = video_width
@@ -265,7 +259,7 @@ def _rs_pipeline_setup(width, height, fps):
         if s.get_info(rs.camera_info.name) == "RGB Camera":
             break
     else:
-        print("Requires Depth camera with Color sensor")
+        print("Requires Depth sensorbox with Color sensor")
         exit(0)
 
     # enable depth stream

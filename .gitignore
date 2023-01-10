@@ -6,4 +6,4 @@ ignore/
 *.pt
 *.so
 venv/
-/camera/data/
+/sensorbox/data/
