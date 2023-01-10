@@ -28,6 +28,7 @@ class SensorBox:
         print(f"[SensorBox] Starting serial listener on port {self.port}...")
         self.serial = serial.Serial(self.port, self.baud)
         while running.value:
+            print("[SensorBox] Waiting for data...")
             if self.serial.in_waiting > 0:
                 pm10, pm25, pm50, pm100, tmp, hmd, co2 = tuple(map(float, self.serial.readline().decode(
                     "utf-8").strip().split(',')))
