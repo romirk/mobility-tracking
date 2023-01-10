@@ -41,31 +41,7 @@ last_entry = {
 last_frame = last_entry["frame"]
 
 
-def receive_frames():
-    global last_entry, last_frame
-    while running:
-        (hostname, frame) = imageHub.recv_image()
-        # print(f"Received frame from {hostname}")
-        imageHub.send_reply(b"OK")
 
-        if hostname not in last_active:
-            print(f"[INFO] receiving data from {hostname}...")
-        last_active[hostname] = datetime.now()
-
-        entry = {
-            "uuid": str(uuid4()),
-            "frame": frame,
-            "source": hostname,
-            "timestamp": last_active[hostname],
-        }
-        last_entry = entry
-        last_frame = last_entry["frame"]
-        try:
-            RAW_IMG_Q.put_nowait(entry)
-        except Full:
-            # print("[INFO] dropping frame from queue")
-            pass
-    print("[INFO] stopping frame receiver")
 
 
 @app.route("/")

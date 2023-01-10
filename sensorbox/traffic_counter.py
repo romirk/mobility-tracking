@@ -188,51 +188,54 @@ class TrafficCounter(object):
         self._set_up_masks()
         rate_of_influence = 0.01
 
-        while running.value:
-            frame = self.pipeline.wait_for_frames().get_color_frame()
-            frame_id = int(frame.frame_number)  # get current frame index
-            img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        try:
+            while running.value:
+                frame = self.pipeline.wait_for_frames().get_color_frame()
+                frame_id = int(frame.frame_number)  # get current frame index
+                img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-            working_img = img.copy()
-            if self.black_mask is not None:
-                working_img = cv2.bitwise_and(working_img, self.black_mask)
+                working_img = img.copy()
+                if self.black_mask is not None:
+                    working_img = cv2.bitwise_and(working_img, self.black_mask)
 
-            if frame_id < self.starting_frame:
+                if frame_id < self.starting_frame:
+                    cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
+                    continue
+
                 cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
-                continue
+                background_avg = cv2.convertScaleAbs(
+                    self.raw_avg
+                )  # reference background average image
+                subtracted_img = cv2.absdiff(background_avg, working_img)
 
-            cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
-            background_avg = cv2.convertScaleAbs(
-                self.raw_avg
-            )  # reference background average image
-            subtracted_img = cv2.absdiff(background_avg, working_img)
+                # Adding extra blur
+                subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
+                subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
+                subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
+                subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
 
-            # Adding extra blur
-            subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
-            subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
-            subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
-            subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
+                # Applying threshold
+                _, threshold_img = cv2.threshold(subtracted_img, 30, 255, 0)
 
-            # Applying threshold
-            _, threshold_img = cv2.threshold(subtracted_img, 30, 255, 0)
+                # Noise Reduction
+                dilated_img = cv2.dilate(threshold_img, None)
+                dilated_img = cv2.dilate(dilated_img, None)
+                dilated_img = cv2.dilate(dilated_img, None)
+                dilated_img = cv2.dilate(dilated_img, None)
+                dilated_img = cv2.dilate(dilated_img, None)
 
-            # Noise Reduction
-            dilated_img = cv2.dilate(threshold_img, None)
-            dilated_img = cv2.dilate(dilated_img, None)
-            dilated_img = cv2.dilate(dilated_img, None)
-            dilated_img = cv2.dilate(dilated_img, None)
-            dilated_img = cv2.dilate(dilated_img, None)
+                # Drawing bounding boxes and counting
+                img = cv2.cvtColor(
+                    img, cv2.COLOR_GRAY2BGR
+                )  # Giving frame 3 channels for color (for drawing colored boxes)
+                self.bind_objects(img, dilated_img)
 
-            # Drawing bounding boxes and counting
-            img = cv2.cvtColor(
-                img, cv2.COLOR_GRAY2BGR
-            )  # Giving frame 3 channels for color (for drawing colored boxes)
-            self.bind_objects(img, dilated_img)
-
-            self.sender.send_image(self.name, img)
-
-        print("[Camera] Stopping counter...")
+                self.sender.send_image(self.name, img)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            print("[Camera] Stopping counter...")
 
 
 def _rs_pipeline_setup(width, height, fps):
