@@ -11,10 +11,10 @@ class Server:
     def __init__(self):
         self.running = True
 
-    def run_server(self):
-        app = self.app = Flask(__name__)
-        self.socketio = socketio = SocketIO(app, async_mode=None)
-        self.image_hub = ImageHub()
+    @staticmethod
+    def create_server():
+        app = Flask(__name__)
+        socketio = SocketIO(app)
 
         @app.route("/")
         def index():
@@ -43,7 +43,7 @@ class Server:
         def sensors():
             data = request.get_json()
             socketio.emit("sensors", data)
-            return "ok"
+            return data
 
         @socketio.on('connect')
         def connect():
@@ -57,9 +57,14 @@ class Server:
         def disconnect():
             print('Client disconnected!')
 
-        app.run("localhost", 5000)
+        return app, socketio
+
+    def run(self):
+        self.app, self.socketio = self.create_server()
+        self.image_hub = ImageHub()
+        self.app.run("localhost", 5000, threaded=False)
 
 
 if __name__ == "__main__":
     server = Server()
-    server.run_server()
+    server.run()

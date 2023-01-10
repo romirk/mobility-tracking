@@ -17,3 +17,4 @@ imagezmq==1.1.1
 pyserial==3.5
 imutils==0.5.4
 pyrealsense2==2.53.1.4623
+pytest==7.2.0
