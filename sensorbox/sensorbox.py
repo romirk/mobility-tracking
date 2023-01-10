@@ -25,6 +25,7 @@ class SensorBox:
         self.sensor_process = Process(target=self.serial_listener, args=(self.running,))
 
     def serial_listener(self, running: Value):
+        print(f"[SensorBox] Starting serial listener on port {self.port}...")
         self.serial = serial.Serial(self.port, self.baud)
         while running.value:
             if self.serial.in_waiting > 0:
@@ -42,11 +43,11 @@ class SensorBox:
 
     def run(self):
         try:
-            self.count_process.start()
             self.sensor_process.start()
+            self.count_process.start()
 
-            self.count_process.join()
             self.sensor_process.join()
+            self.count_process.join()
         except KeyboardInterrupt:
             print("[SensorBox] Stopping...")
             self.running.value = False
