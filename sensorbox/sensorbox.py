@@ -46,14 +46,16 @@ class SensorBox:
 
     def run(self):
         try:
-            self.sensor_process.start()
-            # self.count_process.start()
+            # self.sensor_process.start()
+            self.count_process.start()
 
-            self.sensor_process.join()
-            # self.count_process.join()
+            # self.sensor_process.join()
+            self.count_process.join()
         except KeyboardInterrupt:
             print("[SensorBox] Stopping...")
             self.running.value = False
+        finally:
+            print("[SensorBox] terminated.")
 
 
 if __name__ == "__main__":

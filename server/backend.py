@@ -8,6 +8,8 @@ from flask import render_template, Flask, Response, request
 from flask_socketio import emit, SocketIO
 from imagezmq import ImageHub
 
+from server.broker import detect
+
 
 def receive_frames(running, loc: str):
     frame: np.ndarray
@@ -73,11 +75,11 @@ class Server:
                 self.__gen_frames(), mimetype="multipart/x-mixed-replace; boundary=frame"
             )
 
-        @app.post("/count")
+        @app.post("/detect")
         def count():
             data = request.get_json()
-            # todo detect
-            print(data)
+            result = detect(data.frame)
+            emit('detect', {'data': data, 'result': result})
             return "ok"
 
         @app.post("/sensors")

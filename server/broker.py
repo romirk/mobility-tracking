@@ -1,5 +1,4 @@
 import time
-from argparse import Namespace
 
 import numpy as np
 import torch
@@ -7,19 +6,22 @@ from celery import Celery, Task
 from numpy import random
 
 from models.experimental import attempt_load
+from utils.args import create_arg_parser
 from utils.datasets import LoadImage, letterbox
 from utils.general import set_logging, check_img_size, non_max_suppression, scale_coords
 from utils.torch_utils import select_device, TracedModel, load_classifier, time_synchronized
 
-app = Celery('tasks', backend='rpc://', broker='pyamqp://')
+app = Celery('broker', backend='rpc://', broker='pyamqp://')
 
 
-class DetectionTask(Task):
-    def __init__(self):
-        opt = Namespace()
-        weights, view_img, imgsz, trace = (
+class _DetectTask(Task):
+    name = "Detect"
+    description = "Real-time object detection via YOLOv7"
+    public = True
+
+    def __init__(self, opt):
+        weights, imgsz, trace = (
             opt.weights,
-            opt.view_img,
             opt.img_size,
             not opt.no_trace,
         )
@@ -167,4 +169,6 @@ class DetectionTask(Task):
         return dets
 
 
-detect = app.tasks[DetectionTask.name]
+app.register_task(_DetectTask(create_arg_parser().parse_args([])))
+
+detect = app.tasks[_DetectTask.name]
