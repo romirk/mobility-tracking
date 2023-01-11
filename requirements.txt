@@ -10,4 +10,5 @@ pytest
 pyzmq
 requests
 scipy
+yolov7_package
 zmq
