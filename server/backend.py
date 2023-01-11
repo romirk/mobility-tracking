@@ -10,7 +10,7 @@ from flask_socketio import emit, SocketIO
 from imagezmq import ImageHub
 
 from broker import detect
-from utils.general import decode64
+from utils import decode64
 
 
 def receive_frames(running, loc: str):
