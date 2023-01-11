@@ -3,6 +3,7 @@ Traffic Counting
 """
 import datetime
 from multiprocessing import Value
+from threading import Thread
 
 import cv2
 import imagezmq
@@ -83,12 +84,13 @@ class TrafficCounter(object):
         )
 
     def __remote_update(self, frame: np.ndarray, rect: np.ndarray, cnt: int):
-        requests.post(f"http://{self.server}:5000/detect", json={
+        thread = Thread(target=requests.post, kwargs={"url": f"http://{self.server}:5000/detect", "json": {
             "frame": encode64(frame),
             "count": cnt,
             "rect": encode64(rect),
             "T": str(datetime.datetime.now())
-        })
+        }})
+        thread.start()
 
     def _is_line_crossed(self, frame, cx, cy, prev_cx, prev_cy):
         # print(f"current center: {(cx,cy)}")
