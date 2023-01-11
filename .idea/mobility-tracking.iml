@@ -14,8 +14,9 @@
     <orderEntry type="library" name="bootstrap-icons" level="application" />
   </component>
   <component name="PackageRequirementsSettings">
-    <option name="versionSpecifier" value="Strong equality (==x.y.z)" />
+    <option name="versionSpecifier" value="Don't specify version" />
     <option name="removeUnused" value="true" />
+    <option name="keepMatchingSpecifier" value="false" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="GOOGLE" />
