@@ -2,16 +2,15 @@
 Traffic Counting
 """
 import datetime
-import pickle
 from multiprocessing import Value
-from time import sleep
 
 import cv2
 import imagezmq
 import imutils
 import numpy as np
-import pyrealsense2 as rs
 import requests
+
+from utils import encode64, rs_pipeline_setup, count
 
 
 class TrafficCounter(object):
@@ -34,7 +33,7 @@ class TrafficCounter(object):
         self.min_area = config.min_area
         self.num_contours = config.num_contours
         self.starting_frame = config.starting_frame
-        self.pipeline, self.pipeline_config = _rs_pipeline_setup(config.video_width, 480, 30)
+        self.pipeline, self.pipeline_config = rs_pipeline_setup(config.video_width, 480, 30)
 
         self._vid_width = config.video_width
         self._vid_height = None  # PLACEHOLDER
@@ -85,10 +84,10 @@ class TrafficCounter(object):
 
     def __remote_update(self, frame: np.ndarray, rect: np.ndarray, cnt: int):
         requests.post(f"http://{self.server}:5000/detect", json={
-            "frame": pickle.dumps(frame),
+            "frame": encode64(frame),
             "count": cnt,
-            "rect": pickle.dumps(rect),
-            "T": datetime.datetime.now()
+            "rect": encode64(rect),
+            "T": str(datetime.datetime.now())
         })
 
     def _is_line_crossed(self, frame, cx, cy, prev_cx, prev_cy):
@@ -131,6 +130,7 @@ class TrafficCounter(object):
             ):  # ignore contours that are smaller than this area
                 continue
             rect = cv2.minAreaRect(c)
+            bounding = cv2.boundingRect(c)
             points = cv2.boxPoints(rect)  # This is the way to do it in opencv 3.1
             points = np.int0(points)
 
@@ -167,7 +167,7 @@ class TrafficCounter(object):
 
             _is_crossed = self._is_line_crossed(frame, cx, cy, prev_cx, prev_cy)
             if _is_crossed:
-                self.__remote_update(frame, rect, self.counter)
+                self.__remote_update(frame, bounding, self.counter)
                 print(f"Total Count: {self.counter}")
             self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy)
 
@@ -249,42 +249,3 @@ class TrafficCounter(object):
             pass
         finally:
             print("[Camera] Stopping counter...")
-
-
-def _rs_pipeline_setup(width, height, fps):
-    # Configure depth and color streams
-    # noinspection PyArgumentList
-    pipeline = rs.pipeline()
-    config = rs.config()
-
-    # Get device product line for setting a supporting resolution
-    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
-    pipeline_profile = config.resolve(pipeline_wrapper)
-    device = pipeline_profile.get_device()
-    device_product_line = str(device.get_info(rs.camera_info.product_line))
-
-    print(f"{device} | {device_product_line}\n")
-
-    # find RGB sensor
-    for s in device.sensors:
-        if s.get_info(rs.camera_info.name) == "RGB Camera":
-            break
-    else:
-        print("Requires Depth sensorbox with Color sensor")
-        exit(0)
-
-    # enable depth stream
-    config.enable_stream(rs.stream.depth, width, height, rs.format.z16, fps)
-    # enable RGB stream
-    config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
-    pipeline.start(config)
-    return pipeline, config
-
-
-def count(secs):
-    secs = int(secs)
-    while secs:
-        print(secs, end=' ')
-        sleep(1)
-        secs -= 1
-    print('0')

@@ -3,7 +3,7 @@ console.log('Javascript works!!!');
 let socket = io();
 
 socket.on('connect', function (msg) {
-    console.log(msg.data);
+    console.log(msg);
 });
 
 socket.on('traffic_data', function (msg) {
@@ -13,6 +13,12 @@ socket.on('traffic_data', function (msg) {
 socket.on('sensors', function (msg) {
     console.log(msg);
 });
+
+socket.on('detect', msg => {
+    console.log(msg)
+})
+
+
 const ctx = document.getElementById('myChart');
 
 let chart = new Chart(ctx, {

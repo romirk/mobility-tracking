@@ -1,9 +1,10 @@
 # YOLOR general utils
-
+import codecs
 import glob
 import logging
 import math
 import os
+import pickle
 import platform
 import random
 import re
@@ -887,3 +888,11 @@ def increment_path(path, exist_ok=True, sep=''):
         i = [int(m.groups()[0]) for m in matches if m]  # indices
         n = max(i) + 1 if i else 2  # increment number
         return f"{path}{sep}{n}"  # update path
+
+
+def encode64(data):
+    return codecs.encode(pickle.dumps(data), "base64").decode()
+
+
+def decode64(data: str):
+    return pickle.loads(codecs.decode(data.encode(), "base64"))

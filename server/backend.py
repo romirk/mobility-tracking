@@ -1,5 +1,5 @@
+import codecs
 import datetime
-import pickle
 from multiprocessing import Value, Process
 from multiprocessing.shared_memory import SharedMemory
 
@@ -9,7 +9,8 @@ from flask import render_template, Flask, Response, request
 from flask_socketio import emit, SocketIO
 from imagezmq import ImageHub
 
-from server.broker import detect
+from broker import detect
+from utils.general import decode64
 
 
 def receive_frames(running, loc: str):
@@ -45,8 +46,6 @@ class Server:
         self.__mem = SharedMemory(create=True, size=Server.IMG_SIZE[0] * Server.IMG_SIZE[1] * Server.IMG_SIZE[2])
         self.__last_frame: np.ndarray = np.ndarray(Server.IMG_SIZE, dtype=np.uint8, buffer=self.__mem.buf)
 
-        print(self.__last_frame)
-
         self.receiver = Process(target=receive_frames, args=(self.__running, self.__mem.name), daemon=True)
         print("Server initialized")
 
@@ -79,8 +78,16 @@ class Server:
         @app.post("/detect")
         def count():
             data = request.get_json()
-            result = detect(pickle.loads(data.frame))
-            emit('detect', {'data': data, 'result': result})
+            frame = decode64(data["frame"])
+            x, y, w, h = decode64(data["rect"])
+            cropped = frame[y:y + h, x:x + w]
+            result = detect(cropped)
+            print(result["str"])
+            socketio.emit('detect', {
+                "count": data["count"],
+                "frame": codecs.encode(cv2.imencode(".jpg", cropped)[1], "base64").decode(),
+                "data": result
+            })
             return "ok"
 
         @app.post("/sensors")
@@ -104,6 +111,27 @@ class Server:
         self.receiver.start()
         self.app.run("localhost", 5000)
         print("[INFO] stopping server")
+
+
+def rotate_image(mat, angle):
+    # angle in degrees
+
+    height, width = mat.shape[:2]
+    image_center = (width / 2, height / 2)
+
+    rotation_mat = cv2.getRotationMatrix2D(image_center, angle, 1.)
+
+    abs_cos = abs(rotation_mat[0, 0])
+    abs_sin = abs(rotation_mat[0, 1])
+
+    bound_w = int(height * abs_sin + width * abs_cos)
+    bound_h = int(height * abs_cos + width * abs_sin)
+
+    rotation_mat[0, 2] += bound_w / 2 - image_center[0]
+    rotation_mat[1, 2] += bound_h / 2 - image_center[1]
+
+    rotated_mat = cv2.warpAffine(mat, rotation_mat, (bound_w, bound_h))
+    return rotated_mat
 
 
 if __name__ == "__main__":

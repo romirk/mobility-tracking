@@ -1,4 +1,9 @@
 import argparse
+import codecs
+import pickle
+from time import sleep
+
+import pyrealsense2 as rs
 
 
 def parse_args_counter(parser=argparse.ArgumentParser(
@@ -102,3 +107,50 @@ def parse_args(parser=argparse.ArgumentParser(
     parser = parse_args_counter(parser)
     parser = parse_args_sensorbox(parser)
     return parser.parse_args()
+
+
+def encode64(data):
+    return codecs.encode(pickle.dumps(data), "base64").decode()
+
+
+def decode64(data: str):
+    return pickle.loads(codecs.decode(data.encode(), "base64"))
+
+
+def rs_pipeline_setup(width, height, fps):
+    # Configure depth and color streams
+    # noinspection PyArgumentList
+    pipeline = rs.pipeline()
+    config = rs.config()
+
+    # Get device product line for setting a supporting resolution
+    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
+    pipeline_profile = config.resolve(pipeline_wrapper)
+    device = pipeline_profile.get_device()
+    device_product_line = str(device.get_info(rs.camera_info.product_line))
+
+    print(f"{device} | {device_product_line}\n")
+
+    # find RGB sensor
+    for s in device.sensors:
+        if s.get_info(rs.camera_info.name) == "RGB Camera":
+            break
+    else:
+        print("Requires Depth sensorbox with Color sensor")
+        exit(0)
+
+    # enable depth stream
+    config.enable_stream(rs.stream.depth, width, height, rs.format.z16, fps)
+    # enable RGB stream
+    config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
+    pipeline.start(config)
+    return pipeline, config
+
+
+def count(secs):
+    secs = int(secs)
+    while secs:
+        print(secs, end=' ')
+        sleep(1)
+        secs -= 1
+    print('0')
