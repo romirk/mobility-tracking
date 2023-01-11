@@ -1,4 +1,5 @@
 from multiprocessing import Process, Value
+from time import sleep
 
 import requests
 import serial
@@ -14,7 +15,7 @@ class SensorBox:
     def __init__(self, config):
         self.port: str = config.port
         self.baud: int = config.baud
-        self.server: tuple[str, int] = config.server
+        self.server: str = config.server
         self.config = config
 
         print("[SensorBox] Starting...")
@@ -25,15 +26,18 @@ class SensorBox:
         self.sensor_process = Process(target=self.serial_listener, args=(self.running,))
 
     def serial_listener(self, running: Value):
+        print(f"[SensorBox] Starting serial listener on port {self.port}...")
         self.serial = serial.Serial(self.port, self.baud)
+        print(self.serial.is_open)
         while running.value:
             if self.serial.in_waiting > 0:
                 pm10, pm25, pm50, pm100, tmp, hmd, co2 = tuple(map(float, self.serial.readline().decode(
                     "utf-8").strip().split(',')))
                 print(pm10, pm25, pm50, pm100, tmp, hmd, co2)
-                requests.post(f"http://{self.server[0]}:{self.server[1]}/sensors",
+                requests.post(f"{self.server}/sensors",
                               json={"pm10": pm10, "pm25": pm25, "pm50": pm50, "pm100": pm100, "tmp": tmp, "hmd": hmd,
                                     "co2": co2})
+            sleep(1.5)
         print("[SensorBox] Stopping serial listener...")
 
     def count_traffic(self, running: Value):
@@ -42,14 +46,16 @@ class SensorBox:
 
     def run(self):
         try:
+            # self.sensor_process.start()
             self.count_process.start()
-            self.sensor_process.start()
 
+            # self.sensor_process.join()
             self.count_process.join()
-            self.sensor_process.join()
         except KeyboardInterrupt:
             print("[SensorBox] Stopping...")
             self.running.value = False
+        finally:
+            print("[SensorBox] terminated.")
 
 
 if __name__ == "__main__":

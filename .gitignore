@@ -6,4 +6,5 @@ ignore/
 *.pt
 *.so
 venv/
+env/
 /sensorbox/data/

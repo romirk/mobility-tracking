@@ -1,6 +1,6 @@
-import ctypes
 import datetime
-from multiprocessing import Value, Process, Array
+from multiprocessing import Value, Process
+from multiprocessing.shared_memory import SharedMemory
 
 import cv2
 import numpy as np
@@ -8,24 +8,45 @@ from flask import render_template, Flask, Response, request
 from flask_socketio import emit, SocketIO
 from imagezmq import ImageHub
 
+from server.broker import detect
+
+
+def receive_frames(running, loc: str):
+    frame: np.ndarray
+    mem = SharedMemory(name=loc)
+    last = np.ndarray(Server.IMG_SIZE, dtype=np.uint8, buffer=mem.buf)
+    image_hub = ImageHub()
+    last_active = {}
+    while running.value:
+        (hostname, frame) = image_hub.recv_image()
+        image_hub.send_reply(b"OK")
+
+        if hostname not in last_active:
+            print(f"[INFO] receiving data from {hostname}...")
+        last_active[hostname] = datetime.datetime.now()
+
+        np.copyto(last, frame)
+
+    print("[INFO] stopping frame receiver")
+
 
 class Server:
     image_hub: ImageHub
     app: Flask
     socketio: SocketIO
 
-    __SIZE = (640, 480)
+    IMG_SIZE = (480, 640, 3)
 
     def __init__(self):
         self.__running = Value("b", True)
         self.__last_active = {}
 
-        self.__last_frame_buffer = Array(ctypes.c_uint8, Server.__SIZE[0] * Server.__SIZE[1])
-        self.__last_frame = np.ndarray(Server.__SIZE, dtype=np.uint8, buffer=self.__last_frame_buffer.get_obj())
+        self.__mem = SharedMemory(create=True, size=Server.IMG_SIZE[0] * Server.IMG_SIZE[1] * Server.IMG_SIZE[2])
+        self.__last_frame: np.ndarray = np.ndarray(Server.IMG_SIZE, dtype=np.uint8, buffer=self.__mem.buf)
 
         print(self.__last_frame)
 
-        self.receiver = Process(target=self.receive_frames, daemon=True)
+        self.receiver = Process(target=receive_frames, args=(self.__running, self.__mem.name), daemon=True)
         print("Server initialized")
 
     def kill(self):
@@ -34,7 +55,7 @@ class Server:
     def __gen_frames(self):
         while self.__running.value:
             yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + \
-                cv2.imencode(".jpg", self.__last_frame).tobytes() + b"\r\n"
+                cv2.imencode(".jpg", np.asarray(self.__last_frame).reshape(Server.IMG_SIZE))[1].tobytes() + b"\r\n"
 
     def create_server(self):
         app = Flask(__name__)
@@ -54,11 +75,11 @@ class Server:
                 self.__gen_frames(), mimetype="multipart/x-mixed-replace; boundary=frame"
             )
 
-        @app.post("/count")
+        @app.post("/detect")
         def count():
             data = request.get_json()
-            # todo detect
-            print(data)
+            result = detect(data.frame)
+            emit('detect', {'data': data, 'result': result})
             return "ok"
 
         @app.post("/sensors")
@@ -77,24 +98,10 @@ class Server:
 
         self.app, self.socketio = app, socketio
 
-    def receive_frames(self):
-        frame: np.ndarray
-        self.image_hub = ImageHub()
-        while self.__running.value:
-            (hostname, frame) = self.image_hub.recv_image()
-            self.image_hub.send_reply(b"OK")
-
-            if hostname not in self.__last_active:
-                print(f"[INFO] receiving data from {hostname}...")
-            self.__last_active[hostname] = datetime.now()
-
-            np.copyto(self.__last_frame, frame)
-        print("[INFO] stopping frame receiver")
-
     def run(self):
         self.create_server()
         self.receiver.start()
-        self.app.run("localhost", 5000, threaded=False)
+        self.app.run("localhost", 5000)
         print("[INFO] stopping server")
 
 

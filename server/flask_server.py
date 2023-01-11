@@ -13,7 +13,7 @@ from flask.wrappers import Response
 from flask_socketio import SocketIO, emit
 
 from detect import PROCESSED_Q, RAW_IMG_Q, detect
-from utils.args import parse_arguments
+from utils.args import create_arg_parser
 from utils.plots import plot_one_box
 
 last_active = {}
@@ -121,7 +121,7 @@ def run_sever():
 
 
 if __name__ == "__main__":
-    opt = parse_arguments()
+    opt = create_arg_parser()
     rec_thread = Thread(target=receive_frames)
     det_thread = Process(target=detect, args=(opt,))
     app_thread = Thread(target=run_sever)

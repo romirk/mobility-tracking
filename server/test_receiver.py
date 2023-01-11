@@ -1,6 +1,6 @@
 import pytest
 
-from server.receiver import Server
+from server.backend import Server
 
 
 @pytest.fixture

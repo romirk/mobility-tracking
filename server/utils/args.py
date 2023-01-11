@@ -1,7 +1,7 @@
 import argparse
 
 
-def parse_arguments():
+def create_arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--weights",
@@ -51,6 +51,4 @@ def parse_arguments():
         help="existing project/name ok, do not increment",
     )
     parser.add_argument("--no-trace", action="store_true", help="don`t trace model")
-    opt = parser.parse_args()
-    opt.nosave = True
-    return opt
+    return parser
