@@ -31,7 +31,6 @@ def update_count(new_count, frame, box):
     ...
 
 
-
 last_entry = {
     "uuid": 0,
     "frame": np.random.random((640, 480)) * 255,
@@ -41,12 +40,10 @@ last_entry = {
 last_frame = last_entry["frame"]
 
 
-
-
-
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/exit")
 def stop():
@@ -81,14 +78,14 @@ def disconnect():
     print('Client disconnected!')
 
 
-def test_sockets():
-    counter = 0
-
-    while True:
-        counter = counter + 1
-        socketio.emit('traffic_data', {'data': 'Car count', 'count': counter})
-        print(counter)
-        socketio.sleep(1)
+# def test_sockets():
+#     counter = 0
+#
+#     while True:
+#         counter = counter + 1
+#         socketio.emit('traffic_data', {'data': 'Car count', 'count': counter})
+#         print(counter)
+#         socketio.sleep(1)
 
 
 def process_detections():
@@ -121,6 +118,7 @@ def run_sever():
     global imageHub
     imageHub = imagezmq.ImageHub()
     app.run(host="0.0.0.0", port=5000)
+
 
 if __name__ == "__main__":
     opt = parse_arguments()
