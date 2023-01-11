@@ -15,7 +15,7 @@ socket.on('sensors', function (msg) {
 });
 
 socket.on('detect', msg => {
-    console.log(msg)
+    $("#id").text(msg.count);
 })
 
 

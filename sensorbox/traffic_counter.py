@@ -14,6 +14,13 @@ import requests
 from utils import encode64, rs_pipeline_setup, count
 
 
+def req_thread(url, data):
+    try:
+        requests.post(url, json=data)
+    except Exception as e:
+        print("Error in request thread: ", e)
+
+
 class TrafficCounter(object):
     """
     Traffic Counter class.
@@ -84,12 +91,12 @@ class TrafficCounter(object):
         )
 
     def __remote_update(self, frame: np.ndarray, rect: np.ndarray, cnt: int):
-        thread = Thread(target=requests.post, kwargs={"url": f"http://{self.server}:5000/detect", "json": {
+        thread = Thread(target=req_thread, args=(f"http://{self.server}:5000/detect", {
             "frame": encode64(frame),
             "count": cnt,
             "rect": encode64(rect),
             "T": str(datetime.datetime.now())
-        }})
+        }))
         thread.start()
 
     def _is_line_crossed(self, frame, cx, cy, prev_cx, prev_cy):

@@ -86,7 +86,8 @@ class Server:
             socketio.emit('detect', {
                 "count": data["count"],
                 "frame": codecs.encode(cv2.imencode(".jpg", cropped)[1], "base64").decode(),
-                "data": result
+                "data": result,
+                "T": data["T"],
             })
             return "ok"
 
