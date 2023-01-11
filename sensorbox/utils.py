@@ -56,10 +56,6 @@ def parse_args_counter(parser=argparse.ArgumentParser(
         help=f"Select the starting frame for video analysis (default is {starting_frame_default}). All frames before "
              f"that will still be used for the background average",
     )
-    parser.add_argument(
-        "-i",
-        "--iserver", default=server_default, help="img server address"
-    )
     return parser
 
 
@@ -67,7 +63,7 @@ def parse_args_sensorbox(parser=argparse.ArgumentParser(
     description="sensorbox",
 )):
     baud_default = 115200
-    server_default = ("localhost", 5000)
+    server_default = "localhost"
     port_default = "COM4"
 
     parser.add_argument(
@@ -90,6 +86,12 @@ def parse_args_sensorbox(parser=argparse.ArgumentParser(
         type=int,
         default=baud_default,
         help=f"Serial baud rate (default is {baud_default})",
+    )
+    parser.add_argument(
+        "-x",
+        "--parallel",
+        action="store_true",
+        help="parallel processing"
     )
     return parser
 

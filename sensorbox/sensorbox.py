@@ -22,9 +22,6 @@ class SensorBox:
 
         self.running = Value('b', True)
 
-        self.count_process = Process(target=self.count_traffic, args=(self.running,))
-        self.sensor_process = Process(target=self.serial_listener, args=(self.running,))
-
     def serial_listener(self, running: Value):
         print(f"[SensorBox] Starting serial listener on port {self.port}...")
         self.serial = serial.Serial(self.port, self.baud)
@@ -46,13 +43,20 @@ class SensorBox:
 
     def run(self):
         try:
-            # self.sensor_process.start()
-            self.count_process.start()
+            if self.config.parallel:
+                print("starting threads")
+                count_process = Process(target=self.count_traffic, args=(self.running,))
+                sensor_process = Process(target=self.serial_listener, args=(self.running,))
+                sensor_process.start()
+                count_process.start()
 
-            # self.sensor_process.join()
-            self.count_process.join()
+                sensor_process.join()
+                count_process.join()
+            else:
+
+                self.count_traffic(self.running)
         except KeyboardInterrupt:
-            print("[SensorBox] Stopping...")
+            print("\n[SensorBox] Stopping...")
             self.running.value = False
         finally:
             print("[SensorBox] terminated.")

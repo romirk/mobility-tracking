@@ -1,4 +1,5 @@
 import datetime
+import pickle
 from multiprocessing import Value, Process
 from multiprocessing.shared_memory import SharedMemory
 
@@ -78,7 +79,7 @@ class Server:
         @app.post("/detect")
         def count():
             data = request.get_json()
-            result = detect(data.frame)
+            result = detect(pickle.loads(data.frame))
             emit('detect', {'data': data, 'result': result})
             return "ok"
 

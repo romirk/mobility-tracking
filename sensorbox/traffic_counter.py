@@ -1,6 +1,8 @@
 """
 Traffic Counting
 """
+import datetime
+import pickle
 from multiprocessing import Value
 from time import sleep
 
@@ -9,6 +11,7 @@ import imagezmq
 import imutils
 import numpy as np
 import pyrealsense2 as rs
+import requests
 
 
 class TrafficCounter(object):
@@ -43,8 +46,8 @@ class TrafficCounter(object):
             []
         )  # this will contain the coordinates of the centers in the previous
 
-        self.server = config.iserver
-        self.sender = imagezmq.ImageSender(connect_to=self.server)
+        self.server = config.server
+        self.sender = imagezmq.ImageSender(connect_to=f"tcp://{self.server}:5555")
 
         # Getting frame dimensions
         self._compute_frame_dimensions()
@@ -80,6 +83,14 @@ class TrafficCounter(object):
             frame, str(contour_id), (cx, cy - 15), self.font, 0.4, (255, 0, 0), 2
         )
 
+    def __remote_update(self, frame: np.ndarray, rect: np.ndarray, cnt: int):
+        requests.post(f"http://{self.server}:5000/detect", json={
+            "frame": pickle.dumps(frame),
+            "count": cnt,
+            "rect": pickle.dumps(rect),
+            "T": datetime.datetime.now()
+        })
+
     def _is_line_crossed(self, frame, cx, cy, prev_cx, prev_cy):
         # print(f"current center: {(cx,cy)}")
         # print(f"prev    center: {(prev_cx,prev_cy)}")
@@ -89,7 +100,6 @@ class TrafficCounter(object):
                     cy <= self.p1_count_line[1] <= prev_cy
             ):
                 self.counter += 1
-                # remote.update_count(self.counter)
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
                 is_crossed = True
 
@@ -114,6 +124,7 @@ class TrafficCounter(object):
 
         cnt_id = 1
         cur_centroids = []
+        cur_dims = []
         for c in contours:
             if (
                     cv2.contourArea(c) < self.min_area
@@ -156,6 +167,7 @@ class TrafficCounter(object):
 
             _is_crossed = self._is_line_crossed(frame, cx, cy, prev_cx, prev_cy)
             if _is_crossed:
+                self.__remote_update(frame, rect, self.counter)
                 print(f"Total Count: {self.counter}")
             self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy)
 
@@ -187,6 +199,7 @@ class TrafficCounter(object):
     def main_loop(self, running: Value):
         self._set_up_masks()
         rate_of_influence = 0.01
+        print("running")
 
         try:
             while running.value:
