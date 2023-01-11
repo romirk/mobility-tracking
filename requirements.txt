@@ -1,5 +1,6 @@
 Flask
 celery
+flask-socketio
 imagezmq
 imutils
 numpy

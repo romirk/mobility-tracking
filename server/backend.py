@@ -109,7 +109,7 @@ class Server:
     def run(self):
         self.create_server()
         self.receiver.start()
-        self.app.run("localhost", 5000)
+        self.app.run("0.0.0.0", 5000)
         print("[INFO] stopping server")
 
 
