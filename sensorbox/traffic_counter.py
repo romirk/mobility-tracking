@@ -2,6 +2,7 @@
 Traffic Counting
 """
 import datetime
+import pickle
 import socket
 import time
 from multiprocessing import Value
@@ -256,7 +257,7 @@ class TrafficCounter(object):
                 )  # Giving frame 3 channels for color (for drawing colored boxes)
                 self.bind_objects(img, dilated_img)
 
-                self.sender.sendall(encode64(img))
+                self.sender.sendall(pickle.dumps(img))
 
                 t1 = time.time()
                 print(f"\r{frame_id} {1 / (t1 - t0)}", end="")

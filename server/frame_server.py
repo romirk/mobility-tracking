@@ -1,11 +1,11 @@
+import pickle
 import socketserver
 from multiprocessing import Value
 from multiprocessing.shared_memory import SharedMemory
 
-import cv2
 import numpy as np
 
-from utils import IMG_SIZE, decode64
+from utils import IMG_SIZE
 
 
 class FrameHandler(socketserver.StreamRequestHandler):
@@ -19,7 +19,7 @@ class FrameHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
         # self.request is the TCP socket connected to the client
-        frame = decode64(self.rfile.readline().strip())
+        frame = pickle.loads(self.rfile.readline().strip())
         addr = self.client_address[0]
 
         self.server.recv_frame(frame, addr)
