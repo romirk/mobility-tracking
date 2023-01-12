@@ -256,7 +256,7 @@ class TrafficCounter(object):
                 )  # Giving frame 3 channels for color (for drawing colored boxes)
                 self.bind_objects(img, dilated_img)
 
-                self.sender.sendall(cv2.imencode(".jpg", img)[1].tobytes())
+                self.sender.sendall(encode64(img))
 
                 t1 = time.time()
                 print(f"\r{frame_id} {1 / (t1 - t0)}", end="")

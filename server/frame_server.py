@@ -2,6 +2,7 @@ import socketserver
 from multiprocessing import Value
 from multiprocessing.shared_memory import SharedMemory
 
+import cv2
 import numpy as np
 
 from utils import IMG_SIZE, decode64
@@ -18,8 +19,7 @@ class FrameHandler(socketserver.StreamRequestHandler):
 
     def handle(self):
         # self.request is the TCP socket connected to the client
-        data = self.rfile.readline().strip()
-        frame: np.ndarray = decode64(data)
+        frame = decode64(self.rfile.readline().strip())
         addr = self.client_address[0]
 
         self.server.recv_frame(frame, addr)
@@ -29,7 +29,7 @@ class FrameServer:
     def __init__(self, loc: str, running: Value):
         mem = SharedMemory(name=loc)
         self.frame = np.ndarray(IMG_SIZE, dtype=np.uint8, buffer=mem.buf)
-        self.server = socketserver.TCPServer(("localhost", 9999), FrameHandler)
+        self.server = socketserver.TCPServer(("0.0.0.0", 9999), FrameHandler)
         self.server.recv_frame = self.__receive_frames
         self.running = running
         self.last_active = {}

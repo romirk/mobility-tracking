@@ -10,4 +10,4 @@ def encode64(data: object):
 
 
 def decode64(data: str | bytes):
-    return pickle.loads(codecs.decode(data.encode(), "base64"))
+    return pickle.loads(codecs.decode(data.encode() if type(data) is str else data, "base64"))
