@@ -2,9 +2,7 @@
 Traffic Counting
 """
 import datetime
-import pickle
 import socket
-import time
 from multiprocessing import Value
 from threading import Thread
 
@@ -56,9 +54,9 @@ class TrafficCounter(object):
         )  # this will contain the coordinates of the centers in the previous
 
         self.server = config.server
-        self.sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sender.connect((self.server, 9999))
-        self.sf = self.sender.makefile("wb")
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((self.server, 9999))
+        self.sf = self.socket.makefile("wb")
 
         print("[Camera] connected to server")
 
@@ -216,11 +214,12 @@ class TrafficCounter(object):
 
         try:
             while running.value:
-                t0 = time.time()
                 frame = self.pipeline.wait_for_frames().get_color_frame()
                 frame_id = int(frame.frame_number)  # get current frame index
                 img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+                self.socket.send(img.tobytes())
 
                 working_img = img.copy()
                 if self.black_mask is not None:
@@ -258,9 +257,6 @@ class TrafficCounter(object):
                 )  # Giving frame 3 channels for color (for drawing colored boxes)
                 self.bind_objects(img, dilated_img)
 
-                self.sender.send(img.tobytes())
-
-                t1 = time.time()
                 # print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
         except KeyboardInterrupt:
             pass
