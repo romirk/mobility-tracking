@@ -11,7 +11,7 @@ import imutils
 import numpy as np
 import requests
 
-from utils import encode64, rs_pipeline_setup, count
+from utils import encode64, rs_pipeline_setup, countdown
 
 
 def req_thread(url, data):
@@ -100,8 +100,9 @@ class TrafficCounter(object):
         thread.start()
 
     def _is_line_crossed(self, frame, cx, cy, prev_cx, prev_cy):
-        # print(f"current center: {(cx,cy)}")
-        # print(f"prev    center: {(prev_cx,prev_cy)}")
+        print(f"current center: {(cx,cy)}")
+        print(f"prev    center: {(prev_cx,prev_cy)}")
+        print(f"line: {self.p1_count_line} - {self.p2_count_line}")
         is_crossed = False
         if self.line_direction.upper() == "H":
             if (prev_cy <= self.p1_count_line[1] <= cy) or (
@@ -178,7 +179,7 @@ class TrafficCounter(object):
             _is_crossed = self._is_line_crossed(frame, cx, cy, prev_cx, prev_cy)
             if _is_crossed:
                 self.__remote_update(orig_frame, bounding, self.counter)
-                print(f"Total Count: {self.counter}")
+                print(f"\r{self.counter}", end="")
             self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy)
 
             cnt_id += 1
@@ -192,7 +193,7 @@ class TrafficCounter(object):
         self._vid_height = img.shape[0]
 
         print("Ready. Starting in")
-        count(5)
+        countdown(5)
 
         roi_points = np.array([self.mask_points])
         self.black_mask = None
