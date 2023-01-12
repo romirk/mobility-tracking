@@ -59,7 +59,7 @@ class Server:
 
     def create_server(self):
         app = Flask(__name__)
-        socketio = SocketIO(app, path="/socket")
+        socketio = SocketIO(app)
 
         @app.route("/")
         def index():

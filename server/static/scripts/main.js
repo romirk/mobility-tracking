@@ -16,7 +16,7 @@ class SensorLive {
             co2: 0
         }
 
-        this.socket = io.connect('http://' + document.domain + ':' + location.port + '/socket');
+        this.socket = io.connect();
         this.socket.on('connect', this.on_connect.bind(this));
         this.socket.on('disconnect', this.on_disconnect.bind(this));
         this.socket.on('sensor', this.on_sensor.bind(this));
@@ -57,22 +57,24 @@ class SensorLive {
     }
 
     on_detect(data) {
-        this.counter = data.counter;
-        this.counts = data.counts;
+        this.counts.car = data.count;
+        // this.counts = data.counts;
     }
 
     update() {
-        document.getElementById('counter').innerHTML = this.counter;
+        // uncomment as you implement
+
+        // document.getElementById('counter').innerHTML = this.counter;
         document.getElementById('counts_car').innerHTML = this.counts.car;
         document.getElementById('counts_bus').innerHTML = this.counts.bus;
         document.getElementById('counts_truck').innerHTML = this.counts.truck;
-        document.getElementById('sensor_pm10').innerHTML = this.sensor_data.pm10;
-        document.getElementById('sensor_pm25').innerHTML = this.sensor_data.pm25;
-        document.getElementById('sensor_pm50').innerHTML = this.sensor_data.pm50;
-        document.getElementById('sensor_pm100').innerHTML = this.sensor_data.pm100;
-        document.getElementById('sensor_temperature').innerHTML = this.sensor_data.temperature;
-        document.getElementById('sensor_humidity').innerHTML = this.sensor_data.humidity;
-        document.getElementById('sensor_co2').innerHTML = this.sensor_data.co2;
+        // document.getElementById('sensor_pm10').innerHTML = this.sensor_data.pm10;
+        // document.getElementById('sensor_pm25').innerHTML = this.sensor_data.pm25;
+        // document.getElementById('sensor_pm50').innerHTML = this.sensor_data.pm50;
+        // document.getElementById('sensor_pm100').innerHTML = this.sensor_data.pm100;
+        // document.getElementById('sensor_temperature').innerHTML = this.sensor_data.temperature;
+        // document.getElementById('sensor_humidity').innerHTML = this.sensor_data.humidity;
+        // document.getElementById('sensor_co2').innerHTML = this.sensor_data.co2;
 
         // Update chart
         // TODO

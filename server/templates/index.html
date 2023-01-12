@@ -18,7 +18,7 @@
     <div id="viewer">
         <nav>
             <div class="ms-3 mb-3 btn-group nav nav-pills" id="selector" role="tablist">
-                <button class="btn btn-primary nav-link text-white"
+                <button class="btn btn-primary nav-link text-white active"
                         style="border-radius: var(--y-button-radius) 0 0 var(--y-button-radius);"
                         type="button"
                         data-bs-toggle="tab" data-bs-target="#nav-video"
@@ -29,7 +29,7 @@
                     </svg>
                 </button>
                 <div class="divider"></div>
-                <button class="btn btn-primary nav-link text-white active"
+                <button class="btn btn-primary nav-link text-white"
                         style="border-radius: 0 var(--y-button-radius) var(--y-button-radius) 0;"
                         type="button"
                         data-bs-toggle="tab" data-bs-target="#nav-stats"
@@ -44,7 +44,7 @@
     </div>
 
     <div class="tab-content" id="nav-tabContent">
-        <div class="tab-pane fade" id="nav-video" role="tabpanel" aria-labelledby="nav-video-tab">
+        <div class="tab-pane fade show active" id="nav-video" role="tabpanel" aria-labelledby="nav-video-tab">
             <div class="me-3 mb-3 grid d-flex align-items-center" id="stats">
                 <div class="g-col-4 mx-3 d-flex align-items-center">
                     <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
@@ -71,12 +71,9 @@
                 </div>
             </div>
         </div>
-
-        <video autoplay loop muted>
-            <source src="{{ url_for('video_feed') }}" type="video/mp4"/>
-        </video>
+        <img id="live" src="{{ url_for('video_feed') }}"/>
     </div>
-    <div class="tab-pane fade show active" id="nav-stats" role="tabpanel" aria-labelledby="nav-stats-tab">
+    <div class="tab-pane fade" id="nav-stats" role="tabpanel" aria-labelledby="nav-stats-tab">
         <div id="stats-page">
             <div id="header" class="py-3">
                 <div class="container text-center">
