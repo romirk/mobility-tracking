@@ -2,6 +2,7 @@ import pickle
 import socketserver
 from multiprocessing import Value
 from multiprocessing.shared_memory import SharedMemory
+import socket
 
 import numpy as np
 
@@ -28,8 +29,8 @@ class FrameServer:
     def __init__(self, loc: str, running: Value):
         mem = SharedMemory(name=loc)
         self.frame = np.ndarray(IMG_SIZE, dtype=np.uint8, buffer=mem.buf)
-        self.server = socketserver.UDPServer(("0.0.0.0", 9999), FrameHandler)
-        self.server.recv_frame = self.__receive_frames
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sf = self.socket.makefile(mode='rb')
         self.running = running
         self.last_active = {}
 
@@ -43,4 +44,9 @@ class FrameServer:
             print(f'[FS] Receiving frames from {addr}')
 
     def run(self):
-        self.server.serve_forever()
+        self.socket.bind(('0.0.0.0', 9999))
+        self.socket.listen(1)
+        conn, addr = self.socket.accept()
+        print(f'[FS] Connection from {addr}')
+        with conn:
+            frame = pickle.load(self.sf)
