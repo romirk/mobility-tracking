@@ -255,7 +255,7 @@ class TrafficCounter(object):
 
                 self.sender.send_image(self.name, img)
                 t1 = time.time()
-                print(f"\r{frame_id} {t1 - t0}", end="")
+                print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
         except KeyboardInterrupt:
             pass
         finally:
