@@ -219,7 +219,7 @@ class TrafficCounter(object):
                 img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-                self.socket.send(img.tobytes())
+                # self.socket.send(img.tobytes())
 
                 working_img = img.copy()
                 if self.black_mask is not None:
@@ -256,6 +256,8 @@ class TrafficCounter(object):
                     img, cv2.COLOR_GRAY2BGR
                 )  # Giving frame 3 channels for color (for drawing colored boxes)
                 self.bind_objects(img, dilated_img)
+
+                self.socket.send(img.tobytes())
 
                 # print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
         except KeyboardInterrupt:

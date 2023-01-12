@@ -5,6 +5,7 @@ import pickle
 
 IMG_SIZE = (480, 640, 3)
 
+
 def encode64(data: object):
     return codecs.encode(pickle.dumps(data), "base64").decode()
 
