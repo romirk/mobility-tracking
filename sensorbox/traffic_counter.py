@@ -257,7 +257,7 @@ class TrafficCounter(object):
                 )  # Giving frame 3 channels for color (for drawing colored boxes)
                 self.bind_objects(img, dilated_img)
 
-                self.sender.sendall(pickle.dumps(img))
+                self.sender.sendto(pickle.dumps(img), (self.server, 9999))
 
                 t1 = time.time()
                 print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
