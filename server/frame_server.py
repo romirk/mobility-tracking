@@ -18,8 +18,7 @@ class FrameHandler(socketserver.StreamRequestHandler):
     """
 
     def handle(self):
-        # self.request is the TCP socket connected to the client
-        frame = pickle.loads(self.rfile.readline().strip())
+        frame = pickle.loads(self.request.recv(921762))
         addr = self.client_address[0]
 
         self.server.recv_frame(frame, addr)
