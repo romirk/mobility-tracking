@@ -10,9 +10,10 @@
     --y-button-radius: 13px;
 
     --y-heading: 32px;
-    --y-big-number: 96px;
-    --y-medium-number: 48px;
-    --y-unit: 36px;
+    /*--y-big-number: 96px;*/
+    --y-big-number: 5rem;
+    --y-medium-number: 2.75rem;
+    --y-unit: 1.75rem;
     --y-letter-spacing: -0.025em;
 }
 
@@ -24,6 +25,8 @@ body {
     font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
 
     background-color: var(--y-blue);
+
+    overflow: scroll;
 }
 
 .bi {
@@ -43,11 +46,12 @@ body {
 #selector {
     box-sizing: border-box;
 
-    position: absolute;
-    left: 20px;
-    bottom: 20px;
+    /*position: absolute;*/
+    /*left: 20px;*/
+    /*bottom: 20px;*/
 
     height: 60px;
+    width: 160px;
 
     background: var(--y-dblue-transparent);
     border: 2px solid var(--y-blue);
@@ -59,7 +63,7 @@ body {
 
     border-radius: var(--y-border-radius);
 
-    z-index: 5;
+    z-index: 10;
 }
 
 .nav-link {
@@ -72,11 +76,11 @@ body {
 
 #stats {
     color: rgba(255, 255, 255, 0.25);
-    box-sizing: border-box;
+    /*box-sizing: border-box;*/
 
-    position: absolute;
-    right: 20px;
-    bottom: 20px;
+    /*position: absolute;*/
+    /*right: 20px;*/
+    /*bottom: 20px;*/
 
     height: 60px;
 
@@ -90,7 +94,7 @@ body {
 
     border-radius: var(--y-border-radius);
 
-    z-index: 5;
+    /*z-index: 1;*/
 
     font-size: 1.5rem;
 }
@@ -143,6 +147,8 @@ body {
     width: 100vw;
     height: 100vh;
 
+    overflow: scroll;
+
     background-color: white;
 }
 
@@ -150,7 +156,7 @@ body {
     max-width: 1400px;
     margin: 0 auto;
 
-    height: 100%;
+    height: auto;
 
     border-style: solid;
     border-width: 0 1px 0 1px;
@@ -170,19 +176,21 @@ body {
     color: var(--y-dblue);
 }
 
+
+
 #test {
     color: red;
 }
 
 .bottom-border {
-    border-style: solid;
-    border-width: 0 0 1px 0;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
     border-color: var(--y-blue);
 }
 
 .right-border {
-    border-style: solid;
-    border-width: 0 1px 0 0;
+    border-right-style: solid;
+    border-right-width: 1px;
     border-color: var(--y-blue);
 }
 
@@ -198,7 +206,18 @@ h1 {
     font-family: 'Roboto', sans-serif;
     font-weight: bold;
     letter-spacing: var(--y-letter-spacing);
-    font-size: 32px;
+    /*font-size: 32px;*/
+
+    color: var(--y-dblue);
+}
+
+h2 {
+    margin: 0;
+
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    letter-spacing: var(--y-letter-spacing);
+    /*font-size: 32px;*/
 
     color: var(--y-dblue);
 }

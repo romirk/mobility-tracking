@@ -47,17 +47,17 @@ class SensorLive {
         this.numberOfVehicles = new Chart(this.ctxTypesOfVehicles, {
             type: 'doughnut', data: {
                 labels: [
-                    'Red',
-                    'Blue',
-                    'Yellow'
+                    'Cars',
+                    'Trucks',
+                    'Buses'
                 ],
                 datasets: [{
-                    label: 'My First Dataset',
+                    label: 'Types of vehicles',
                     data: [300, 50, 100],
                     backgroundColor: [
-                        'rgb(255, 99, 132)',
-                        'rgb(54, 162, 235)',
-                        'rgb(255, 205, 86)'
+                        'rgb(2, 159, 227)',
+                        'rgb(26,122,165)',
+                        'rgb(31,84,108)'
                     ],
                     hoverOffset: 4
                 }]
