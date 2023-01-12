@@ -2,6 +2,7 @@
 Traffic Counting
 """
 import datetime
+import time
 from multiprocessing import Value
 from threading import Thread
 
@@ -100,17 +101,13 @@ class TrafficCounter(object):
         thread.start()
 
     def _is_line_crossed(self, frame, cx, cy, prev_cx, prev_cy):
-        print(f"current center: {(cx,cy)}")
-        print(f"prev    center: {(prev_cx,prev_cy)}")
-        print(f"line: {self.p1_count_line} - {self.p2_count_line}")
-        is_crossed = False
         if self.line_direction.upper() == "H":
             if (prev_cy <= self.p1_count_line[1] <= cy) or (
                     cy <= self.p1_count_line[1] <= prev_cy
             ):
                 self.counter += 1
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
-                is_crossed = True
+                return True
 
         elif self.line_direction.upper() == "V":
             if (prev_cx <= self.p1_count_line[0] <= cx) or (
@@ -118,8 +115,8 @@ class TrafficCounter(object):
             ):
                 self.counter += 1
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
-                is_crossed = True
-        return is_crossed
+                return True
+        return False
 
     def bind_objects(self, frame, thresh_img):
         """Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be 
@@ -214,6 +211,7 @@ class TrafficCounter(object):
 
         try:
             while running.value:
+                t0 = time.time()
                 frame = self.pipeline.wait_for_frames().get_color_frame()
                 frame_id = int(frame.frame_number)  # get current frame index
                 img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
@@ -256,6 +254,8 @@ class TrafficCounter(object):
                 self.bind_objects(img, dilated_img)
 
                 self.sender.send_image(self.name, img)
+                t1 = time.time()
+                print(f"\r{frame_id} {t1 - t0}", end="")
         except KeyboardInterrupt:
             pass
         finally:
