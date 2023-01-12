@@ -56,7 +56,7 @@ class TrafficCounter(object):
         )  # this will contain the coordinates of the centers in the previous
 
         self.server = config.server
-        self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sender.connect((self.server, 9999))
         self.sf = self.sender.makefile("wb")
 
