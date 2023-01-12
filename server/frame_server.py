@@ -8,7 +8,7 @@ import numpy as np
 from utils import IMG_SIZE
 
 
-class FrameHandler(socketserver.StreamRequestHandler):
+class FrameHandler(socketserver.BaseRequestHandler):
     """
     The request handler class for our server.
 
@@ -18,7 +18,7 @@ class FrameHandler(socketserver.StreamRequestHandler):
     """
 
     def handle(self):
-        frame = pickle.loads(self.request.recv(921762))
+        frame = pickle.loads(self.request[0].strip())
         addr = self.client_address[0]
 
         self.server.recv_frame(frame, addr)
@@ -28,7 +28,7 @@ class FrameServer:
     def __init__(self, loc: str, running: Value):
         mem = SharedMemory(name=loc)
         self.frame = np.ndarray(IMG_SIZE, dtype=np.uint8, buffer=mem.buf)
-        self.server = socketserver.TCPServer(("0.0.0.0", 9999), FrameHandler)
+        self.server = socketserver.UDPServer(("0.0.0.0", 9999), FrameHandler)
         self.server.recv_frame = self.__receive_frames
         self.running = running
         self.last_active = {}
