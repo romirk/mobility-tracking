@@ -97,6 +97,12 @@ def parse_args_sensorbox(parser=argparse.ArgumentParser(
         action="store_true",
         help="parallel processing"
     )
+    parser.add_argument(
+        "-v",
+        "--visual",
+        action="store_true",
+        help="visualize"
+    )
     return parser
 
 
