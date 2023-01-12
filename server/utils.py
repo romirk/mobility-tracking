@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import codecs
 import pickle
 
+IMG_SIZE = (480, 640)
+IMG_SIZE_RGB = (480, 640, 3)
 
-def encode64(data):
+
+def encode64(data: object):
     return codecs.encode(pickle.dumps(data), "base64").decode()
 
 
-def decode64(data: str):
-    return pickle.loads(codecs.decode(data.encode(), "base64"))
+def decode64(data: str | bytes):
+    return pickle.loads(codecs.decode(data.encode() if type(data) is str else data, "base64"))

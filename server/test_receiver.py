@@ -1,11 +1,11 @@
 import pytest
 
-from server.backend import Server
+from server.http_server import HttpServer
 
 
 @pytest.fixture
 def app():
-    app, _ = Server.create_server()
+    app, _ = HttpServer.create_server()
     app.config.update({
         "TESTING": True,
     })

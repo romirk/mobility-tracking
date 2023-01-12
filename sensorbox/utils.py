@@ -14,7 +14,6 @@ def parse_args_counter(parser=argparse.ArgumentParser(
     num_count_default = 10
     video_width_default = 640
     starting_frame_default = 10
-    server_default = "tcp://localhost:5555"
 
     parser.add_argument(
         "-a",
@@ -98,6 +97,12 @@ def parse_args_sensorbox(parser=argparse.ArgumentParser(
         action="store_true",
         help="parallel processing"
     )
+    parser.add_argument(
+        "-v",
+        "--visual",
+        action="store_true",
+        help="visualize"
+    )
     return parser
 
 
@@ -147,7 +152,7 @@ def rs_pipeline_setup(width, height, fps):
     return pipeline, config
 
 
-def count(secs):
+def countdown(secs):
     secs = int(secs)
     while secs:
         print(secs, end=' ')

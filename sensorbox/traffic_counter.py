@@ -2,16 +2,16 @@
 Traffic Counting
 """
 import datetime
+import socket
 from multiprocessing import Value
 from threading import Thread
 
 import cv2
-import imagezmq
 import imutils
 import numpy as np
 import requests
 
-from utils import encode64, rs_pipeline_setup, count
+from utils import encode64, rs_pipeline_setup, countdown
 
 
 def req_thread(url, data):
@@ -54,7 +54,13 @@ class TrafficCounter(object):
         )  # this will contain the coordinates of the centers in the previous
 
         self.server = config.server
-        self.sender = imagezmq.ImageSender(connect_to=f"tcp://{self.server}:5555")
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((self.server, 9999))
+        self.sf = self.socket.makefile("wb")
+
+        self.visualize = config.visual
+
+        print("[Camera] connected to server")
 
         # Getting frame dimensions
         self._compute_frame_dimensions()
@@ -100,16 +106,13 @@ class TrafficCounter(object):
         thread.start()
 
     def _is_line_crossed(self, frame, cx, cy, prev_cx, prev_cy):
-        # print(f"current center: {(cx,cy)}")
-        # print(f"prev    center: {(prev_cx,prev_cy)}")
-        is_crossed = False
         if self.line_direction.upper() == "H":
             if (prev_cy <= self.p1_count_line[1] <= cy) or (
                     cy <= self.p1_count_line[1] <= prev_cy
             ):
                 self.counter += 1
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
-                is_crossed = True
+                return True
 
         elif self.line_direction.upper() == "V":
             if (prev_cx <= self.p1_count_line[0] <= cx) or (
@@ -117,8 +120,8 @@ class TrafficCounter(object):
             ):
                 self.counter += 1
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
-                is_crossed = True
-        return is_crossed
+                return True
+        return False
 
     def bind_objects(self, frame, thresh_img):
         """Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be 
@@ -178,7 +181,7 @@ class TrafficCounter(object):
             _is_crossed = self._is_line_crossed(frame, cx, cy, prev_cx, prev_cy)
             if _is_crossed:
                 self.__remote_update(orig_frame, bounding, self.counter)
-                print(f"Total Count: {self.counter}")
+                print(f"\r{self.counter}", end="")
             self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy)
 
             cnt_id += 1
@@ -192,7 +195,7 @@ class TrafficCounter(object):
         self._vid_height = img.shape[0]
 
         print("Ready. Starting in")
-        count(5)
+        countdown(5)
 
         roi_points = np.array([self.mask_points])
         self.black_mask = None
@@ -217,6 +220,9 @@ class TrafficCounter(object):
                 frame_id = int(frame.frame_number)  # get current frame index
                 img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+                if not self.visualize:
+                    self.socket.send(img.tobytes())
 
                 working_img = img.copy()
                 if self.black_mask is not None:
@@ -254,8 +260,12 @@ class TrafficCounter(object):
                 )  # Giving frame 3 channels for color (for drawing colored boxes)
                 self.bind_objects(img, dilated_img)
 
-                self.sender.send_image(self.name, img)
+                if self.visualize:
+                    self.socket.send(img.tobytes())
+
+                # print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
         except KeyboardInterrupt:
             pass
         finally:
+            self.pipeline.stop()
             print("[Camera] Stopping counter...")

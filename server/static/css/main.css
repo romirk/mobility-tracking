@@ -133,7 +133,7 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    object-fit: cover;
+    object-fit: contain;
     z-index: 0;
 
     background-color: white;
