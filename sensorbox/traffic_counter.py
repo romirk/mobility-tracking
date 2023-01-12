@@ -2,12 +2,12 @@
 Traffic Counting
 """
 import datetime
+import socket
 import time
 from multiprocessing import Value
 from threading import Thread
 
 import cv2
-import imagezmq
 import imutils
 import numpy as np
 import requests
@@ -55,7 +55,8 @@ class TrafficCounter(object):
         )  # this will contain the coordinates of the centers in the previous
 
         self.server = config.server
-        self.sender = imagezmq.ImageSender(connect_to=f"tcp://{self.server}:5555")
+        self.sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sender.connect((self.server, 9999))
 
         # Getting frame dimensions
         self._compute_frame_dimensions()
@@ -253,10 +254,12 @@ class TrafficCounter(object):
                 )  # Giving frame 3 channels for color (for drawing colored boxes)
                 self.bind_objects(img, dilated_img)
 
-                self.sender.send_image(self.name, img)
+                self.sender.sendall(cv2.imencode(".jpg", img)[1].tobytes())
+
                 t1 = time.time()
                 print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
         except KeyboardInterrupt:
             pass
         finally:
+            self.pipeline.stop()
             print("[Camera] Stopping counter...")

@@ -5,3 +5,4 @@ opencv-python==4.7.0.68
 imagezmq==1.1.1
 imutils==0.5.4
 numpy==1.21.6
+python-socketio[client]

@@ -1,15 +1,12 @@
 Flask
 celery
 flask-socketio
-imagezmq
 imutils
 numpy
 opencv-python
 pandas
 pyserial
 pytest
-pyzmq
 requests
 scipy
 yolov7_package
-zmq
