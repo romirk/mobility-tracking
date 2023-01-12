@@ -34,7 +34,7 @@ class FrameServer:
         self.running = running
         self.last_active = {}
 
-        adds = ', '.join(str(sock.getsockname()) for sock in self.server.sockets)
+        adds = self.server.server_address
         print(f'[FS] Serving on {adds}')
 
     def __receive_frames(self, frame: np.ndarray, addr: str):

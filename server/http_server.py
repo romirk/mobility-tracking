@@ -2,12 +2,12 @@ import codecs
 from argparse import Namespace
 from multiprocessing import Value, Process
 from multiprocessing.shared_memory import SharedMemory
+from threading import Thread
 
 import cv2
 import numpy as np
 from flask import Flask, render_template, Response, request
 from flask_socketio import SocketIO, emit
-from imagezmq import ImageHub
 
 from server.broker import detect
 from server.frame_server import FrameServer
@@ -15,7 +15,6 @@ from server.utils import IMG_SIZE, decode64
 
 
 class HttpServer:
-    image_hub: ImageHub
     app: Flask
     socketio: SocketIO
 
@@ -24,12 +23,12 @@ class HttpServer:
         self.__last_active = {}
 
         self.__mem = SharedMemory(create=True, size=IMG_SIZE[0] * IMG_SIZE[1] * IMG_SIZE[2])
-        self.__last_frame: np.ndarray = np.ndarray(HttpServer.IMG_SIZE, dtype=np.uint8, buffer=self.__mem.buf)
+        self.__last_frame: np.ndarray = np.ndarray(IMG_SIZE, dtype=np.uint8, buffer=self.__mem.buf)
 
         self.__counts = Namespace(car=0, person=0, truck=0, bus=0, motorcycle=0, bicycle=0)
 
         self.fs = FrameServer(self.__mem.name, self.__running)
-        self.fs_thread = Process(target=self.fs.run, daemon=True)
+        self.fs_thread = Thread(target=self.fs.run, daemon=True)
         print("Server initialized")
 
     @property
@@ -42,7 +41,7 @@ class HttpServer:
     def __gen_frames(self):
         while self.__running.value:
             yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + \
-                cv2.imencode(".jpg", np.asarray(self.__last_frame).reshape(HttpServer.IMG_SIZE))[1].tobytes() + b"\r\n"
+                cv2.imencode(".jpg", np.asarray(self.__last_frame).reshape(IMG_SIZE))[1].tobytes() + b"\r\n"
 
     def create_server(self):
         app = Flask(__name__)

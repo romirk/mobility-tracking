@@ -58,6 +58,8 @@ class TrafficCounter(object):
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sender.connect((self.server, 9999))
 
+        print("[Camera] connected to server")
+
         # Getting frame dimensions
         self._compute_frame_dimensions()
         self._set_up_line(config.direction[0], float(config.direction[1]))
