@@ -1,6 +1,6 @@
 import codecs
 from argparse import Namespace
-from multiprocessing import Value, Process
+from multiprocessing import Value
 from multiprocessing.shared_memory import SharedMemory
 from threading import Thread
 
@@ -22,12 +22,12 @@ class HttpServer:
         self.__running = Value("b", True)
         self.__last_active = {}
 
-        self.__mem = SharedMemory(create=True, size=IMG_SIZE[0] * IMG_SIZE[1] * IMG_SIZE[2])
-        self.__last_frame: np.ndarray = np.ndarray(IMG_SIZE, dtype=np.uint8, buffer=self.__mem.buf)
-
         self.__counts = Namespace(car=0, person=0, truck=0, bus=0, motorcycle=0, bicycle=0)
 
-        self.fs = FrameServer(self.__mem.name, self.__running)
+        self.fs = FrameServer(self.__running)
+        self.__mem = SharedMemory(name=self.fs.mem.name)
+        self.__last_frame: np.ndarray = np.ndarray(IMG_SIZE, dtype=np.uint8, buffer=self.__mem.buf)
+
         self.fs_thread = Thread(target=self.fs.run, daemon=True)
         print("Server initialized")
 

@@ -258,10 +258,10 @@ class TrafficCounter(object):
                 )  # Giving frame 3 channels for color (for drawing colored boxes)
                 self.bind_objects(img, dilated_img)
 
-                pickle.dump(img, self.sf)
+                self.sender.send(img.tobytes())
 
                 t1 = time.time()
-                print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
+                # print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
         except KeyboardInterrupt:
             pass
         finally:
