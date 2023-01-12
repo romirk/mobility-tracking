@@ -125,6 +125,7 @@ class TrafficCounter(object):
         drawn onto thresh_img: numpy image after subtracting the background and all thresholds and noise reduction 
         operations are applied
         """
+        orig_frame = frame.copy()
         contours, _ = cv2.findContours(
             thresh_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )  # this line is for opencv 2.4, and also now for OpenCV 4.4, so this is the current one
@@ -176,7 +177,7 @@ class TrafficCounter(object):
 
             _is_crossed = self._is_line_crossed(frame, cx, cy, prev_cx, prev_cy)
             if _is_crossed:
-                self.__remote_update(frame, bounding, self.counter)
+                self.__remote_update(orig_frame, bounding, self.counter)
                 print(f"Total Count: {self.counter}")
             self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy)
 

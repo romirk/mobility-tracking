@@ -1,5 +1,6 @@
 import codecs
 import datetime
+from argparse import Namespace
 from multiprocessing import Value, Process
 from multiprocessing.shared_memory import SharedMemory
 
@@ -46,8 +47,14 @@ class Server:
         self.__mem = SharedMemory(create=True, size=Server.IMG_SIZE[0] * Server.IMG_SIZE[1] * Server.IMG_SIZE[2])
         self.__last_frame: np.ndarray = np.ndarray(Server.IMG_SIZE, dtype=np.uint8, buffer=self.__mem.buf)
 
+        self.__counts = Namespace(car=0, person=0, truck=0, bus=0, motorcycle=0, bicycle=0)
+
         self.receiver = Process(target=receive_frames, args=(self.__running, self.__mem.name), daemon=True)
         print("Server initialized")
+
+    @property
+    def counts(self):
+        return self.__counts
 
     def kill(self):
         self.__running.value = False
@@ -89,6 +96,7 @@ class Server:
                 "data": result,
                 "T": data["T"],
             })
+            cv2.imwrite(f"output/{data['count']}.jpg", cropped)
             return "ok"
 
         @app.post("/sensors")
