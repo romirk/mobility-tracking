@@ -22,22 +22,49 @@ class SensorLive {
         this.socket.on('sensor', this.on_sensor.bind(this));
         this.socket.on('detect', this.on_detect.bind(this));
 
-        this.ctx = document.getElementById('myChart');
-        this.chart = new Chart(this.ctx, {
+        this.ctxNumberOfVehicles = document.getElementById('numberOfVehicles');
+        this.numberOfVehicles = new Chart(this.ctxNumberOfVehicles, {
             type: 'line', data: {
                 labels: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00'], datasets: [{
                     label: 'Number of cars over time',
                     data: [65, 59, 80, 81, 56, 55, 40],
                     fill: false,
-                    tension: 0.25,
-                    borderWidth: 1
+                    tension: 0.35,
+                    borderWidth: 3
                 }]
             }, options: {
                 scales: {
                     y: {
                         beginAtZero: true
                     }
-                }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        this.ctxTypesOfVehicles = document.getElementById('typesOfVehicles');
+        this.numberOfVehicles = new Chart(this.ctxTypesOfVehicles, {
+            type: 'doughnut', data: {
+                labels: [
+                    'Red',
+                    'Blue',
+                    'Yellow'
+                ],
+                datasets: [{
+                    label: 'My First Dataset',
+                    data: [300, 50, 100],
+                    backgroundColor: [
+                        'rgb(255, 99, 132)',
+                        'rgb(54, 162, 235)',
+                        'rgb(255, 205, 86)'
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
             }
         });
 

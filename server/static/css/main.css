@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
 :root {
     --y-blue: #029FE3;
@@ -7,6 +8,12 @@
     --y-dblue-transparent: rgba(40, 58, 89, 0.8);
     --y-border-radius: 15px;
     --y-button-radius: 13px;
+
+    --y-heading: 32px;
+    --y-big-number: 96px;
+    --y-medium-number: 48px;
+    --y-unit: 36px;
+    --y-letter-spacing: -0.025em;
 }
 
 body {
@@ -124,6 +131,8 @@ body {
     left: 0;
     object-fit: cover;
     z-index: 0;
+
+    background-color: white;
 }
 
 #nav-stats {
@@ -163,6 +172,65 @@ body {
 
 #test {
     color: red;
+}
+
+.bottom-border {
+    border-style: solid;
+    border-width: 0 0 1px 0;
+    border-color: var(--y-blue);
+}
+
+.right-border {
+    border-style: solid;
+    border-width: 0 1px 0 0;
+    border-color: var(--y-blue);
+}
+
+.all-border {
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--y-blue);
+}
+
+h1 {
+    margin: 0;
+
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    letter-spacing: var(--y-letter-spacing);
+    font-size: 32px;
+
+    color: var(--y-dblue);
+}
+
+.big-number {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    font-size: var(--y-big-number);
+    line-height: var(--y-big-number);
+    letter-spacing: var(--y-letter-spacing);
+
+    color: var(--y-blue);
+}
+
+.medium-number {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    font-size: var(--y-medium-number);
+    line-height: var(--y-medium-number);
+    letter-spacing: var(--y-letter-spacing);
+
+    color: var(--y-blue);
+}
+
+.unit {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    font-size: var(--y-unit);
+    line-height: var(--y-unit);
+    letter-spacing: var(--y-letter-spacing);
+
+    color: var(--y-dblue);
 }
 
 .svg {
