@@ -12,7 +12,6 @@ import cv2
 import imutils
 import numpy as np
 import requests
-import sys
 
 from .utils import encode64, rs_pipeline_setup, countdown
 
@@ -31,10 +30,19 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
     transport.connect((url, 9999))
     print("Connected to streamer")
 
-    while running.value:
-        transport.sendall(frame)
-        time.sleep(0.25)
-    mem.close()
+    try:
+        while running.value:
+            transport.sendall(frame)
+            time.sleep(0.25)
+    except ConnectionResetError:
+        print("Connection reset by peer")
+    except KeyboardInterrupt:
+        pass
+    finally:
+        running.value = False
+        mem.close()
+        transport.close()
+
 
 class TrafficCounter(object):
     """
@@ -78,8 +86,8 @@ class TrafficCounter(object):
             history=100, varThreshold=50, detectShadows=True
         )
 
-        self.mem = SharedMemory(create=True, size=self._vid_width * self._vid_height * 3, name="frame")
-        self.shared_frame = np.ndarray((self._vid_height, self._vid_width, 3), dtype=np.uint8, buffer=self.mem.buf)
+        self.mem = SharedMemory(create=True, size=921600, name="frame")
+        self.shared_frame = np.ndarray((480, 640, 3), dtype=np.uint8, buffer=self.mem.buf)
 
         self.record = config.record
 
@@ -95,8 +103,8 @@ class TrafficCounter(object):
             print(f"Recording to file {filename} ({self._vid_width}x{self._vid_height})")
 
         self.streamer = Process(target=streamer_thread, args=(
-        config.server, (self._vid_height, self._vid_width, 3), self.mem.name, self.running), daemon=True)
-        #self.streamer.start()
+            config.server, self.shared_frame.shape, self.mem.name, self.running), daemon=True)
+        self.streamer.start()
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -185,8 +193,8 @@ class TrafficCounter(object):
             cx = int(rect[0][0])
             cy = int(rect[0][1])
 
-            if cy > 240:
-                continue
+            # if cy > 240:
+            #     continue
 
             w, h = rect[1]  # Unpacks the width and height of the frame
 
@@ -280,19 +288,19 @@ class TrafficCounter(object):
                 # Drawing bounding boxes and counting
                 t2 = time.time()
                 self.bind_objects(img, fg_mask)
-                sys.stdout.write(f"\rbound objects in {time.time()-t2} at frame")
+                # sys.stdout.write(f"\rbound objects in {time.time() - t2} at frame")
+
                 # Displaying the frame
-                # np.copyto(self.shared_frame, img)
+                downsampled = cv2.resize(img, (480, 640))
+                np.copyto(self.shared_frame, downsampled)
 
                 if self.record:
                     self.out.write(img)
 
                 t1 = time.time()
-                sys.stdout.write(f" {frame_id} {1 / (t1 - t0)}")
+                # sys.stdout.write(f" {frame_id} {1 / (t1 - t0)}")
         except KeyboardInterrupt:
             pass
-        except ConnectionResetError:
-            print("Connection reset by peer")
         finally:
             self.running.value = False
             self.mem.close()

@@ -114,26 +114,26 @@ class HttpServer:
             frame = decode64(data["frame"])
             box = x, y, w, h = decode64(data["rect"])
             direction = data["direction"]
-            cls, score, box = self.detect(frame, box)
-            cropped = frame[y:y + h, x:x + w]
-            cv2.imwrite(f"server/static/{data['count']}.jpg", cropped)
-            if cls is None:
-                print("No object detected")
-                return {"count": 0}
-
-            if direction not in self.counts[cls]:
-                self.counts[cls][direction] = 1
-            else:
-                self.counts[cls][direction] += 1
-            self.__total += 1
-
-            socketio.emit('detect', {
-                "counts": self.counts,
-                "T": data["T"],
-                "total": self.total,
-                "cam_count": data["count"],
-            })
-            print(f"Detected {cls} moving {direction} with confidence {score} at {box}")
+            # cls, score, box = self.detect(frame, box)
+            # cropped = frame[y:y + h, x:x + w]
+            # cv2.imwrite(f"server/static/{data['count']}.jpg", cropped)
+            # if cls is None:
+            #     print("No object detected")
+            #     return {"count": 0}
+            #
+            # if direction not in self.counts[cls]:
+            #     self.counts[cls][direction] = 1
+            # else:
+            #     self.counts[cls][direction] += 1
+            # self.__total += 1
+            #
+            # socketio.emit('detect', {
+            #     "counts": self.counts,
+            #     "T": data["T"],
+            #     "total": self.total,
+            #     "cam_count": data["count"],
+            # })
+            # print(f"Detected {cls} moving {direction} with confidence {score} at {box}")
 
             return {"count": self.total}
 
