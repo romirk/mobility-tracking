@@ -1,3 +1,4 @@
+#!../../env/bin/python
 from multiprocessing import Process, Value
 from time import sleep
 

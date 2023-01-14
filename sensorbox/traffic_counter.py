@@ -3,6 +3,7 @@ Traffic Counting
 """
 import datetime
 import socket
+import time
 from multiprocessing import Value
 from threading import Thread
 
@@ -58,6 +59,8 @@ class TrafficCounter(object):
         self.socket.connect((self.server, 9999))
         self.sf = self.socket.makefile("wb")
 
+        self.record = config.record
+
         self.visualize = config.visual
 
         print("[Camera] connected to server")
@@ -65,6 +68,12 @@ class TrafficCounter(object):
         # Getting frame dimensions
         self._compute_frame_dimensions()
         self._set_up_line(config.direction[0], float(config.direction[1]))
+
+        if config.record:
+            filename = f"output/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.mp4"
+            self.out = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), 30,
+                                       (self._vid_width, self._vid_height))
+            print(f"Recording to file {filename} ({self._vid_width}x{self._vid_height})")
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -96,11 +105,12 @@ class TrafficCounter(object):
             frame, str(contour_id), (cx, cy - 15), self.font, 0.4, (255, 0, 0), 2
         )
 
-    def __remote_update(self, frame: np.ndarray, rect: np.ndarray, cnt: int):
+    def __remote_update(self, frame: np.ndarray, rect: np.ndarray, dir: str, cnt: int):
         thread = Thread(target=req_thread, args=(f"http://{self.server}:5000/detect", {
             "frame": encode64(frame),
             "count": cnt,
             "rect": encode64(rect),
+            "direction": dir,
             "T": str(datetime.datetime.now())
         }))
         thread.start()
@@ -112,16 +122,15 @@ class TrafficCounter(object):
             ):
                 self.counter += 1
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
-                return True
-
+                return True, "u" if cy - self.p1_count_line[1] < 0 else "d"
         elif self.line_direction.upper() == "V":
             if (prev_cx <= self.p1_count_line[0] <= cx) or (
                     cx <= self.p1_count_line[0] <= prev_cx
             ):
                 self.counter += 1
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
-                return True
-        return False
+                return True, "l" if cx - self.p1_count_line[0] < 0 else "r"
+        return False, None
 
     def bind_objects(self, frame, thresh_img):
         """Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be 
@@ -136,7 +145,6 @@ class TrafficCounter(object):
 
         cnt_id = 1
         cur_centroids = []
-        cur_dims = []
         for c in contours:
             if (
                     cv2.contourArea(c) < self.min_area
@@ -150,6 +158,9 @@ class TrafficCounter(object):
             # Getting the center coordinates of the contour box
             cx = int(rect[0][0])
             cy = int(rect[0][1])
+
+            if cy > 240:
+                continue
 
             w, h = rect[1]  # Unpacks the width and height of the frame
 
@@ -172,42 +183,32 @@ class TrafficCounter(object):
                         min_dist = dist
                         min_point = self.prev_centroids[i]
                 # This if is meant to reduce over-counting errors
-                if min_dist < w / 2:
+                if min_dist < 1.5 * w / 2:
                     prev_cx, prev_cy = min_point
                 else:
                     prev_cx, prev_cy = cx, cy
                 # prev_cx,prev_cy = min_point
 
-            _is_crossed = self._is_line_crossed(frame, cx, cy, prev_cx, prev_cy)
+            _is_crossed, direction = self._is_line_crossed(frame, cx, cy, prev_cx, prev_cy)
             if _is_crossed:
-                self.__remote_update(orig_frame, bounding, self.counter)
+                self.__remote_update(orig_frame, bounding, direction, self.counter)
                 print(f"\r{self.counter}", end="")
             self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy)
+
+            cv2.line(frame, (0, 240), (self._vid_width, 240), (0, 0, 255), 1)
 
             cnt_id += 1
         self.prev_centroids = cur_centroids  # updating centroids for next frame
 
     def _set_up_masks(self):
         frame = self.pipeline.wait_for_frames().get_color_frame()
+        img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
 
-        img = imutils.resize(np.asanyarray(frame.get_data()), width=self._vid_width)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        self._vid_height = img.shape[0]
+        self.raw_avg = np.float32(img)
+        self.raw_avg = cv2.resize(self.raw_avg, (self._vid_width, self._vid_height))
 
         print("Ready. Starting in")
         countdown(5)
-
-        roi_points = np.array([self.mask_points])
-        self.black_mask = None
-        if len(self.mask_points) != 0:
-            self.black_mask = np.zeros(img.shape, dtype=np.uint8)
-            cv2.fillPoly(self.black_mask, roi_points, (255, 255, 255))
-
-            self.raw_avg = np.float32(self.black_mask)
-        else:
-            self.raw_avg = np.float32(img)
-
-        self.raw_avg = cv2.resize(self.raw_avg, (self._vid_width, self._vid_height))
 
     def main_loop(self, running: Value):
         self._set_up_masks()
@@ -216,27 +217,28 @@ class TrafficCounter(object):
 
         try:
             while running.value:
+                t0 = time.time()
                 frame = self.pipeline.wait_for_frames().get_color_frame()
                 frame_id = int(frame.frame_number)  # get current frame index
                 img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
                 if not self.visualize:
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     self.socket.send(img.tobytes())
 
                 working_img = img.copy()
-                if self.black_mask is not None:
-                    working_img = cv2.bitwise_and(working_img, self.black_mask)
-
-                if frame_id < self.starting_frame:
-                    cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
-                    continue
 
                 cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
+
+                if frame_id < self.starting_frame:
+                    print(self.raw_avg)
+                    continue
+
                 background_avg = cv2.convertScaleAbs(
                     self.raw_avg
                 )  # reference background average image
-                subtracted_img = cv2.absdiff(background_avg, working_img)
+
+                subtracted_img = self.subtract(background_avg, working_img)
 
                 # Adding extra blur
                 subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
@@ -255,17 +257,25 @@ class TrafficCounter(object):
                 dilated_img = cv2.dilate(dilated_img, None)
 
                 # Drawing bounding boxes and counting
-                img = cv2.cvtColor(
-                    img, cv2.COLOR_GRAY2BGR
-                )  # Giving frame 3 channels for color (for drawing colored boxes)
                 self.bind_objects(img, dilated_img)
 
                 if self.visualize:
                     self.socket.send(img.tobytes())
 
+                if self.record:
+                    self.out.write(img)
+
+                t1 = time.time()
                 # print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
         except KeyboardInterrupt:
             pass
+        except ConnectionResetError:
+            print("Connection reset by peer")
         finally:
             self.pipeline.stop()
+            if self.record:
+                self.out.release()
             print("[Camera] Stopping counter...")
+
+    def subtract(self, background_avg, working_img):
+        return np.linalg.norm(background_avg - working_img, axis=2)
