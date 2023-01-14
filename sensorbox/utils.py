@@ -66,6 +66,9 @@ def parse_args_counter(parser=argparse.ArgumentParser(
         action="store_true",
         help="Boolean flag to record the video.",
     )
+    parser.add_argument(
+        "--debug", action="store_true", help="Boolean flag to show debug windows."
+    )
     return parser
 
 
