@@ -59,6 +59,8 @@ class TrafficCounter(object):
         self.socket.connect((self.server, 9999))
         self.sf = self.socket.makefile("wb")
 
+        self.record = config.record
+
         self.visualize = config.visual
 
         print("[Camera] connected to server")
@@ -66,6 +68,12 @@ class TrafficCounter(object):
         # Getting frame dimensions
         self._compute_frame_dimensions()
         self._set_up_line(config.direction[0], float(config.direction[1]))
+
+        if config.record:
+            filename = f"output/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.mp4"
+            self.out = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), 30,
+                                       (self._vid_width, self._vid_height))
+            print(f"Recording to file {filename} ({self._vid_width}x{self._vid_height})")
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -137,7 +145,6 @@ class TrafficCounter(object):
 
         cnt_id = 1
         cur_centroids = []
-        cur_dims = []
         for c in contours:
             if (
                     cv2.contourArea(c) < self.min_area
@@ -265,10 +272,14 @@ class TrafficCounter(object):
                 if self.visualize:
                     self.socket.send(img.tobytes())
 
+                if self.record:
+                    self.out.write(img)
+
                 t1 = time.time()
                 # print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
         except KeyboardInterrupt:
             pass
         finally:
             self.pipeline.stop()
+            self.out.release()
             print("[Camera] Stopping counter...")
