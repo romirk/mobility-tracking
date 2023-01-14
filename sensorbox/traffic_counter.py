@@ -275,6 +275,7 @@ class TrafficCounter(object):
                 self.bind_objects(img, dilated_img)
 
                 if self.visualize:
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     self.socket.send(img.tobytes())
 
                 if self.record:
