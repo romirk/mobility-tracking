@@ -1,4 +1,3 @@
-import codecs
 from argparse import Namespace
 from multiprocessing import Value
 from multiprocessing.shared_memory import SharedMemory
@@ -98,12 +97,12 @@ class HttpServer:
             data = request.get_json()
             frame = decode64(data["frame"])
             x, y, w, h = decode64(data["rect"])
+            direction = data["direction"]
             cropped = frame[y:y + h, x:x + w]
             result = self.detect(cropped)
-            print(result["str"])
+            print(result["str"], "in", direction)
             socketio.emit('detect', {
                 "count": data["count"],
-                "frame": codecs.encode(cv2.imencode(".jpg", cropped)[1], "base64").decode(),
                 "data": result,
                 "T": data["T"],
             })

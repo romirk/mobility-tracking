@@ -3,6 +3,7 @@ Traffic Counting
 """
 import datetime
 import socket
+import time
 from multiprocessing import Value
 from threading import Thread
 
@@ -96,11 +97,12 @@ class TrafficCounter(object):
             frame, str(contour_id), (cx, cy - 15), self.font, 0.4, (255, 0, 0), 2
         )
 
-    def __remote_update(self, frame: np.ndarray, rect: np.ndarray, cnt: int):
+    def __remote_update(self, frame: np.ndarray, rect: np.ndarray, dir: str, cnt: int):
         thread = Thread(target=req_thread, args=(f"http://{self.server}:5000/detect", {
             "frame": encode64(frame),
             "count": cnt,
             "rect": encode64(rect),
+            "direction": dir
             "T": str(datetime.datetime.now())
         }))
         thread.start()
@@ -112,16 +114,15 @@ class TrafficCounter(object):
             ):
                 self.counter += 1
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
-                return True
-
+                return True, "u" if cy - self.p1_count_line[1] < 0 else "d"
         elif self.line_direction.upper() == "V":
             if (prev_cx <= self.p1_count_line[0] <= cx) or (
                     cx <= self.p1_count_line[0] <= prev_cx
             ):
                 self.counter += 1
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
-                return True
-        return False
+                return True, "l" if cx - self.p1_count_line[0] < 0 else "r"
+        return False, None
 
     def bind_objects(self, frame, thresh_img):
         """Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be 
@@ -178,9 +179,9 @@ class TrafficCounter(object):
                     prev_cx, prev_cy = cx, cy
                 # prev_cx,prev_cy = min_point
 
-            _is_crossed = self._is_line_crossed(frame, cx, cy, prev_cx, prev_cy)
+            _is_crossed, direction = self._is_line_crossed(frame, cx, cy, prev_cx, prev_cy)
             if _is_crossed:
-                self.__remote_update(orig_frame, bounding, self.counter)
+                self.__remote_update(orig_frame, bounding, direction, self.counter)
                 print(f"\r{self.counter}", end="")
             self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy)
 
@@ -216,6 +217,7 @@ class TrafficCounter(object):
 
         try:
             while running.value:
+                t0 = time.time()
                 frame = self.pipeline.wait_for_frames().get_color_frame()
                 frame_id = int(frame.frame_number)  # get current frame index
                 img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
@@ -263,6 +265,7 @@ class TrafficCounter(object):
                 if self.visualize:
                     self.socket.send(img.tobytes())
 
+                t1 = time.time()
                 # print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
         except KeyboardInterrupt:
             pass
