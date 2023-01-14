@@ -257,13 +257,9 @@ class TrafficCounter(object):
                 dilated_img = cv2.dilate(dilated_img, None)
 
                 # Drawing bounding boxes and counting
-                img = cv2.cvtColor(
-                    img, cv2.COLOR_GRAY2BGR
-                )  # Giving frame 3 channels for color (for drawing colored boxes)
                 self.bind_objects(img, dilated_img)
 
                 if self.visualize:
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     self.socket.send(img.tobytes())
 
                 if self.record:
@@ -277,7 +273,8 @@ class TrafficCounter(object):
             print("Connection reset by peer")
         finally:
             self.pipeline.stop()
-            self.out.release()
+            if self.record:
+                self.out.release()
             print("[Camera] Stopping counter...")
 
     def subtract(self, background_avg, working_img):
