@@ -159,6 +159,9 @@ class TrafficCounter(object):
             cx = int(rect[0][0])
             cy = int(rect[0][1])
 
+            if cy < 240:
+                continue
+
             w, h = rect[1]  # Unpacks the width and height of the frame
 
             cs = np.array((cx, cy))
@@ -191,6 +194,8 @@ class TrafficCounter(object):
                 self.__remote_update(orig_frame, bounding, direction, self.counter)
                 print(f"\r{self.counter}", end="")
             self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy)
+
+            cv2.line(frame, (0, 240), (self._vid_width, 240), (0, 0, 255), 1)
 
             cnt_id += 1
         self.prev_centroids = cur_centroids  # updating centroids for next frame
@@ -279,6 +284,8 @@ class TrafficCounter(object):
                 # print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
         except KeyboardInterrupt:
             pass
+        except ConnectionResetError:
+            print("Connection reset by peer")
         finally:
             self.pipeline.stop()
             self.out.release()

@@ -133,6 +133,7 @@ body {
     z-index: 0;
 
     background-color: white;
+    transform: rotate(180deg);
 }
 
 #nav-stats {

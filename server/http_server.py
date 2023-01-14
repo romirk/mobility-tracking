@@ -1,18 +1,20 @@
-from argparse import Namespace
 from multiprocessing import Value
 from multiprocessing.shared_memory import SharedMemory
 from threading import Thread
+from typing import Tuple
 
 import cv2
 import numpy as np
 import yolov7_package
 from flask import Flask, render_template, Response, request
 from flask_socketio import SocketIO, emit
+from yolov7_package.model_utils import coco_names
 
 from server.frame_server import FrameServer
-from server.utils import IMG_SIZE, decode64, encode64
+from server.utils import IMG_SIZE, decode64
 
 WHITELIST = {1: "bicycle", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck"}
+CONFIDENCE_THRESHOLD = 0.3
 
 
 class HttpServer:
@@ -23,19 +25,34 @@ class HttpServer:
         self.__running = Value("b", True)
         self.__last_active = {}
 
-        self.__counts = Namespace(car=0, person=0, truck=0, bus=0, motorcycle=0, bicycle=0)
+        self.__counts = {
+            "bicycle": {},
+            "car": {},
+            "motorcycle": {},
+            "bus": {},
+            "truck": {},
+        }
+        self.__total = 0
 
         self.fs = FrameServer(self.__running)
         self.__mem = SharedMemory(name=self.fs.mem.name)
         self.__last_frame: np.ndarray = np.ndarray(IMG_SIZE, dtype=np.uint8, buffer=self.__mem.buf)
 
         self.fs_thread = Thread(target=self.fs.run, daemon=True)
-        self.yolo = yolov7_package.Yolov7Detector()
+        self.yolo = yolov7_package.Yolov7Detector(traced=True)
         print("Server initialized")
 
     @property
     def counts(self):
         return self.__counts
+
+    @property
+    def running(self):
+        return self.__running.value
+
+    @property
+    def total(self):
+        return self.__total
 
     def kill(self):
         self.__running.value = False
@@ -45,34 +62,33 @@ class HttpServer:
             yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + \
                 cv2.imencode(".jpg", np.asarray(self.__last_frame).reshape(IMG_SIZE))[1].tobytes() + b"\r\n"
 
-    def detect(self, img):
-        cl, bx, sc = self.yolo.detect(img)
-        cl: list = cl[0]  # ugh
+    def detect(self, img, box) -> Tuple[str, float, Tuple[int, int, int, int]]:
+        cx, cy = box[0] + box[2] // 2, box[1] + box[3] // 2
+        classes, boxes, scores = self.yolo.detect(img)
+        classes, boxes, scores = classes[0], boxes[0], scores[0]  # only 1 image
 
-        d = {"frame": encode64(img)}
-
-        for i in range(len(cl)):
-            if cl[i] not in WHITELIST or sc[i] < 0.7:
+        min_dist = img.shape[0] + img.shape[1]
+        min_idx = -1
+        for i in range(len(classes)):
+            if classes[i] not in WHITELIST or scores[i] < CONFIDENCE_THRESHOLD:
                 continue
-            if cl[i] not in d:
-                d[cl[i]] = {
-                    "name": WHITELIST[cl[i]],
-                    "boxes": [bx[i]],
-                    "scores": [sc[i]],
-                    "count": 1
-                }
-            else:
-                d[cl[i]]["boxes"].append(bx[i])
-                d[cl[i]]["scores"].append(sc[i])
-                d[cl[i]]["count"] += 1
 
-        s = ""
-        for c in WHITELIST:
-            if c in d:
-                name, count = d[c]['name'], d[c]['count']
-                s += f"{count} {name}{'' if count == 1 else 's'} "
-        d["str"] = s if len(s) else "no detections."
-        return d
+            b = boxes[i]
+            bx, by = b[0] + b[2] // 2, b[1] + b[3] // 2
+            diff = [bx - cx, by - cy]
+            dist = np.linalg.norm(diff)
+            if dist < min_dist:
+                min_dist = dist
+                min_idx = i
+
+        if min_idx == -1:
+            return None, None, None
+
+        min_cl = classes[min_idx]
+        min_sc = scores[min_idx]
+        min_bx = boxes[min_idx]
+
+        return coco_names[min_cl], min_sc, min_bx
 
     def create_server(self):
         app = Flask(__name__)
@@ -96,18 +112,30 @@ class HttpServer:
         def count():
             data = request.get_json()
             frame = decode64(data["frame"])
-            x, y, w, h = decode64(data["rect"])
+            box = x, y, w, h = decode64(data["rect"])
             direction = data["direction"]
+            cls, score, box = self.detect(frame, box)
             cropped = frame[y:y + h, x:x + w]
-            result = self.detect(cropped)
-            print(result["str"], "in", direction)
+            cv2.imwrite(f"server/static/{data['count']}.jpg", cropped)
+            if cls is None:
+                print("No object detected")
+                return {"count": 0}
+
+            if direction not in self.counts[cls]:
+                self.counts[cls][direction] = 1
+            else:
+                self.counts[cls][direction] += 1
+            self.__total += 1
+
             socketio.emit('detect', {
-                "count": data["count"],
-                "data": result,
+                "counts": self.counts,
                 "T": data["T"],
+                "total": self.total,
+                "cam_count": data["count"],
             })
-            cv2.imwrite(f"output/{data['count']}.jpg", cropped)
-            return "ok"
+            print(f"Detected {cls} moving {direction} with confidence {score} at {box}")
+
+            return {"count": self.total}
 
         @app.post("/sensors")
         def sensors():
