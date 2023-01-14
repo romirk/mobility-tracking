@@ -1,12 +1,12 @@
-#!../../env/bin/python
+#!../env/bin/python
 from multiprocessing import Process, Value
 from time import sleep
 
 import requests
 import serial
 
-from traffic_counter import TrafficCounter
-from utils import parse_args
+from .traffic_counter import TrafficCounter
+from .utils import parse_args
 
 
 class SensorBox:

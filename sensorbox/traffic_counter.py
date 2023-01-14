@@ -12,8 +12,9 @@ import cv2
 import imutils
 import numpy as np
 import requests
+import sys
 
-from utils import encode64, rs_pipeline_setup, countdown
+from .utils import encode64, rs_pipeline_setup, countdown
 
 
 def req_thread(url, data):
@@ -33,7 +34,7 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
     while running.value:
         transport.sendall(frame)
         time.sleep(0.25)
-
+    mem.close()
 
 class TrafficCounter(object):
     """
@@ -65,7 +66,7 @@ class TrafficCounter(object):
             self._vid_width = config.video_width
             self._vid_height = 800
             self.debug = False
-            self.pipeline, self.pipeline_config = rs_pipeline_setup(self._vid_width, self._vid_height, 15)
+            self.pipeline, self.pipeline_config = rs_pipeline_setup(self._vid_width, self._vid_height, 30)
             self._compute_frame_dimensions()
         else:
             self.debug = True
@@ -95,7 +96,7 @@ class TrafficCounter(object):
 
         self.streamer = Process(target=streamer_thread, args=(
         config.server, (self._vid_height, self._vid_width, 3), self.mem.name, self.running), daemon=True)
-        self.streamer.start()
+        #self.streamer.start()
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -277,22 +278,24 @@ class TrafficCounter(object):
                 fg_mask = self.bg_subtractor.apply(working_img, background_avg, rate_of_influence)
 
                 # Drawing bounding boxes and counting
+                t2 = time.time()
                 self.bind_objects(img, fg_mask)
-
+                sys.stdout.write(f"\rbound objects in {time.time()-t2} at frame")
                 # Displaying the frame
-                np.copyto(self.shared_frame, img)
+                # np.copyto(self.shared_frame, img)
 
                 if self.record:
                     self.out.write(img)
 
                 t1 = time.time()
-                # print(f"\r{frame_id} {1 / (t1 - t0)}", end="")
+                sys.stdout.write(f" {frame_id} {1 / (t1 - t0)}")
         except KeyboardInterrupt:
             pass
         except ConnectionResetError:
             print("Connection reset by peer")
         finally:
             self.running.value = False
+            self.mem.close()
             self.pipeline.stop()
             if self.record:
                 self.out.release()

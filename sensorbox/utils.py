@@ -3,7 +3,8 @@ import codecs
 import pickle
 from time import sleep
 
-import pyrealsense2 as rs
+from ..res import pyrealsense2 as rs
+
 
 
 def parse_args_counter(parser=argparse.ArgumentParser(
