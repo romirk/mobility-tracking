@@ -159,7 +159,7 @@ class TrafficCounter(object):
             cx = int(rect[0][0])
             cy = int(rect[0][1])
 
-            if cy < 240:
+            if cy > 240:
                 continue
 
             w, h = rect[1]  # Unpacks the width and height of the frame
