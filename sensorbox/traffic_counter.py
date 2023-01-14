@@ -183,7 +183,7 @@ class TrafficCounter(object):
                         min_dist = dist
                         min_point = self.prev_centroids[i]
                 # This if is meant to reduce over-counting errors
-                if min_dist < w / 2:
+                if min_dist < 1.5 * w / 2:
                     prev_cx, prev_cy = min_point
                 else:
                     prev_cx, prev_cy = cx, cy
@@ -233,24 +233,24 @@ class TrafficCounter(object):
                 frame = self.pipeline.wait_for_frames().get_color_frame()
                 frame_id = int(frame.frame_number)  # get current frame index
                 img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
                 if not self.visualize:
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     self.socket.send(img.tobytes())
 
                 working_img = img.copy()
-                if self.black_mask is not None:
-                    working_img = cv2.bitwise_and(working_img, self.black_mask)
-
-                if frame_id < self.starting_frame:
-                    cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
-                    continue
 
                 cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
+
+                if frame_id < self.starting_frame:
+                    print(self.raw_avg)
+                    continue
+
                 background_avg = cv2.convertScaleAbs(
                     self.raw_avg
                 )  # reference background average image
-                subtracted_img = cv2.absdiff(background_avg, working_img)
+
+                subtracted_img = self.subtract(background_avg, working_img)
 
                 # Adding extra blur
                 subtracted_img = cv2.GaussianBlur(subtracted_img, (21, 21), 0)
@@ -291,3 +291,6 @@ class TrafficCounter(object):
             self.pipeline.stop()
             self.out.release()
             print("[Camera] Stopping counter...")
+
+    def subtract(self, background_avg, working_img):
+        return np.linalg.norm(background_avg - working_img, axis=2)
