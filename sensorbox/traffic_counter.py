@@ -7,7 +7,7 @@ import time
 from multiprocessing import Value
 from threading import Thread
 
-import cv2
+import cv2 
 import imutils
 import numpy as np
 import requests
@@ -51,8 +51,7 @@ class TrafficCounter(object):
         )  # this will contain the coordinates of the centers in the previous
         if not config.debug:
             self.debug = False
-            self.pipeline = rs_pipeline_setup(640, 480, 20)
-            self.pipeline, self.pipeline_config = rs_pipeline_setup(config.video_width, 480, 20)
+            self.pipeline, self.pipeline_config = rs_pipeline_setup(1280, 800, 15)
         else:
             self.debug = True
             self.cap = cv2.VideoCapture("../test.mp4")
@@ -216,14 +215,15 @@ class TrafficCounter(object):
         """Sets up the masks for the background subtraction and the thresholding operations"""
 
         if self.debug:
-            frame = self.cap.grab()
+            _, frame = self.cap.read()
+            img = frame
         else:
             frame = self.pipeline.wait_for_frames().get_color_frame()
-        img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
+            img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
 
         self.raw_avg = np.float32(img)
         self.raw_avg = cv2.resize(self.raw_avg, (self._vid_width, self._vid_height))
-
+        print(self.raw_avg.shape)
         print("Ready. Starting in")
         countdown(5)
 
@@ -233,21 +233,26 @@ class TrafficCounter(object):
         print("running")
 
         try:
+            i = 0
             while running.value:
                 t0 = time.time()
                 if self.debug:
-                    frame = self.cap.grab()
+                    self.cap.set(cv2.CAP_PROP_POS_FRAMES, i)
+                    ret, frame = self.cap.read()
+                    if not ret: continue
+                    frame_id = i
+                    i += 1
+                    img = frame
                 else:
                     frame = self.pipeline.wait_for_frames().get_color_frame()
-                frame_id = int(frame.frame_number)  # get current frame index
-                img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
+                    frame_id = int(frame.frame_number)  # get current frame index
+                    img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
 
                 if not self.visualize:
-                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                    self.socket.send(img.tobytes())
+                    img_gr = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    self.socket.send(img_gr.tobytes())
 
                 working_img = img.copy()
-
                 cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
 
                 if frame_id < self.starting_frame:
@@ -265,7 +270,8 @@ class TrafficCounter(object):
                 self.bind_objects(img, fg_mask)
 
                 if self.visualize:
-                    self.socket.send(fg_mask.tobytes())
+                    stacked = np.hstack((img, cv2.cvtColor(fg_mask, cv2.COLOR_GRAY2BGR)))
+                    self.socket.send(stacked.tobytes())
 
                 if self.record:
                     self.out.write(img)
