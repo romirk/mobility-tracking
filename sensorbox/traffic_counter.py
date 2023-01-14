@@ -4,10 +4,11 @@ Traffic Counting
 import datetime
 import socket
 import time
-from multiprocessing import Value
+from multiprocessing import Value, Process
+from multiprocessing.shared_memory import SharedMemory
 from threading import Thread
 
-import cv2 
+import cv2
 import imutils
 import numpy as np
 import requests
@@ -22,6 +23,18 @@ def req_thread(url, data):
         print("Error in request thread: ", e)
 
 
+def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
+    mem = SharedMemory(name=mem)
+    frame = np.ndarray(dim, dtype=np.uint8, buffer=mem.buf)
+    transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    transport.connect((url, 9999))
+    print("Connected to streamer")
+
+    while running.value:
+        transport.sendall(frame)
+        time.sleep(0.25)
+
+
 class TrafficCounter(object):
     """
     Traffic Counter class.
@@ -29,6 +42,7 @@ class TrafficCounter(object):
 
     def __init__(self, config):
         self.name = __name__
+        self.running = Value("b", True)
         self.crop_rect = []  # stores the click coordinates where to crop the frame
         self.mask_points = (
             []
@@ -42,7 +56,6 @@ class TrafficCounter(object):
         self.min_area = config.min_area
         self.num_contours = config.num_contours
         self.starting_frame = config.starting_frame
-
 
         self.prev_centroids = (
             []
@@ -64,19 +77,14 @@ class TrafficCounter(object):
             history=100, varThreshold=50, detectShadows=True
         )
 
-        self.server = config.server
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((self.server, 9999))
-        self.sf = self.socket.makefile("wb")
+        self.mem = SharedMemory(create=True, size=self._vid_width * self._vid_height * 3, name="frame")
+        self.shared_frame = np.ndarray((self._vid_height, self._vid_width, 3), dtype=np.uint8, buffer=self.mem.buf)
 
         self.record = config.record
 
         self.visualize = config.visual
 
-        print("[Camera] connected to server")
-
         # Getting frame dimensions
-        self._compute_frame_dimensions()
         self._set_up_line(config.direction[0], float(config.direction[1]))
 
         if config.record:
@@ -84,6 +92,10 @@ class TrafficCounter(object):
             self.out = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), 30,
                                        (self._vid_width, self._vid_height))
             print(f"Recording to file {filename} ({self._vid_width}x{self._vid_height})")
+
+        self.streamer = Process(target=streamer_thread, args=(
+        config.server, (self._vid_height, self._vid_width, 3), self.mem.name, self.running), daemon=True)
+        self.streamer.start()
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -250,10 +262,6 @@ class TrafficCounter(object):
                     frame_id = int(frame.frame_number)  # get current frame index
                     img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
 
-                if not self.visualize:
-                    img_gr = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                    self.socket.send(img_gr.tobytes())
-
                 working_img = img.copy()
                 cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
 
@@ -271,9 +279,8 @@ class TrafficCounter(object):
                 # Drawing bounding boxes and counting
                 self.bind_objects(img, fg_mask)
 
-                if self.visualize:
-                    stacked = np.hstack((img, cv2.cvtColor(fg_mask, cv2.COLOR_GRAY2BGR)))
-                    self.socket.send(stacked.tobytes())
+                # Displaying the frame
+                np.copyto(self.shared_frame, img)
 
                 if self.record:
                     self.out.write(img)
@@ -285,6 +292,7 @@ class TrafficCounter(object):
         except ConnectionResetError:
             print("Connection reset by peer")
         finally:
+            self.running.value = False
             self.pipeline.stop()
             if self.record:
                 self.out.release()
