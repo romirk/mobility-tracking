@@ -102,7 +102,7 @@ class TrafficCounter(object):
             "frame": encode64(frame),
             "count": cnt,
             "rect": encode64(rect),
-            "direction": dir
+            "direction": dir,
             "T": str(datetime.datetime.now())
         }))
         thread.start()
