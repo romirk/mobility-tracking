@@ -153,8 +153,6 @@ def rs_pipeline_setup(width, height, fps):
         print("Requires Depth sensorbox with Color sensor")
         exit(0)
 
-    # enable depth stream
-    config.enable_stream(rs.stream.depth, width, height, rs.format.z16, fps)
     # enable RGB stream
     config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
     pipeline.start(config)

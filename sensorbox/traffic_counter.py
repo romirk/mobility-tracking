@@ -43,15 +43,17 @@ class TrafficCounter(object):
         self.num_contours = config.num_contours
         self.starting_frame = config.starting_frame
 
-        self._vid_width = config.video_width
-        self._vid_height = None  # PLACEHOLDER
 
         self.prev_centroids = (
             []
         )  # this will contain the coordinates of the centers in the previous
         if not config.debug:
             self.debug = False
-            self.pipeline, self.pipeline_config = rs_pipeline_setup(1280, 800, 15)
+            self._vid_width = config.video_width
+            self._vid_height = 800
+            self.debug = False
+            self.pipeline, self.pipeline_config = rs_pipeline_setup(self._vid_width, self._vid_height, 15)
+            self._compute_frame_dimensions()
         else:
             self.debug = True
             self.cap = cv2.VideoCapture("../test.mp4")
