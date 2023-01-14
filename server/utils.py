@@ -3,7 +3,7 @@ from __future__ import annotations
 import codecs
 import pickle
 
-IMG_SIZE = (480, 640)
+IMG_SIZE = (480, 640, 3)
 IMG_SIZE_RGB = (480, 640, 3)
 
 

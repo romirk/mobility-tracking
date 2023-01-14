@@ -202,25 +202,13 @@ class TrafficCounter(object):
 
     def _set_up_masks(self):
         frame = self.pipeline.wait_for_frames().get_color_frame()
+        img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
 
-        img = imutils.resize(np.asanyarray(frame.get_data()), width=self._vid_width)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        self._vid_height = img.shape[0]
+        self.raw_avg = np.float32(img)
+        self.raw_avg = cv2.resize(self.raw_avg, (self._vid_width, self._vid_height))
 
         print("Ready. Starting in")
         countdown(5)
-
-        roi_points = np.array([self.mask_points])
-        self.black_mask = None
-        if len(self.mask_points) != 0:
-            self.black_mask = np.zeros(img.shape, dtype=np.uint8)
-            cv2.fillPoly(self.black_mask, roi_points, (255, 255, 255))
-
-            self.raw_avg = np.float32(self.black_mask)
-        else:
-            self.raw_avg = np.float32(img)
-
-        self.raw_avg = cv2.resize(self.raw_avg, (self._vid_width, self._vid_height))
 
     def main_loop(self, running: Value):
         self._set_up_masks()
