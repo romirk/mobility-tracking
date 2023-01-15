@@ -132,5 +132,17 @@ class SensorLive {
     }
 }
 
+
 const sensor_live = new SensorLive();
 sensor_live.log()
+
+window.onkeyup = function (e) {
+    const key = e.code;
+
+    if (key === 'KeyL') {
+        let old_data = sensor_live.counts;
+        console.log(old_data);
+        old_data.car.total += 1;
+        sensor_live.on_detect({counts: old_data});
+    }
+}
