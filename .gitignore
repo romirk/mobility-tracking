@@ -5,6 +5,7 @@ ignore/
 .vscode/
 *.pt
 *.so
-venv/
-env/
+envs/
 /sensorbox/data/
+output/
+ignore/

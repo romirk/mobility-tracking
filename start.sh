@@ -1,5 +1,7 @@
 #!/bin/bash
-cd server
-./env/bin/python backend.py &
-cd ../sensorbox
-../env/bin/python sensorbox.py -d v 0.5 &
+pushd /mnt/mobility-tracking
+git pull
+pushd ..
+/mnt/envs/3.6/bin/python -m mobility-tracking -vw 1280 -s Tonys-MBP.lan -d v 0.7 -a 5000 --debug
+popd
+popd

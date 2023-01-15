@@ -10,8 +10,10 @@ from flask import Flask, render_template, Response, request
 from flask_socketio import SocketIO, emit
 from yolov7_package.model_utils import coco_names
 
-from server.frame_server import FrameServer
-from server.utils import IMG_SIZE, decode64
+# from server.frame_server import FrameServer
+# from server.utils import IMG_SIZE, decode64
+from frame_server import FrameServer
+from utils import IMG_SIZE, decode64
 
 WHITELIST = {1: "bicycle", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck"}
 CONFIDENCE_THRESHOLD = 0.3
@@ -26,11 +28,11 @@ class HttpServer:
         self.__last_active = {}
 
         self.__counts = {
-            "bicycle": {},
-            "car": {},
-            "motorcycle": {},
-            "bus": {},
-            "truck": {},
+            "bicycle": {"total": 0},
+            "car": {"total": 0},
+            "motorcycle": {"total": 0},
+            "bus": {"total": 0},
+            "truck": {"total": 0},
         }
         self.__total = 0
 
@@ -116,15 +118,17 @@ class HttpServer:
             direction = data["direction"]
             cls, score, box = self.detect(frame, box)
             cropped = frame[y:y + h, x:x + w]
-            cv2.imwrite(f"server/static/{data['count']}.jpg", cropped)
+            cv2.imwrite(f"output/{data['count']}_{cls}.jpg", cropped)
             if cls is None:
                 print("No object detected")
                 return {"count": 0}
 
             if direction not in self.counts[cls]:
                 self.counts[cls][direction] = 1
+                self.counts[cls]["total"] = 1
             else:
                 self.counts[cls][direction] += 1
+                self.counts[cls]["total"] += 1
             self.__total += 1
 
             socketio.emit('detect', {

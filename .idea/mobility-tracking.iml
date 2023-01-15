@@ -4,8 +4,11 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludeFolder url="file://$MODULE_DIR$/legacy" />
+      <excludeFolder url="file://$MODULE_DIR$/envs/3.6" />
+      <excludeFolder url="file://$MODULE_DIR$/envs/3.8" />
+      <excludeFolder url="file://$MODULE_DIR$/envs" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.7 (mobility-tracking)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.8 (mobility-tracking)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jquery-3.6.1" level="application" />
     <orderEntry type="library" name="bootstrap" level="application" />

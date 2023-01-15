@@ -1,9 +1,60 @@
 import argparse
 import codecs
 import pickle
+import sys
 from time import sleep
 
-import pyrealsense2 as rs
+if sys.platform == "win32":
+    import pyrealsense2 as rs
+else:
+    # noinspection PyPackageRequirements,PyUnresolvedReferences
+    from ..res import pyrealsense2 as rs
+
+
+def encode64(data):
+    return codecs.encode(pickle.dumps(data), "base64").decode()
+
+
+def decode64(data: str):
+    return pickle.loads(codecs.decode(data.encode(), "base64"))
+
+
+def rs_pipeline_setup(width, height, fps):
+    # Configure depth and color streams
+    # noinspection PyArgumentList
+    pipeline = rs.pipeline()
+    config = rs.config()
+
+    # Get device product line for setting a supporting resolution
+    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
+    pipeline_profile = config.resolve(pipeline_wrapper)
+    device = pipeline_profile.get_device()
+    device_product_line = str(device.get_info(rs.camera_info.product_line))
+
+    # print(f"{device} | {device_product_line}\n")
+    print(f"configuring {device_product_line} with {width}x{height} @ {fps} fps")
+
+    # find RGB sensor
+    for s in device.sensors:
+        if s.get_info(rs.camera_info.name) == "RGB Camera":
+            break
+    else:
+        print("Requires Depth sensorbox with Color sensor")
+        exit(0)
+
+    # enable RGB stream
+    config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
+    pipeline.start(config)
+    return pipeline, config
+
+
+def countdown(secs):
+    secs = int(secs)
+    while secs:
+        print(secs, end=' ')
+        sleep(1)
+        secs -= 1
+    print('0')
 
 
 def parse_args_counter(parser=argparse.ArgumentParser(
@@ -13,6 +64,7 @@ def parse_args_counter(parser=argparse.ArgumentParser(
     direction_default = ["H", "0.5"]
     num_count_default = 10
     video_width_default = 640
+    video_height_default = 480
     starting_frame_default = 10
 
     parser.add_argument(
@@ -53,6 +105,15 @@ def parse_args_counter(parser=argparse.ArgumentParser(
              f"automatically to preserve aspect ratio",
     )
     parser.add_argument(
+        "-vh",
+        "--video_height",
+        type=int,
+        default=video_height_default,
+        help=f"Videos will be resized to this height (default is {video_width_default}). Width will be computed "
+             f"automatically to preserve aspect ratio",
+    )
+
+    parser.add_argument(
         "-sf",
         "--starting_frame",
         type=int,
@@ -65,6 +126,16 @@ def parse_args_counter(parser=argparse.ArgumentParser(
         "--record",
         action="store_true",
         help="Boolean flag to record the video.",
+    )
+    parser.add_argument(
+        "--debug", action="store_true", help="Boolean flag to show debug windows."
+    )
+    parser.add_argument(
+        "-f",
+        "--fps",
+        type=int,
+        default=30,
+        help="Frames per second for the video (default is 30).",
     )
     return parser
 
@@ -118,50 +189,3 @@ def parse_args(parser=argparse.ArgumentParser(
     parser = parse_args_counter(parser)
     parser = parse_args_sensorbox(parser)
     return parser.parse_args()
-
-
-def encode64(data):
-    return codecs.encode(pickle.dumps(data), "base64").decode()
-
-
-def decode64(data: str):
-    return pickle.loads(codecs.decode(data.encode(), "base64"))
-
-
-def rs_pipeline_setup(width, height, fps):
-    # Configure depth and color streams
-    # noinspection PyArgumentList
-    pipeline = rs.pipeline()
-    config = rs.config()
-
-    # Get device product line for setting a supporting resolution
-    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
-    pipeline_profile = config.resolve(pipeline_wrapper)
-    device = pipeline_profile.get_device()
-    device_product_line = str(device.get_info(rs.camera_info.product_line))
-
-    print(f"{device} | {device_product_line}\n")
-
-    # find RGB sensor
-    for s in device.sensors:
-        if s.get_info(rs.camera_info.name) == "RGB Camera":
-            break
-    else:
-        print("Requires Depth sensorbox with Color sensor")
-        exit(0)
-
-    # enable depth stream
-    config.enable_stream(rs.stream.depth, width, height, rs.format.z16, fps)
-    # enable RGB stream
-    config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
-    pipeline.start(config)
-    return pipeline, config
-
-
-def countdown(secs):
-    secs = int(secs)
-    while secs:
-        print(secs, end=' ')
-        sleep(1)
-        secs -= 1
-    print('0')

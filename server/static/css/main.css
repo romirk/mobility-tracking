@@ -137,7 +137,6 @@ body {
     z-index: 0;
 
     background-color: white;
-    transform: rotate(180deg);
 }
 
 #nav-stats {
@@ -255,6 +254,11 @@ h2 {
 
 .svg {
     transform: scale(0.70);
+}
+
+.material-symbols-rounded {
+    transform: scale(1.25);
+    color: #FF6701;
 }
 
 .dblue {
