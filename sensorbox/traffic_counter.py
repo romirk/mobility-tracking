@@ -285,7 +285,7 @@ class TrafficCounter(object):
 
                 # Background subtraction
                 fg_mask = self.bg_subtractor.apply(working_img, background_avg, rate_of_influence)
-                blurred = cv2.GaussianBlur(fg_mask, (21, 21), 0)
+                blurred = cv2.GaussianBlur(fg_mask, (31, 31), 0)
                 ret1, th1 = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
 
                 kernel = np.ones((7, 7), np.uint8)
