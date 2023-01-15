@@ -1,11 +1,11 @@
 """
 Traffic Counting
 """
+import _pickle as pickle
 import datetime
 import socket
 import time
-from multiprocessing import Value, Process, Lock, Event
-from multiprocessing.shared_memory import SharedMemory
+from multiprocessing import Value, Process, Queue
 from threading import Thread
 
 import cv2
@@ -17,9 +17,7 @@ from utils import encode64, rs_pipeline_setup, countdown
 
 # from jetson_inference import detectNet
 
-mutex = Lock()
-new_frame_event = Event()
-frame_sent_event = Event()
+STREAM_Q = Queue(maxsize=100)
 
 
 def req_thread(url, data):
@@ -29,16 +27,14 @@ def req_thread(url, data):
         print("Error in request thread: ", e)
 
 
-def streamer_thread(url: str, dim: tuple, mem: str, running: Value, event: Event):
-    mem = SharedMemory(name=mem)
-    frame = np.ndarray(dim, dtype=np.uint8, buffer=mem.buf)
+def streamer_thread(url: str, running: Value, queue: Queue):
     transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     transport.connect((url, 9999))
     print("Connected to streamer")
 
     try:
         while running.value:
-            event.wait()
+            frame = pickle.loads(queue.get())
             transport.sendall(frame)
     except ConnectionResetError:
         print("Connection reset by peer")
@@ -46,7 +42,6 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value, event: Event
         pass
     finally:
         running.value = False
-        mem.close()
         transport.close()
 
 
@@ -62,7 +57,6 @@ class TrafficCounter():
     def __init__(self, config):
         self.name = __name__
         self.running = Value("b", True)
-        self.event = Event()
         self.crop_rect = []  # stores the click coordinates where to crop the frame
         self.mask_points = (
             []
@@ -103,9 +97,6 @@ class TrafficCounter():
             history=100, varThreshold=50, detectShadows=True
         )
 
-        self.mem = SharedMemory(create=True, size=921600, name="frame")
-        self.shared_frame = np.ndarray((480, 640, 3), dtype=np.uint8, buffer=self.mem.buf)
-
         self.record = config.record
 
         self.visualize = config.visual
@@ -120,7 +111,7 @@ class TrafficCounter():
             print(f"Recording to file {filename} ({self._vid_width}x{self._vid_height})")
 
         self.streamer = Process(target=streamer_thread, args=(
-            config.server, self.shared_frame.shape, self.mem.name, self.running, self.event), daemon=True)
+            config.server, self.running, STREAM_Q), daemon=True)
         self.streamer.start()
 
     def _set_up_line(self, line_direction, line_position):
@@ -332,9 +323,8 @@ class TrafficCounter():
                 colored_final_img = img
 
                 down_sampled = cv2.resize(colored_final_img, (640, 480))
-                np.copyto(self.shared_frame, down_sampled)
-                self.event.set()
 
+                STREAM_Q.put(pickle.dumps(down_sampled))
 
                 if self.record:
                     print("type of frame", type(down_sampled))
@@ -350,8 +340,6 @@ class TrafficCounter():
                 self.pipeline.stop()
             if self.record:
                 self.out.release()
-            self.mem.close()
-            self.mem.unlink()
 
             print("[Camera] Stopping counter...")
 
