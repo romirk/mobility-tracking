@@ -4,7 +4,7 @@ Traffic Counting
 import datetime
 import socket
 import time
-from multiprocessing import Value, Process
+from multiprocessing import Value, Process, Lock, Event
 from multiprocessing.shared_memory import SharedMemory
 from threading import Thread
 
@@ -15,8 +15,10 @@ import requests
 
 from utils import encode64, rs_pipeline_setup, countdown
 
-
 # from jetson_inference import detectNet
+
+mutex = Lock()
+new_frame_event = Event()
 
 
 def req_thread(url, data):
@@ -35,7 +37,9 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
 
     try:
         while running.value:
-            transport.sendall(frame)
+            if new_frame_event.is_set():
+                with mutex:
+                    transport.sendall(frame)
     except ConnectionResetError:
         print("Connection reset by peer")
     except KeyboardInterrupt:
@@ -327,7 +331,9 @@ class TrafficCounter():
                 colored_final_img = img
 
                 down_sampled = cv2.resize(colored_final_img, (640, 480))
-                np.copyto(self.shared_frame, down_sampled)
+                with mutex:
+                    new_frame_event.set()
+                    np.copyto(self.shared_frame, down_sampled)
 
                 if self.record:
                     print("type of frame", type(down_sampled))
