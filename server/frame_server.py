@@ -42,8 +42,12 @@ class FrameServer:
         with conn:
             sf = conn.makefile(mode='rb')
             while self.running.value:
-                frame: np.ndarray = np.frombuffer(sf.read(self.frame.nbytes), dtype=np.uint8,
-                                                  ).reshape(IMG_SIZE)
+                try:
+                    frame: np.ndarray = np.frombuffer(sf.read(self.frame.nbytes), dtype=np.uint8,
+                                                      ).reshape(IMG_SIZE)
+                except ValueError:
+                    print('[FS] Connection lost')
+                    break
                 # print(f'[FS] Received frame from {addr}: {frame.dtype}')
                 np.copyto(self.frame, frame)
                 # print(f'[FS] Copied frame to shared memory')

@@ -35,6 +35,8 @@ def streamer_thread(url: str, running: Value, queue: Queue):
     try:
         while running.value:
             frame = pickle.loads(queue.get())
+            if frame is None:
+                break
             transport.sendall(frame)
     except ConnectionResetError:
         print("Connection reset by peer")
@@ -336,6 +338,7 @@ class TrafficCounter():
             pass
         finally:
             self.running.value = False
+            STREAM_Q.put(None)
             if not self.debug:
                 self.pipeline.stop()
             if self.record:
