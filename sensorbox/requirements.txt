@@ -1,8 +1,8 @@
-requests==2.28.1
-pyserial==3.5
-opencv-python==4.7.0.68
-imagezmq==1.1.1
-imutils==0.5.4
-numpy==1.21.6
+requests
+pyserial
+opencv-python
+imagezmq
+imutils
+numpy
 python-socketio[client]
 shared-memory38

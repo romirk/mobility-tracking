@@ -3,7 +3,7 @@ import codecs
 import pickle
 from time import sleep
 
-from ..res import pyrealsense2 as rs
+# from ..res import pyrealsense2 as rs
 
 
 
