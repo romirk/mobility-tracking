@@ -10,8 +10,10 @@ from flask import Flask, render_template, Response, request
 from flask_socketio import SocketIO, emit
 from yolov7_package.model_utils import coco_names
 
-from server.frame_server import FrameServer
-from server.utils import IMG_SIZE, decode64
+# from server.frame_server import FrameServer
+# from server.utils import IMG_SIZE, decode64
+from frame_server import FrameServer
+from utils import IMG_SIZE, decode64, expand_bounding_box
 
 WHITELIST = {1: "bicycle", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck"}
 CONFIDENCE_THRESHOLD = 0.3
@@ -114,26 +116,31 @@ class HttpServer:
             frame = decode64(data["frame"])
             box = x, y, w, h = decode64(data["rect"])
             direction = data["direction"]
-            # cls, score, box = self.detect(frame, box)
-            # cropped = frame[y:y + h, x:x + w]
-            # cv2.imwrite(f"server/static/{data['count']}.jpg", cropped)
-            # if cls is None:
-            #     print("No object detected")
-            #     return {"count": 0}
-            #
-            # if direction not in self.counts[cls]:
-            #     self.counts[cls][direction] = 1
-            # else:
-            #     self.counts[cls][direction] += 1
-            # self.__total += 1
-            #
-            # socketio.emit('detect', {
-            #     "counts": self.counts,
-            #     "T": data["T"],
-            #     "total": self.total,
-            #     "cam_count": data["count"],
-            # })
-            # print(f"Detected {cls} moving {direction} with confidence {score} at {box}")
+            cls, score, box = self.detect(frame, box)
+
+            x, y, w, h = expand_bounding_box(x, y, w, h, frame)
+
+            cropped = frame[y:y + h, x:x + w]
+            cv2.imwrite(f"server/static/{data['count']}.jpg", cropped)
+            if cls is None:
+                print("No object detected")
+                return {"count": 0}
+
+            if direction not in self.counts[cls]:
+                self.counts[cls][direction] = 1
+                self.counts[cls]["total"] = 1
+            else:
+                self.counts[cls][direction] += 1
+                self.counts[cls]["total"] += 1
+            self.__total += 1
+
+            socketio.emit('detect', {
+                "counts": self.counts,
+                "T": data["T"],
+                "total": self.total,
+                "cam_count": data["count"],
+            })
+            print(f"Detected {cls} moving {direction} with confidence {score} at {box}")
 
             return {"count": self.total}
 

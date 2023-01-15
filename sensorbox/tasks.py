@@ -1,6 +1,8 @@
 from celery import Celery, Task
 
 app = Celery('broker', backend='rpc://', broker='pyamqp://')
+
+
 class _DetectTask(Task):
     name = "Detect"
     description = "Real-time object detection via YOLOv7"

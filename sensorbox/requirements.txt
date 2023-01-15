@@ -5,4 +5,3 @@ imagezmq
 imutils
 numpy
 python-socketio[client]
-shared-memory38
