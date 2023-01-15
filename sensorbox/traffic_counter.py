@@ -296,10 +296,10 @@ class TrafficCounter(object):
                 # sys.stdout.write(f"\rbound objects in {time.time() - t2} at frame")
 
                 if self.debug:
-                    frame_1 = fg_mask
-                    frame_2 = blurred
-                    frame_3 = dilated
-                    frame_4 = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                    frame_1 = cv2.cvtColor(fg_mask, cv2.COLOR_GRAY2BGR)
+                    frame_2 = cv2.cvtColor(blurred, cv2.COLOR_GRAY2BGR)
+                    frame_3 = cv2.cvtColor(dilated, cv2.COLOR_GRAY2BGR)
+                    frame_4 = img
 
                     frame_12 = np.hstack((frame_1, frame_2))
                     frame_34 = np.hstack((frame_3, frame_4))
