@@ -19,6 +19,7 @@ from utils import encode64, rs_pipeline_setup, countdown
 
 mutex = Lock()
 new_frame_event = Event()
+frame_sent_event = Event()
 
 
 def req_thread(url, data):
@@ -38,9 +39,7 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
     try:
         while running.value:
             new_frame_event.wait()
-            with mutex:
-                transport.sendall(frame)
-                new_frame_event.clear()
+            transport.sendall(frame)
     except ConnectionResetError:
         print("Connection reset by peer")
     except KeyboardInterrupt:
@@ -332,9 +331,10 @@ class TrafficCounter():
                 colored_final_img = img
 
                 down_sampled = cv2.resize(colored_final_img, (640, 480))
-                with mutex:
-                    new_frame_event.set()
-                    np.copyto(self.shared_frame, down_sampled)
+                np.copyto(self.shared_frame, down_sampled)
+                new_frame_event.set()
+
+                frame_sent_event.wait()
 
                 if self.record:
                     print("type of frame", type(down_sampled))
