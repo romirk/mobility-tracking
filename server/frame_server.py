@@ -51,3 +51,4 @@ class FrameServer:
                     self.last_active[addr] = 0
                     print(f'[FS] Receiving frames from {addr}')
             self.mem.close()
+            self.mem.unlink()

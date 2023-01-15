@@ -3,6 +3,7 @@ Traffic Counting
 """
 import datetime
 import socket
+import sys
 import time
 from multiprocessing import Value, Process
 from multiprocessing.shared_memory import SharedMemory
@@ -12,6 +13,7 @@ import cv2
 import imutils
 import numpy as np
 import requests
+from jetson_inference import detectNet
 
 from .utils import encode64, rs_pipeline_setup, countdown
 
@@ -43,9 +45,11 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
         mem.close()
         transport.close()
 
+
 TEST_FILE = "./mobility-tracking/ignore/test.mp4"
 
-class TrafficCounter(object):
+
+class TrafficCounter():
     """
     Traffic Counter class.
     """
@@ -83,6 +87,8 @@ class TrafficCounter(object):
             self.cap.open(TEST_FILE)
             self._vid_width = int(self.cap.get(3))
             self._vid_height = int(self.cap.get(4))
+
+        self.net = detectNet("ssd-mobilenet-v2", sys.argv, 0.5)
 
         self.bg_subtractor = cv2.createBackgroundSubtractorMOG2(
             history=100, varThreshold=50, detectShadows=True
@@ -168,6 +174,9 @@ class TrafficCounter(object):
                 return True, "l" if cx - self.p1_count_line[0] < 0 else "r"
         return False, None
 
+    def classify(self, frame, bounding_box):
+        detections = self.net.Detect(frame, overlay="box,labels,conf")
+
     def bind_objects(self, frame, thresh_img):
         """Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be 
         drawn onto thresh_img: numpy image after subtracting the background and all thresholds and noise reduction 
@@ -238,7 +247,7 @@ class TrafficCounter(object):
 
     def _set_up_masks(self):
         """Sets up the masks for the background subtraction and the thresholding operations"""
-        
+
         assert self.cap.isOpened()
         if self.debug:
             _, frame = self.cap.read()
@@ -248,7 +257,7 @@ class TrafficCounter(object):
             img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
 
         self.raw_avg = np.copy(img).astype(np.float32)
-        
+
         print(self.raw_avg.shape)
         print("Ready. Starting in")
         countdown(5)
@@ -278,7 +287,6 @@ class TrafficCounter(object):
                 cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
 
                 if frame_id < self.starting_frame:
-                    # print(self.raw_avg)
                     continue
 
                 background_avg = cv2.convertScaleAbs(
