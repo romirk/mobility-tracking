@@ -3,7 +3,6 @@ Traffic Counting
 """
 import datetime
 import socket
-import sys
 import time
 from multiprocessing import Value, Process
 # from shared_memory import SharedMemory
@@ -14,9 +13,11 @@ import cv2
 import imutils
 import numpy as np
 import requests
-# from jetson_inference import detectNet
 
 from utils import encode64, rs_pipeline_setup, countdown
+
+
+# from jetson_inference import detectNet
 
 
 def req_thread(url, data):
@@ -86,10 +87,12 @@ class TrafficCounter():
             self._compute_frame_dimensions()
         else:
             self.debug = True
-            self.cap = cv2.VideoCapture()
-            self.cap.open(TEST_FILE)
-            self._vid_width = int(self.cap.get(3))
-            self._vid_height = int(self.cap.get(4))
+            print("Debug mode")
+            self.frames = np.fromfile("../hekinchonker.obj", dtype=np.uint8).reshape((900, 720, 1280, 3))
+            print(self.frames.shape)
+            self._vid_width = self.frames.shape[1]
+            self._vid_height = self.frames.shape[2]
+            print("Video dimensions: ", self._vid_width, self._vid_height)
 
         # self.net = detectNet("ssd-mobilenet-v2", sys.argv, 0.5)
 
@@ -252,7 +255,7 @@ class TrafficCounter():
         """Sets up the masks for the background subtraction and the thresholding operations"""
 
         if self.debug:
-            _, frame = self.cap.read()
+            frame = self.frames[0].copy()
             img = frame
         else:
             frame = self.pipeline.wait_for_frames().get_color_frame()
@@ -274,12 +277,10 @@ class TrafficCounter():
             while running.value:
                 t0 = time.time()
                 if self.debug:
-                    self.cap.set(cv2.CAP_PROP_POS_FRAMES, i)
-                    ret, frame = self.cap.read()
-                    if not ret: continue
-                    frame_id = i
+                    frame = self.frames[i]
                     i += 1
                     img = frame
+                    frame_id = i
                 else:
                     frame = self.pipeline.wait_for_frames().get_color_frame()
                     frame_id = int(frame.frame_number)  # get current frame index
@@ -341,8 +342,7 @@ class TrafficCounter():
                 self.pipeline.stop()
             if self.record:
                 self.out.release()
-            if self.debug:
-                self.cap.release()
+
             print("[Camera] Stopping counter...")
 
     def subtract(self, background_avg, working_img):

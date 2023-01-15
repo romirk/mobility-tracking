@@ -264,3 +264,7 @@ h2 {
 .dblue {
     color: var(--y-dblue)
 }
+
+.card {
+    height: 80%;
+}
