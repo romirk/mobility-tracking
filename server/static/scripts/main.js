@@ -6,7 +6,8 @@ class SensorLive {
         };
         this.sensor_data = {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, temperature: 0, humidity: 0, co2: 0
-        }
+        };
+        this.last_count = -1;
 
         this.socket = io.connect();
         this.socket.on('connect', this.on_connect.bind(this));
@@ -71,6 +72,8 @@ class SensorLive {
         console.log("!!!CAR DATA: ", data)
         this.counts.car = data.count;
         this.counts = data.counts;
+
+        this.counter = this.counts.car.total + this.counts.bus.total + this.counts.truck.total;
     }
 
     update() {
@@ -94,7 +97,7 @@ class SensorLive {
         // document.getElementById('sensor_co2').innerHTML = this.sensor_data.co2;
 
         this.numberOfVehicles.data.datasets.forEach((dataset) => {
-            dataset.data = [this.counts.car.total, this.counter.truck.total, this.counter.bus.total];
+            dataset.data = [this.counts.car.total, this.counts.truck.total, this.counts.bus.total];
         });
 
         this.numberOfVehicles.update();
@@ -113,7 +116,12 @@ class SensorLive {
 
         this.vehiclesOverTime.data.datasets.forEach((dataset) => {
             dataset.data.shift();
-            dataset.data.push(this.counter);
+            if (this.last_count === -1) {
+                dataset.data.push(0);
+            } else {
+                dataset.data.push(this.counter - this.last_count);
+            }
+            this.last_count = this.counter;
         });
 
         this.vehiclesOverTime.update();

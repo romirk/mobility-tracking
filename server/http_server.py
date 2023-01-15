@@ -13,7 +13,7 @@ from yolov7_package.model_utils import coco_names
 # from server.frame_server import FrameServer
 # from server.utils import IMG_SIZE, decode64
 from frame_server import FrameServer
-from utils import IMG_SIZE, decode64, expand_bounding_box
+from utils import IMG_SIZE, decode64
 
 WHITELIST = {1: "bicycle", 2: "car", 3: "motorcycle", 5: "bus", 7: "truck"}
 CONFIDENCE_THRESHOLD = 0.3
@@ -28,11 +28,11 @@ class HttpServer:
         self.__last_active = {}
 
         self.__counts = {
-            "bicycle": {},
-            "car": {},
-            "motorcycle": {},
-            "bus": {},
-            "truck": {},
+            "bicycle": {"total": 0},
+            "car": {"total": 0},
+            "motorcycle": {"total": 0},
+            "bus": {"total": 0},
+            "truck": {"total": 0},
         }
         self.__total = 0
 
@@ -117,11 +117,8 @@ class HttpServer:
             box = x, y, w, h = decode64(data["rect"])
             direction = data["direction"]
             cls, score, box = self.detect(frame, box)
-
-            x, y, w, h = expand_bounding_box(x, y, w, h, frame)
-
             cropped = frame[y:y + h, x:x + w]
-            cv2.imwrite(f"server/static/{data['count']}.jpg", cropped)
+            cv2.imwrite(f"output/{data['count']}_{cls}.jpg", cropped)
             if cls is None:
                 print("No object detected")
                 return {"count": 0}
