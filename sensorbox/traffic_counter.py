@@ -6,7 +6,7 @@ import socket
 import sys
 import time
 from multiprocessing import Value, Process
-from multiprocessing.shared_memory import SharedMemory
+from shared_memory import SharedMemory
 from threading import Thread
 
 import cv2
