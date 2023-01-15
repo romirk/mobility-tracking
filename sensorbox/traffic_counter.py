@@ -130,7 +130,7 @@ class TrafficCounter(object):
             self._vid_width = img.shape[1]
 
     def _draw_bounding_boxes(
-            self, frame, contour_id, bounding_points, cx, cy, prev_cx, prev_cy
+            self, frame, contour_id, bounding_points, cx, cy, prev_cx, prev_cy, area
     ):
         cv2.drawContours(frame, [bounding_points], 0, (0, 255, 0), 1)
         cv2.line(
@@ -138,7 +138,7 @@ class TrafficCounter(object):
         )  # line between last position and current position
         cv2.circle(frame, (cx, cy), 3, (0, 0, 255), 4)
         cv2.putText(
-            frame, str(contour_id), (cx, cy - 15), self.font, 0.4, (255, 0, 0), 2
+            frame, str(contour_id) + " " + str(area), (cx, cy - 15), self.font, 0.4, (255, 0, 0), 2
         )
 
     def __remote_update(self, frame: np.ndarray, rect: np.ndarray, dir: str, cnt: int):
@@ -182,8 +182,10 @@ class TrafficCounter(object):
         cnt_id = 1
         cur_centroids = []
         for c in contours:
+            area = cv2.contourArea(c)
+
             if (
-                    cv2.contourArea(c) < self.min_area
+                    area < self.min_area
             ):  # ignore contours that are smaller than this area
                 continue
             rect = cv2.minAreaRect(c)
@@ -229,7 +231,7 @@ class TrafficCounter(object):
             if _is_crossed:
                 self.__remote_update(orig_frame, bounding, direction, self.counter)
                 print(f"\r{self.counter}", end="")
-            self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy)
+            self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy, area)
 
             cnt_id += 1
         self.prev_centroids = cur_centroids  # updating centroids for next frame
