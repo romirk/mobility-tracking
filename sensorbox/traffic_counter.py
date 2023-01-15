@@ -306,7 +306,8 @@ class TrafficCounter(object):
                     final_img = np.vstack((frame_12, frame_34))
 
                 # Displaying the frame
-                colored_final_img = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
+                # colored_final_img = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
+                colored_final_img = final_img
 
                 down_sampled = cv2.resize(colored_final_img, (640, 480))
                 np.copyto(self.shared_frame, down_sampled)
