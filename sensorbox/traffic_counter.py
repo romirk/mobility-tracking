@@ -251,7 +251,7 @@ class TrafficCounter():
     def _set_up_masks(self):
         """Sets up the masks for the background subtraction and the thresholding operations"""
 
-            if self.debug:
+        if self.debug:
             _, frame = self.cap.read()
             img = frame
         else:
