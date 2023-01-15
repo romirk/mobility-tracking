@@ -37,9 +37,10 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
 
     try:
         while running.value:
-            if new_frame_event.is_set():
-                with mutex:
-                    transport.sendall(frame)
+            new_frame_event.wait()
+            with mutex:
+                transport.sendall(frame)
+                new_frame_event.clear()
     except ConnectionResetError:
         print("Connection reset by peer")
     except KeyboardInterrupt:
