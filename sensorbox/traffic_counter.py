@@ -76,12 +76,13 @@ class TrafficCounter():
         self.prev_centroids = (
             []
         )  # this will contain the coordinates of the centers in the previous
+        self.fps = config.fps
         if not config.debug:
             self.debug = False
             self._vid_width = config.video_width
-            self._vid_height = 800
+            self._vid_height = config.video_height
             self.debug = False
-            self.pipeline, self.pipeline_config = rs_pipeline_setup(self._vid_width, self._vid_height, 30)
+            self.pipeline, self.pipeline_config = rs_pipeline_setup(self._vid_width, self._vid_height, self.fps)
             self._compute_frame_dimensions()
         else:
             self.debug = True
@@ -250,8 +251,7 @@ class TrafficCounter():
     def _set_up_masks(self):
         """Sets up the masks for the background subtraction and the thresholding operations"""
 
-        assert self.cap.isOpened()
-        if self.debug:
+            if self.debug:
             _, frame = self.cap.read()
             img = frame
         else:
