@@ -285,25 +285,20 @@ class TrafficCounter(object):
 
                 # Background subtraction
                 fg_mask = self.bg_subtractor.apply(working_img, background_avg, rate_of_influence)
-                dilated = cv2.dilate(fg_mask, None)
+                blurred = cv2.GaussianBlur(fg_mask, (5, 5), 0)
+                ret1, th1 = cv.threshold(blurred, 127, 255, cv.THRESH_BINARY)
+                dilated = cv2.dilate(th1, None)
                 dilated = cv2.dilate(dilated, None)
-                dilated = cv2.dilate(dilated, None)
-                dilated = cv2.dilate(dilated, None)
-                dilated = cv2.dilate(dilated, None)
-                dilated = cv2.dilate(dilated, None)
-                dilated = cv2.dilate(dilated, None)
-                dilated = cv2.dilate(dilated, None)
-                dilated = cv2.dilate(dilated, None)
-                dilated = cv2.dilate(dilated, None)
-
 
                 # Drawing bounding boxes and counting
                 t2 = time.time()
-                self.bind_objects(img, fg_mask)
+                self.bind_objects(img, dilated)
                 # sys.stdout.write(f"\rbound objects in {time.time() - t2} at frame")
 
                 # Displaying the frame
-                downsampled = cv2.resize(img, (640, 480))
+                colored_dilated = cv2.cvtColor(dilated, cv2.COLOR_GRAY2BGR)
+
+                downsampled = cv2.resize(colored_dilated, (640, 480))
                 np.copyto(self.shared_frame, downsampled)
 
                 if self.record:
