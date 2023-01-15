@@ -84,6 +84,7 @@ class SensorLive {
     }
 
     on_detect(data) {
+        console.log("!!!CAR DATA: " + data)
         this.counts.car = data.count;
         // this.counts = data.counts;
     }
