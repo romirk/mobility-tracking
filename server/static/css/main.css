@@ -256,6 +256,11 @@ h2 {
     transform: scale(0.70);
 }
 
+.material-symbols-rounded {
+    transform: scale(1.25);
+    color: #FF6701;
+}
+
 .dblue {
     color: var(--y-dblue)
 }
