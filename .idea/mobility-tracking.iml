@@ -6,7 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/legacy" />
       <excludeFolder url="file://$MODULE_DIR$/envs/3.6" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.6 (mobility-tracking)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.8 (mobility-tracking)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jquery-3.6.1" level="application" />
     <orderEntry type="library" name="bootstrap" level="application" />

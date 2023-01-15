@@ -6,16 +6,17 @@ import socket
 import sys
 import time
 from multiprocessing import Value, Process
-from shared_memory import SharedMemory
+# from shared_memory import SharedMemory
+from multiprocessing.shared_memory import SharedMemory
 from threading import Thread
 
 import cv2
 import imutils
 import numpy as np
 import requests
-from jetson_inference import detectNet
+# from jetson_inference import detectNet
 
-from .utils import encode64, rs_pipeline_setup, countdown
+from utils import encode64, rs_pipeline_setup, countdown
 
 
 def req_thread(url, data):
@@ -46,7 +47,8 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
         transport.close()
 
 
-TEST_FILE = "./mobility-tracking/ignore/test.mp4"
+# TEST_FILE = "./mobility-tracking/ignore/test.mp4"
+TEST_FILE = "./test.mp4"
 
 
 class TrafficCounter():
@@ -88,7 +90,7 @@ class TrafficCounter():
             self._vid_width = int(self.cap.get(3))
             self._vid_height = int(self.cap.get(4))
 
-        self.net = detectNet("ssd-mobilenet-v2", sys.argv, 0.5)
+        # self.net = detectNet("ssd-mobilenet-v2", sys.argv, 0.5)
 
         self.bg_subtractor = cv2.createBackgroundSubtractorMOG2(
             history=100, varThreshold=50, detectShadows=True
@@ -174,8 +176,8 @@ class TrafficCounter():
                 return True, "l" if cx - self.p1_count_line[0] < 0 else "r"
         return False, None
 
-    def classify(self, frame, bounding_box):
-        detections = self.net.Detect(frame, overlay="box,labels,conf")
+    # def classify(self, frame, bounding_box):
+    #     detections = self.net.Detect(frame, overlay="box,labels,conf")
 
     def bind_objects(self, frame, thresh_img):
         """Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be 
