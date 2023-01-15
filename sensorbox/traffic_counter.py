@@ -43,6 +43,7 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
         mem.close()
         transport.close()
 
+TEST_FILE = "./mobility-tracking/ignore/test.mp4"
 
 class TrafficCounter(object):
     """
@@ -65,7 +66,7 @@ class TrafficCounter(object):
         self.min_area = config.min_area
         self.num_contours = config.num_contours
         self.starting_frame = config.starting_frame
-
+        self.server = config.server
         self.prev_centroids = (
             []
         )  # this will contain the coordinates of the centers in the previous
@@ -78,7 +79,8 @@ class TrafficCounter(object):
             self._compute_frame_dimensions()
         else:
             self.debug = True
-            self.cap = cv2.VideoCapture("../test.mp4")
+            self.cap = cv2.VideoCapture()
+            self.cap.open(TEST_FILE)
             self._vid_width = int(self.cap.get(3))
             self._vid_height = int(self.cap.get(4))
 
@@ -229,14 +231,13 @@ class TrafficCounter(object):
                 print(f"\r{self.counter}", end="")
             self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy)
 
-            cv2.line(frame, (0, 240), (self._vid_width, 240), (0, 0, 255), 1)
-
             cnt_id += 1
         self.prev_centroids = cur_centroids  # updating centroids for next frame
 
     def _set_up_masks(self):
         """Sets up the masks for the background subtraction and the thresholding operations"""
-
+        
+        assert self.cap.isOpened()
         if self.debug:
             _, frame = self.cap.read()
             img = frame
@@ -244,8 +245,8 @@ class TrafficCounter(object):
             frame = self.pipeline.wait_for_frames().get_color_frame()
             img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
 
-        self.raw_avg = np.float32(img)
-        self.raw_avg = cv2.resize(self.raw_avg, (self._vid_width, self._vid_height))
+        self.raw_avg = np.copy(img).astype(np.float32)
+        
         print(self.raw_avg.shape)
         print("Ready. Starting in")
         countdown(5)
@@ -275,7 +276,7 @@ class TrafficCounter(object):
                 cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
 
                 if frame_id < self.starting_frame:
-                    print(self.raw_avg)
+                    # print(self.raw_avg)
                     continue
 
                 background_avg = cv2.convertScaleAbs(
@@ -284,6 +285,17 @@ class TrafficCounter(object):
 
                 # Background subtraction
                 fg_mask = self.bg_subtractor.apply(working_img, background_avg, rate_of_influence)
+                dilated = cv2.dilate(fg_mask, None)
+                dilated = cv2.dilate(dilated, None)
+                dilated = cv2.dilate(dilated, None)
+                dilated = cv2.dilate(dilated, None)
+                dilated = cv2.dilate(dilated, None)
+                dilated = cv2.dilate(dilated, None)
+                dilated = cv2.dilate(dilated, None)
+                dilated = cv2.dilate(dilated, None)
+                dilated = cv2.dilate(dilated, None)
+                dilated = cv2.dilate(dilated, None)
+
 
                 # Drawing bounding boxes and counting
                 t2 = time.time()
@@ -291,7 +303,7 @@ class TrafficCounter(object):
                 # sys.stdout.write(f"\rbound objects in {time.time() - t2} at frame")
 
                 # Displaying the frame
-                downsampled = cv2.resize(img, (480, 640))
+                downsampled = cv2.resize(img, (640, 480))
                 np.copyto(self.shared_frame, downsampled)
 
                 if self.record:
