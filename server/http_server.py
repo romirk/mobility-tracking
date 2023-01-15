@@ -128,8 +128,10 @@ class HttpServer:
 
             if direction not in self.counts[cls]:
                 self.counts[cls][direction] = 1
+                self.counts[cls]["total"] = 1
             else:
                 self.counts[cls][direction] += 1
+                self.counts[cls]["total"] += 1
             self.__total += 1
 
             socketio.emit('detect', {

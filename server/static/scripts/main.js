@@ -2,18 +2,10 @@ class SensorLive {
     constructor() {
         this.counter = 0;
         this.counts = {
-            car: 0,
-            bus: 0,
-            truck: 0
+            car: {total: 0}, bus: {total: 0}, truck: {total: 0}
         };
         this.sensor_data = {
-            pm10: 0,
-            pm25: 0,
-            pm50: 0,
-            pm100: 0,
-            temperature: 0,
-            humidity: 0,
-            co2: 0
+            pm10: 0, pm25: 0, pm50: 0, pm100: 0, temperature: 0, humidity: 0, co2: 0
         }
 
         this.socket = io.connect();
@@ -37,34 +29,21 @@ class SensorLive {
                     y: {
                         beginAtZero: true
                     }
-                },
-                responsive: true,
-                maintainAspectRatio: false
+                }, responsive: true, maintainAspectRatio: false
             }
         });
 
         this.ctxTypesOfVehicles = document.getElementById('typesOfVehicles');
         this.numberOfVehicles = new Chart(this.ctxTypesOfVehicles, {
             type: 'doughnut', data: {
-                labels: [
-                    'Cars',
-                    'Trucks',
-                    'Buses'
-                ],
-                datasets: [{
+                labels: ['Cars', 'Trucks', 'Buses'], datasets: [{
                     label: 'Types of vehicles',
                     data: [300, 50, 100],
-                    backgroundColor: [
-                        'rgb(2, 159, 227)',
-                        'rgb(26,122,165)',
-                        'rgb(31,84,108)'
-                    ],
+                    backgroundColor: ['rgb(2, 159, 227)', 'rgb(26,122,165)', 'rgb(31,84,108)'],
                     hoverOffset: 4
                 }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
+            }, options: {
+                responsive: true, maintainAspectRatio: false
             }
         });
 
@@ -84,18 +63,18 @@ class SensorLive {
     }
 
     on_detect(data) {
-        console.log("!!!CAR DATA: " + data)
+        console.log("!!!CAR DATA: ", data)
         this.counts.car = data.count;
-        // this.counts = data.counts;
+        this.counts = data.counts;
     }
 
     update() {
         // uncomment as you implement
 
         // document.getElementById('counter').innerHTML = this.counter;
-        document.getElementById('counts_car').innerHTML = this.counts.car;
-        document.getElementById('counts_bus').innerHTML = this.counts.bus;
-        document.getElementById('counts_truck').innerHTML = this.counts.truck;
+        document.getElementById('counts_car').innerHTML = this.counts.car.total;
+        document.getElementById('counts_bus').innerHTML = this.counts.bus.total;
+        document.getElementById('counts_truck').innerHTML = this.counts.truck.total;
         // document.getElementById('sensor_pm10').innerHTML = this.sensor_data.pm10;
         // document.getElementById('sensor_pm25').innerHTML = this.sensor_data.pm25;
         // document.getElementById('sensor_pm50').innerHTML = this.sensor_data.pm50;
