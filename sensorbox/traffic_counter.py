@@ -29,7 +29,7 @@ def req_thread(url, data):
         print("Error in request thread: ", e)
 
 
-def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
+def streamer_thread(url: str, dim: tuple, mem: str, running: Value, event: Event):
     mem = SharedMemory(name=mem)
     frame = np.ndarray(dim, dtype=np.uint8, buffer=mem.buf)
     transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -38,7 +38,7 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
 
     try:
         while running.value:
-            new_frame_event.wait()
+            event.wait()
             transport.sendall(frame)
     except ConnectionResetError:
         print("Connection reset by peer")
@@ -62,6 +62,7 @@ class TrafficCounter():
     def __init__(self, config):
         self.name = __name__
         self.running = Value("b", True)
+        self.event = Event()
         self.crop_rect = []  # stores the click coordinates where to crop the frame
         self.mask_points = (
             []
@@ -119,7 +120,7 @@ class TrafficCounter():
             print(f"Recording to file {filename} ({self._vid_width}x{self._vid_height})")
 
         self.streamer = Process(target=streamer_thread, args=(
-            config.server, self.shared_frame.shape, self.mem.name, self.running), daemon=True)
+            config.server, self.shared_frame.shape, self.mem.name, self.running, self.event), daemon=True)
         self.streamer.start()
 
     def _set_up_line(self, line_direction, line_position):
@@ -332,9 +333,8 @@ class TrafficCounter():
 
                 down_sampled = cv2.resize(colored_final_img, (640, 480))
                 np.copyto(self.shared_frame, down_sampled)
-                new_frame_event.set()
+                self.event.set()
 
-                frame_sent_event.wait()
 
                 if self.record:
                     print("type of frame", type(down_sampled))
