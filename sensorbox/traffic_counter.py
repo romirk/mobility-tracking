@@ -5,7 +5,6 @@ import datetime
 import socket
 import time
 from multiprocessing import Value, Process
-# from shared_memory import SharedMemory
 from multiprocessing.shared_memory import SharedMemory
 from threading import Thread
 
@@ -37,7 +36,6 @@ def streamer_thread(url: str, dim: tuple, mem: str, running: Value):
     try:
         while running.value:
             transport.sendall(frame)
-            time.sleep(0.25)
     except ConnectionResetError:
         print("Connection reset by peer")
     except KeyboardInterrupt:
@@ -90,8 +88,8 @@ class TrafficCounter():
             print("Debug mode")
             self.frames = np.fromfile("../hekinchonker.obj", dtype=np.uint8).reshape((900, 720, 1280, 3))
             print(self.frames.shape)
-            self._vid_width = self.frames.shape[1]
-            self._vid_height = self.frames.shape[2]
+            self._vid_width = self.frames.shape[2]
+            self._vid_height = self.frames.shape[1]
             print("Video dimensions: ", self._vid_width, self._vid_height)
 
         # self.net = detectNet("ssd-mobilenet-v2", sys.argv, 0.5)
@@ -129,6 +127,7 @@ class TrafficCounter():
             fract = int(self._vid_width * float(line_position))
             self.p1_count_line = (fract, 0)
             self.p2_count_line = (fract, self._vid_height)
+            print(f"vertical line at {fract}")
         else:
             raise ValueError('Expected an "H" or a "V" only for line direction')
 
@@ -277,6 +276,8 @@ class TrafficCounter():
             while running.value:
                 t0 = time.time()
                 if self.debug:
+                    if i == 900: raise KeyboardInterrupt
+                    print(f"\r{i / 900 * 100:.2f}% ", end="")
                     frame = self.frames[i]
                     i += 1
                     img = frame
@@ -329,7 +330,8 @@ class TrafficCounter():
                 np.copyto(self.shared_frame, down_sampled)
 
                 if self.record:
-                    self.out.write(img)
+                    print("type of frame", type(down_sampled))
+                    self.out.write(down_sampled)
 
                 t1 = time.time()
                 # sys.stdout.write(f" {frame_id} {1 / (t1 - t0)}")
@@ -337,11 +339,12 @@ class TrafficCounter():
             pass
         finally:
             self.running.value = False
-            self.mem.close()
             if not self.debug:
                 self.pipeline.stop()
             if self.record:
                 self.out.release()
+            self.mem.close()
+            self.mem.unlink()
 
             print("[Camera] Stopping counter...")
 
