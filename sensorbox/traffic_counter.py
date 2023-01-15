@@ -299,19 +299,20 @@ class TrafficCounter(object):
                 self.bind_objects(img, final_img)
                 # sys.stdout.write(f"\rbound objects in {time.time() - t2} at frame")
 
-                if self.debug:
-                    frame_1 = cv2.cvtColor(fg_mask, cv2.COLOR_GRAY2BGR)
-                    frame_2 = cv2.cvtColor(blurred, cv2.COLOR_GRAY2BGR)
-                    frame_3 = cv2.cvtColor(dilated, cv2.COLOR_GRAY2BGR)
-                    frame_4 = img
-
-                    frame_12 = np.hstack((frame_1, frame_2))
-                    frame_34 = np.hstack((frame_3, frame_4))
-                    final_img = np.vstack((frame_12, frame_34))
+                # if self.debug:
+                #     frame_1 = cv2.cvtColor(fg_mask, cv2.COLOR_GRAY2BGR)
+                #     frame_2 = cv2.cvtColor(blurred, cv2.COLOR_GRAY2BGR)
+                #     frame_3 = cv2.cvtColor(dilated, cv2.COLOR_GRAY2BGR)
+                #     frame_4 = img
+                #
+                #     frame_12 = np.hstack((frame_1, frame_2))
+                #     frame_34 = np.hstack((frame_3, frame_4))
+                #     final_img = np.vstack((frame_12, frame_34))
 
                 # Displaying the frame
                 # colored_final_img = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
-                colored_final_img = final_img
+                # colored_final_img = final_img
+                colored_final_img = img
 
                 down_sampled = cv2.resize(colored_final_img, (640, 480))
                 np.copyto(self.shared_frame, down_sampled)
