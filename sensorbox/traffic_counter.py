@@ -286,7 +286,7 @@ class TrafficCounter(object):
                 # Background subtraction
                 fg_mask = self.bg_subtractor.apply(working_img, background_avg, rate_of_influence)
                 blurred = cv2.GaussianBlur(fg_mask, (5, 5), 0)
-                ret1, th1 = cv2.threshold(blurred, 127, 255, cv.THRESH_BINARY)
+                ret1, th1 = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
                 dilated = cv2.dilate(th1, None)
                 dilated = cv2.dilate(dilated, None)
 
@@ -311,7 +311,8 @@ class TrafficCounter(object):
         finally:
             self.running.value = False
             self.mem.close()
-            self.pipeline.stop()
+            if not self.debug:
+                self.pipeline.stop()
             if self.record:
                 self.out.release()
             if self.debug:
