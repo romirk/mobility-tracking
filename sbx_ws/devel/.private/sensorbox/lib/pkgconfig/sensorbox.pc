@@ -1,0 +1,8 @@
+prefix=/mobility-tracking/sbx_ws/devel/.private/sensorbox
+
+Name: sensorbox
+Description: Description of sensorbox
+Version: 0.0.0
+Cflags: -I/mobility-tracking/sbx_ws/devel/.private/sensorbox/include
+Libs: -L${prefix}/lib 
+Requires: message_runtime

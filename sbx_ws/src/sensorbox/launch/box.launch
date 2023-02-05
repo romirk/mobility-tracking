@@ -1,0 +1,3 @@
+<launch>
+    <node type="aqi_node.py" name="aqi" pkg="sensorbox" />
+</launch>

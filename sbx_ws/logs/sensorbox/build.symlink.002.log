@@ -1,0 +1,18 @@
+Symlinking /mobility-tracking/sbx_ws/devel/share/gennodejs/ros/sensorbox/_index.js
+Symlinking /mobility-tracking/sbx_ws/devel/share/gennodejs/ros/sensorbox/msg/AQI.js
+Symlinking /mobility-tracking/sbx_ws/devel/share/gennodejs/ros/sensorbox/msg/_index.js
+Symlinking /mobility-tracking/sbx_ws/devel/share/common-lisp/ros/sensorbox/msg/sensorbox-msg.asd
+Symlinking /mobility-tracking/sbx_ws/devel/share/common-lisp/ros/sensorbox/msg/_package.lisp
+Symlinking /mobility-tracking/sbx_ws/devel/share/common-lisp/ros/sensorbox/msg/_package_AQI.lisp
+Symlinking /mobility-tracking/sbx_ws/devel/share/common-lisp/ros/sensorbox/msg/AQI.lisp
+Symlinking /mobility-tracking/sbx_ws/devel/share/roseus/ros/sensorbox/manifest.l
+Symlinking /mobility-tracking/sbx_ws/devel/share/roseus/ros/sensorbox/msg/AQI.l
+Symlinking /mobility-tracking/sbx_ws/devel/share/sensorbox/cmake/sensorbox-msg-extras.cmake
+Linked: (/mobility-tracking/sbx_ws/devel/.private/sensorbox/share/sensorbox/cmake/sensorboxConfig-version.cmake, /mobility-tracking/sbx_ws/devel/share/sensorbox/cmake/sensorboxConfig-version.cmake)
+Symlinking /mobility-tracking/sbx_ws/devel/share/sensorbox/cmake/sensorbox-msg-paths.cmake
+Linked: (/mobility-tracking/sbx_ws/devel/.private/sensorbox/share/sensorbox/cmake/sensorboxConfig.cmake, /mobility-tracking/sbx_ws/devel/share/sensorbox/cmake/sensorboxConfig.cmake)
+Linked: (/mobility-tracking/sbx_ws/devel/.private/sensorbox/lib/pkgconfig/sensorbox.pc, /mobility-tracking/sbx_ws/devel/lib/pkgconfig/sensorbox.pc)
+Symlinking /mobility-tracking/sbx_ws/devel/lib/python3/dist-packages/sensorbox/__init__.py
+Symlinking /mobility-tracking/sbx_ws/devel/lib/python3/dist-packages/sensorbox/msg/_AQI.py
+Symlinking /mobility-tracking/sbx_ws/devel/lib/python3/dist-packages/sensorbox/msg/__init__.py
+Symlinking /mobility-tracking/sbx_ws/devel/include/sensorbox/AQI.h

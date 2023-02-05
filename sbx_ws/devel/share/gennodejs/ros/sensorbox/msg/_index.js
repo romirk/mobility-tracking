@@ -1,0 +1,1 @@
+/mobility-tracking/sbx_ws/devel/.private/sensorbox/share/gennodejs/ros/sensorbox/msg/_index.js
