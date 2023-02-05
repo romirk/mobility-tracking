@@ -13,7 +13,6 @@ def reader():
         if transport.in_waiting > 0:
             pm10, pm25, pm50, pm100, tmp, hmd, co2 = tuple(map(float, transport.readline().decode(
                 "utf-8").strip().split(',')))
-            print(pm10, pm25, pm50, pm100, tmp, hmd, co2)
             pub.publish(AQI(pm10, pm25, pm50, pm100, tmp, hmd, co2))
 
 

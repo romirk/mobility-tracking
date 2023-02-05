@@ -9,3 +9,8 @@ envs/
 /sensorbox/data/
 output/
 ignore/
+
+build/
+devel/
+logs/
+.catkin_tools/
