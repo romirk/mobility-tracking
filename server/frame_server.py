@@ -43,8 +43,7 @@ class FrameServer:
             sf = conn.makefile(mode='rb')
             while self.running.value:
                 try:
-                    frame: np.ndarray = np.frombuffer(sf.read(self.frame.nbytes), dtype=np.uint8,
-                                                      ).reshape(IMG_SIZE)
+                    frame: np.ndarray = np.frombuffer(sf.read(self.frame.nbytes), dtype=np.uint8).reshape(IMG_SIZE)
                 except ValueError:
                     print('[FS] Connection lost')
                     break
