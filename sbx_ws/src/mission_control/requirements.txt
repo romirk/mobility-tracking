@@ -1,0 +1,3 @@
+yolov7_package
+flask
+flask_socketio
