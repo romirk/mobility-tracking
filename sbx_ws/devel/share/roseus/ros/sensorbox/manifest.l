@@ -1,1 +1,0 @@
-/mobility-tracking/sbx_ws/devel/.private/sensorbox/share/roseus/ros/sensorbox/manifest.l

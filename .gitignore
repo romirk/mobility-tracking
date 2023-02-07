@@ -9,3 +9,8 @@ envs/
 /sensorbox/data/
 output/
 ignore/
+
+sbx_ws/build/
+sbx_ws/devel/
+sbx_ws/logs/
+sbx_ws/.catkin_tools/

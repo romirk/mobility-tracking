@@ -1,1 +1,0 @@
-/mobility-tracking/sbx_ws/devel/.private/sensorbox/share/common-lisp/ros/sensorbox/msg/_package_AQI.lisp
