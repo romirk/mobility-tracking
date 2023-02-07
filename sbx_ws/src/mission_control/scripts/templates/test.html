@@ -1,0 +1,16 @@
+<img src="" alt="" id="i" />
+
+<script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+<script src="../static/scripts/relay.js"></script>
+<script>
+    const img = document.getElementById("i");
+    const jpeg_header = "data:image/jpeg;base64,"
+
+    const relay = new Relay("localhost", 9090)
+    function setup() {
+        relay.createListener("/camera/color/image_raw/compressed", "sensor_msgs/CompressedImage", msg => {
+            img.src = jpeg_header + msg.data;
+        });
+    }
+    relay.connect().then(setup);
+</script>
