@@ -59,11 +59,12 @@ class SensorLive {
     relay_setup() {
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_detect.bind(this));
-        this.relay.createListener("/camera/color/image_raw/compressed", "sensor_msgs/CompressedImage", this.on_image.bind(this));
+        this.relay.createListener("/sbx/camera/color/image_raw/compressed", "sensor_msgs/CompressedImage", this.on_image.bind(this));
     }
 
     on_sensor(data) {
         this.sensor_data = data;
+        this.log();
         this.update();
     }
 
@@ -71,7 +72,7 @@ class SensorLive {
         this.counts = data;
 
         // TODO calculate rate
-
+        this.log();
         this.update();
     }
 
@@ -126,7 +127,6 @@ class SensorLive {
     }
 
     log() {
-        console.log(this.counter)
         console.log(this.counts);
         console.log(this.sensor_data);
     }

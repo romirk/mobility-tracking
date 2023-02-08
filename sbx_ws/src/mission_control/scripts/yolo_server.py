@@ -74,6 +74,8 @@ class YoloServer:
             self.pub.publish(Counts(*future.result()))
 
     def exec_callback(self, msg: Detection2D) -> tuple[int, int, int, int, int, int]:
+        if not self.multiprocessing:
+            rospy.logwarn("Received detection")
         total = self.counts.total + 1
         box = msg.bbox
         frame = msg.source_img

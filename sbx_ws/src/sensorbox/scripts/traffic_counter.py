@@ -26,8 +26,20 @@ class TrafficCounter:
     """
 
     def __init__(self):
-        self.name = __name__
-        rospy.init_node(self.name)
+        rospy.init_node("mt")
+        self.prefix = rospy.get_param("prefix")
+        self.camera_name = rospy.get_param("camera_name")
+        self.line_direction = rospy.get_param("direction", "H")
+        self.line_position = rospy.get_param("line_position", 0.5)
+        self.min_area = rospy.get_param("min_area", 5000)
+        self.num_contours = rospy.get_param("num_contours", 10)
+        self.starting_frame = rospy.get_param("starting_frame", 30)
+        self.fps = rospy.get_param("fps", 30)
+        self._vid_width = rospy.get_param("video_width", 640)
+        self._vid_height = rospy.get_param("video_height", 480)
+
+        rospy.logerr(f"Starting {self.prefix} node")
+
         self.stopped = Event()
         self.crop_rect = []  # stores the click coordinates where to crop the frame
         self.mask_points = (
@@ -37,18 +49,9 @@ class TrafficCounter:
         self.p1_count_line: tuple = ()
         self.p2_count_line: tuple = ()
         self.counter = 0
-        self.line_direction = rospy.get_param("~direction", "H")
-        self.line_position = rospy.get_param("~line_position", 0.5)
-        self.min_area = rospy.get_param("~min_area", 5000)
-        self.num_contours = rospy.get_param("~num_contours", 10)
-        self.starting_frame = rospy.get_param("~starting_frame", 30)
         self.prev_centroids = (
             []
         )  # this will contain the coordinates of the centers in the previous
-        self.fps = rospy.get_param("~fps", 30)
-
-        self._vid_width = rospy.get_param("~video_width", 640)
-        self._vid_height = rospy.get_param("~video_height", 480)
 
         self.bg_subtractor = cv2.createBackgroundSubtractorMOG2(
             history=100, varThreshold=50, detectShadows=True
@@ -60,9 +63,9 @@ class TrafficCounter:
         self.raw_avg = np.zeros((self._vid_height, self._vid_width, 3))
 
         self.frame_sub = rospy.Subscriber(
-            "/camera/color/image_raw", Image, self.frame_callback
+            f"/{self.camera_name}/color/image_raw", Image, self.frame_callback
         )
-        self.detection_pub = rospy.Publisher("/sbx/detect", Detection2D, queue_size=10)
+        self.detection_pub = rospy.Publisher(f"/{self.prefix}/detect", Detection2D, queue_size=10)
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
