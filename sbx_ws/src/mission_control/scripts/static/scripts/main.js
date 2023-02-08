@@ -3,7 +3,7 @@ class SensorLive {
     constructor() {
         this.counter = 0;
         this.counts = {
-            car: { total: 0 }, bus: { total: 0 }, truck: { total: 0 }
+            total: 0, cars: 0, trucks: 0, buses: 0, motorcycles: 0, bicycles: 0,
         };
         this.sensor_data = {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
@@ -64,14 +64,10 @@ class SensorLive {
 
     on_sensor(data) {
         this.sensor_data = data;
-        console.log(data);
     }
 
     on_detect(data) {
-        console.log(data)
-        this.counts = data.counts;
-        this.counter = this.counts.car.total + this.counts.bus.total + this.counts.truck.total;
-        console.log(data);
+        this.counts = data;
     }
 
     on_image(data) {
@@ -82,17 +78,17 @@ class SensorLive {
         // uncomment as you implement
 
         // document.getElementById('counter').innerHTML = this.counter;
-        document.getElementById('total_count').innerHTML = this.counter;
-        document.getElementById('counts_car').innerHTML = this.counts.car.total;
-        document.getElementById('counts_bus').innerHTML = this.counts.bus.total;
-        document.getElementById('counts_truck').innerHTML = this.counts.truck.total;
-        document.getElementById('total_count_2').innerHTML = this.counter;
-        document.getElementById('counts_car_2').innerHTML = this.counts.car.total;
-        document.getElementById('counts_bus_2').innerHTML = this.counts.bus.total;
-        document.getElementById('counts_truck_2').innerHTML = this.counts.truck.total;
+        document.getElementById('total_count').innerHTML = this.counts.total;
+        document.getElementById('counts_car').innerHTML = this.counts.cars;
+        document.getElementById('counts_bus').innerHTML = this.counts.buses;
+        document.getElementById('counts_truck').innerHTML = this.counts.trucks;
+        document.getElementById('total_count_2').innerHTML = this.counts.total;
+        document.getElementById('counts_car_2').innerHTML = this.counts.cars;
+        document.getElementById('counts_bus_2').innerHTML = this.counts.buses;
+        document.getElementById('counts_truck_2').innerHTML = this.counts.trucks;
 
         this.numberOfVehicles.data.datasets.forEach((dataset) => {
-            dataset.data = [this.counts.car.total, this.counts.truck.total, this.counts.bus.total];
+            dataset.data = [this.counts.cars, this.counts.trucks, this.counts.buses];
         });
 
         this.numberOfVehicles.update();
