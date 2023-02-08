@@ -9,243 +9,177 @@
     <title>Mobility Tracking</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css" rel="stylesheet">
     <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
-          integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" rel="stylesheet">
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" rel="stylesheet">
     <link href="static/css/main.css" rel="stylesheet">
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0"/>
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0" />
 </head>
 
 <body>
-<div class="video-container" id="main">
-    <div id="viewer">
-        <nav>
-            <div class="ms-3 mb-3 btn-group nav nav-pills fixed-bottom" id="selector" role="tablist">
-                <button class="btn btn-primary nav-link text-white active"
-                        style="border-radius: var(--y-button-radius) 0 0 var(--y-button-radius);"
-                        type="button"
-                        data-bs-toggle="tab" data-bs-target="#nav-video"
-                        role="tab" aria-controls="nav-video" aria-selected="true">
-                    <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <use href="#camera" x="0" y="0"></use>
-                    </svg>
-                </button>
-                <div class="divider"></div>
-                <button class="btn btn-primary nav-link text-white"
-                        style="border-radius: 0 var(--y-button-radius) var(--y-button-radius) 0;"
-                        type="button"
-                        data-bs-toggle="tab" data-bs-target="#nav-stats"
-                        role="tab" aria-controls="nav-stats" aria-selected="false">
-                    <svg class="svg" fill="none" height="46" viewBox="0 0 46 46" width="46"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <use href="#graph" x="0" y="0"></use>
-                    </svg>
-                </button>
-            </div>
-        </nav>
-    </div>
-
-    <div class="tab-content" id="nav-tabContent">
-        <div class="tab-pane fade show active" id="nav-video" role="tabpanel" aria-labelledby="nav-video-tab">
-            <div class="fixed-bottom d-flex justify-content-end" style="z-index: 5;">
-                <div class="me-3 mb-3 grid d-flex align-items-center" id="stats">
-                    <div class="g-col-4 mx-3 d-flex align-items-center">
-                        Total:&nbsp;<span class="ms-2" id="total_count">0</span>
-                    </div>
-                    <div class="divider"></div>
-                    <div class="g-col-4 mx-3 d-flex align-items-center">
+    <div class="video-container" id="main">
+        <div id="viewer">
+            <nav>
+                <div class="ms-3 mb-3 btn-group nav nav-pills fixed-bottom" id="selector" role="tablist">
+                    <button class="btn btn-primary nav-link text-white active"
+                        style="border-radius: var(--y-button-radius) 0 0 var(--y-button-radius);" type="button"
+                        data-bs-toggle="tab" data-bs-target="#nav-video" role="tab" aria-controls="nav-video"
+                        aria-selected="true">
                         <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
-                             xmlns="http://www.w3.org/2000/svg">
-                            <use href="#car" x="0" y="0"></use>
+                            xmlns="http://www.w3.org/2000/svg">
+                            <use href="#camera" x="0" y="0"></use>
                         </svg>
-                        <span class="ms-2" id="counts_car">0</span>
-                    </div>
+                    </button>
                     <div class="divider"></div>
-                    <div class="g-col-4 mx-3 d-flex align-items-center">
-                        <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
-                             xmlns="http://www.w3.org/2000/svg">
-                            <use href="#truck" x="0" y="0"></use>
+                    <button class="btn btn-primary nav-link text-white"
+                        style="border-radius: 0 var(--y-button-radius) var(--y-button-radius) 0;" type="button"
+                        data-bs-toggle="tab" data-bs-target="#nav-stats" role="tab" aria-controls="nav-stats"
+                        aria-selected="false">
+                        <svg class="svg" fill="none" height="46" viewBox="0 0 46 46" width="46"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <use href="#graph" x="0" y="0"></use>
                         </svg>
-                        <span class="ms-2" id="counts_truck">0</span>
-                    </div>
-                    <div class="divider"></div>
-                    <div class="g-col-4 mx-3 d-flex align-items-center">
-                        <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
-                             xmlns="http://www.w3.org/2000/svg">
-                            <use href="#bus" x="0" y="0"></use>
-                        </svg>
-                        <span class="ms-2" id="counts_bus">0</span>
-                    </div>
+                    </button>
                 </div>
-            </div>
+            </nav>
         </div>
-        <img id="live" src="{{ url_for('video_feed') }}" alt="Camera live-stream"/>
-    </div>
 
-    <div class="tab-pane fade" id="nav-stats" role="tabpanel" aria-labelledby="nav-stats-tab">
-        <div id="stats-page" class="container gx-0 text-center">
-            <div id="header" class="row gx-0 bg-white" style="height: 8vh;">
-                <div class="col-2 text-start" style="height: 100%;">
-                    <div class="ms-3 d-flex justify-content-center flex-column" style="height: 100%;">
-                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9d2ywjOKcFq0xvbLH1bkR40VJ0stVx1ubQE_zfPN9&s.png"
-                             alt="YES!Delft ImpactLab logo"
-                             style="height: 50%; width: fit-content;">
-                    </div>
-                </div>
-                <div class="col-sm-8 col-10 my-auto text-end text-sm-center pe-3 pe-sm-0">
-                    <div><h1>Dashboard</h1></div>
-                </div>
-            </div>
-            <div class="row gx-0">
-                <div class="col bg-white right-border bottom-border d-flex flex-column justify-content-between"
-                     style="height: 46vh; min-width: 320px; min-height: 400px;">
-                    <div class="card shadow m-2">
-                        <div style="height: 100%;">
-                            <div class="row gx-0 text-start px-3 pt-2"><h2>Traffic Flow</h2></div>
-                            <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
-                                 style="height: 80%;">
-                                <div style="width: 90%; height: 100%;">
-                                    <canvas id="numberOfVehicles"></canvas>
-                                </div>
-                            </div>
+        <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active" id="nav-video" role="tabpanel" aria-labelledby="nav-video-tab">
+                <div class="fixed-bottom d-flex justify-content-end" style="z-index: 5;">
+                    <div class="me-3 mb-3 grid d-flex align-items-center" id="stats">
+                        <div class="g-col-4 mx-3 d-flex align-items-center">
+                            Total:&nbsp;<span class="ms-2" id="total_count">0</span>
                         </div>
-                        <div class="row gx-0 mb-3">
-                            <div class="col">
-                                <div class="row gx-0 pb-2">
-                                    <span id="total_count_2" class="medium-number">4</span>
-                                </div>
-                                <div class="row gx-0">
-                                    <span>Total</span>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="row gx-0 pb-2">
-                                    <span id="counts_car_2" class="medium-number">4</span>
-                                </div>
-                                <div class="row gx-0">
-                                    <svg class="svg dblue" fill="none" height="48" viewBox="0 0 48 48" width="48"
-                                         xmlns="http://www.w3.org/2000/svg">
-                                        <use href="#car" x="0" y="0"></use>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="row gx-0 pb-2">
-                                    <span id="counts_bus_2" class="medium-number">4</span>
-                                </div>
-                                <div class="row gx-0" style="padding: 3px 0 3px 0">
-                                    <svg class="svg dblue" fill="none" height="42" viewBox="0 0 48 48" width="42"
-                                         xmlns="http://www.w3.org/2000/svg">
-                                        <use href="#bus" x="0" y="0"></use>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="row gx-0 pb-2">
-                                    <span id="counts_truck_2" class="medium-number">4</span>
-                                </div>
-                                <div class="row gx-0" style="padding: 3px 0 3px 0">
-                                    <svg class="svg dblue" fill="none" height="42" viewBox="0 0 48 48" width="42"
-                                         xmlns="http://www.w3.org/2000/svg">
-                                        <use href="#truck" x="0" y="0"></use>
-                                    </svg>
-                                </div>
-                            </div>
+                        <div class="divider"></div>
+                        <div class="g-col-4 mx-3 d-flex align-items-center">
+                            <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <use href="#car" x="0" y="0"></use>
+                            </svg>
+                            <span class="ms-2" id="counts_car">0</span>
                         </div>
-                    </div>
-                </div>
-                <div class="col bg-white bottom-border"
-                     style="height: 46vh; min-width: 320px; min-height: 400px;">
-                    <div class="row gx-0 text-start px-3 pt-2"><h2>Types of Vehicles</h2></div>
-                    <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center" style="height: 85%;">
-                        <div style="width: 90%; height: 100%;">
-                            <canvas id="typesOfVehicles"></canvas>
+                        <div class="divider"></div>
+                        <div class="g-col-4 mx-3 d-flex align-items-center">
+                            <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <use href="#truck" x="0" y="0"></use>
+                            </svg>
+                            <span class="ms-2" id="counts_truck">0</span>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="g-col-4 mx-3 d-flex align-items-center">
+                            <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <use href="#bus" x="0" y="0"></use>
+                            </svg>
+                            <span class="ms-2" id="counts_bus">0</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <hr>
+            <img id="live"
+                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wgARCAANAAkDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUAQEAAAAAAAAAAAAAAAAAAAAH/9oADAMBAAIQAxAAAAGQKAf/AP/EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAQUCH//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEABj8CH//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8hH//aAAwDAQACAAMAAAAQ8//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Qf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Qf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8QH//Z"
+                alt="Camera live-stream" />
+        </div>
 
-            <div class="row gx-0" style="height: 46vh;">
-                <div class="col bottom-border right-border bg-white"
-                     style="height: 100%; min-width: 320px; min-height: 440px;">
-                    <div class="card shadow m-2">
-                        <div class="row gx-0 px-3 pt-2">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="me-2"><h2>Temperature</h2></div>
-                                <div>
-                                    <div>
-                                        <span class="material-symbols-rounded">error</span>
+        <div class="tab-pane fade" id="nav-stats" role="tabpanel" aria-labelledby="nav-stats-tab">
+            <div id="stats-page" class="container gx-0 text-center">
+                <div id="header" class="row gx-0 bg-white" style="height: 8vh;">
+                    <div class="col-2 text-start" style="height: 100%;">
+                        <div class="ms-3 d-flex justify-content-center flex-column" style="height: 100%;">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9d2ywjOKcFq0xvbLH1bkR40VJ0stVx1ubQE_zfPN9&s.png"
+                                alt="YES!Delft ImpactLab logo" style="height: 50%; width: fit-content;">
+                        </div>
+                    </div>
+                    <div class="col-sm-8 col-10 my-auto text-end text-sm-center pe-3 pe-sm-0">
+                        <div>
+                            <h1>Dashboard</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="row gx-0">
+                    <div class="col bg-white right-border bottom-border d-flex flex-column justify-content-between"
+                        style="height: 46vh; min-width: 320px; min-height: 400px;">
+                        <div class="card shadow m-2">
+                            <div style="height: 100%;">
+                                <div class="row gx-0 text-start px-3 pt-2">
+                                    <h2>Traffic Flow</h2>
+                                </div>
+                                <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
+                                    style="height: 80%;">
+                                    <div style="width: 90%; height: 100%;">
+                                        <canvas id="numberOfVehicles"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row gx-0 mb-3">
+                                <div class="col">
+                                    <div class="row gx-0 pb-2">
+                                        <span id="total_count_2" class="medium-number">4</span>
+                                    </div>
+                                    <div class="row gx-0">
+                                        <span>Total</span>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row gx-0 pb-2">
+                                        <span id="counts_car_2" class="medium-number">4</span>
+                                    </div>
+                                    <div class="row gx-0">
+                                        <svg class="svg dblue" fill="none" height="48" viewBox="0 0 48 48" width="48"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <use href="#car" x="0" y="0"></use>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row gx-0 pb-2">
+                                        <span id="counts_bus_2" class="medium-number">4</span>
+                                    </div>
+                                    <div class="row gx-0" style="padding: 3px 0 3px 0">
+                                        <svg class="svg dblue" fill="none" height="42" viewBox="0 0 48 48" width="42"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <use href="#bus" x="0" y="0"></use>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row gx-0 pb-2">
+                                        <span id="counts_truck_2" class="medium-number">4</span>
+                                    </div>
+                                    <div class="row gx-0" style="padding: 3px 0 3px 0">
+                                        <svg class="svg dblue" fill="none" height="42" viewBox="0 0 48 48" width="42"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <use href="#truck" x="0" y="0"></use>
+                                        </svg>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="row gx-0">
-                            <div class="col pt-4 pb-5">
-                                <div class="row gx-0 pb-3"><span class="big-number">8</span></div>
-                                <div class="row gx-0"><span class="unit">° Celsius</span></div>
-                            </div>
+                    </div>
+                    <div class="col bg-white bottom-border" style="height: 46vh; min-width: 320px; min-height: 400px;">
+                        <div class="row gx-0 text-start px-3 pt-2">
+                            <h2>Types of Vehicles</h2>
                         </div>
-                        <div class="row gx-0" style="height: 34%">
-                            <div class="mx-auto all-border" style="height: 100%; width: 80%;"></div>
+                        <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
+                            style="height: 85%;">
+                            <div style="width: 90%; height: 100%;">
+                                <canvas id="typesOfVehicles"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col right-border bg-white bottom-border"
-                     style="height: 100%;  min-width: 320px; min-height: 440px;">
-                    <div class="card shadow m-2">
-                        <div class="row gx-0 px-3 pt-2">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="me-2"><h2>Humidity</h2></div>
-                                <div>
-                                    <div>
-                                        <span class="material-symbols-rounded">error</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row gx-0">
-                            <div class="col pt-4 pb-5">
-                                <div class="row gx-0 pb-3"><span class="big-number">95</span></div>
-                                <div class="row gx-0"><span class="unit">%RH</span></div>
-                            </div>
-                        </div>
-                        <div class="row gx-0" style="height: 34%">
-                            <div class="mx-auto all-border" style="height: 100%; width: 80%;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col right-border bottom-border bg-white"
-                     style="height: 100%;  min-width: 320px; min-height: 440px;">
-                    <div class="card shadow m-2">
+                <hr>
 
-                        <div class="row gx-0 px-3 pt-2">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="me-2"><h2>CO<sub>2</sub></h2></div>
-                                <div>
-                                    <div>
-                                        <span class="material-symbols-rounded">error</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row gx-0">
-                            <div class="col pt-4 pb-5">
-                                <div class="row gx-0 pb-3"><span class="big-number">419</span></div>
-                                <div class="row gx-0"><span class="unit">PPM</span></div>
-                            </div>
-                        </div>
-                        <div class="row gx-0" style="height: 34%">
-                            <div class="mx-auto all-border" style="height: 100%; width: 80%;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col" style="height: 100%; min-width: 320px;">
-                    <div class="row gx-0 bottom-border bg-white" style="height: 50%;">
-                        <div class="col">
+                <div class="row gx-0" style="height: 46vh;">
+                    <div class="col bottom-border right-border bg-white"
+                        style="height: 100%; min-width: 320px; min-height: 440px;">
+                        <div class="card shadow m-2">
                             <div class="row gx-0 px-3 pt-2">
                                 <div class="d-flex align-items-center justify-content-between">
-                                    <div class="me-2"><h2>PM<sub>2.5</sub></h2></div>
+                                    <div class="me-2">
+                                        <h2>Temperature</h2>
+                                    </div>
                                     <div>
                                         <div>
                                             <span class="material-symbols-rounded">error</span>
@@ -253,35 +187,117 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="row gx-0 py-3" style="height: 72%;">
-                                <div class="col-xl-8 col-10">
-                                    <div class="ms-auto all-border" style="height: 100%; width: 100%;"></div>
+                            <div class="row gx-0">
+                                <div class="col pt-4 pb-5">
+                                    <div class="row gx-0 pb-3"><span class="big-number">8</span></div>
+                                    <div class="row gx-0"><span class="unit">° Celsius</span></div>
                                 </div>
-                                <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">
+                            </div>
+                            <div class="row gx-0" style="height: 34%">
+                                <div class="mx-auto all-border" style="height: 100%; width: 80%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col right-border bg-white bottom-border"
+                        style="height: 100%;  min-width: 320px; min-height: 440px;">
+                        <div class="card shadow m-2">
+                            <div class="row gx-0 px-3 pt-2">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="me-2">
+                                        <h2>Humidity</h2>
+                                    </div>
                                     <div>
-                                        <span class="medium-number">70</span>
+                                        <div>
+                                            <span class="material-symbols-rounded">error</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row gx-0">
+                                <div class="col pt-4 pb-5">
+                                    <div class="row gx-0 pb-3"><span class="big-number">95</span></div>
+                                    <div class="row gx-0"><span class="unit">%RH</span></div>
+                                </div>
+                            </div>
+                            <div class="row gx-0" style="height: 34%">
+                                <div class="mx-auto all-border" style="height: 100%; width: 80%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col right-border bottom-border bg-white"
+                        style="height: 100%;  min-width: 320px; min-height: 440px;">
+                        <div class="card shadow m-2">
+
+                            <div class="row gx-0 px-3 pt-2">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="me-2">
+                                        <h2>CO<sub>2</sub></h2>
+                                    </div>
+                                    <div>
+                                        <div>
+                                            <span class="material-symbols-rounded">error</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row gx-0">
+                                <div class="col pt-4 pb-5">
+                                    <div class="row gx-0 pb-3"><span class="big-number">419</span></div>
+                                    <div class="row gx-0"><span class="unit">PPM</span></div>
+                                </div>
+                            </div>
+                            <div class="row gx-0" style="height: 34%">
+                                <div class="mx-auto all-border" style="height: 100%; width: 80%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col" style="height: 100%; min-width: 320px;">
+                        <div class="row gx-0 bottom-border bg-white" style="height: 50%;">
+                            <div class="col">
+                                <div class="row gx-0 px-3 pt-2">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="me-2">
+                                            <h2>PM<sub>2.5</sub></h2>
+                                        </div>
+                                        <div>
+                                            <div>
+                                                <span class="material-symbols-rounded">error</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row gx-0 py-3" style="height: 72%;">
+                                    <div class="col-xl-8 col-10">
+                                        <div class="ms-auto all-border" style="height: 100%; width: 100%;"></div>
+                                    </div>
+                                    <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">
+                                        <div>
+                                            <span class="medium-number">70</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="row gx-0 bg-white" style="height: 50%;">
-                        <div class="col">
-                            <div class="row gx-0 px-3 pt-2">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="me-2"><h2>PM<sub>10</sub></h2></div>
-                                    <div>
-                                        <span class="material-symbols-rounded">error</span>
+                        <div class="row gx-0 bg-white" style="height: 50%;">
+                            <div class="col">
+                                <div class="row gx-0 px-3 pt-2">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="me-2">
+                                            <h2>PM<sub>10</sub></h2>
+                                        </div>
+                                        <div>
+                                            <span class="material-symbols-rounded">error</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row gx-0 py-3" style="height: 72%;">
-                                <div class="col-xl-8 col-10">
-                                    <div class="ms-auto all-border" style="height: 100%; width: 100%;"></div>
-                                </div>
-                                <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">
-                                    <div>
-                                        <span class="medium-number">20</span>
+                                <div class="row gx-0 py-3" style="height: 72%;">
+                                    <div class="col-xl-8 col-10">
+                                        <div class="ms-auto all-border" style="height: 100%; width: 100%;"></div>
+                                    </div>
+                                    <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">
+                                        <div>
+                                            <span class="medium-number">20</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -289,69 +305,70 @@
                     </div>
                 </div>
             </div>
+
         </div>
 
     </div>
-
-</div>
-<svg class="svg" style="display: none" xmlns="http://www.w3.org/2000/svg">
-    <symbol id="camera">
-        <path d="M31.5 19.5V12C31.5 11.6022 31.342 11.2206 31.0607 10.9393C30.7794 10.658 30.3978 10.5 30 10.5H3C2.60218 10.5 2.22064 10.658 1.93934 10.9393C1.65804 11.2206 1.5 11.6022 1.5 12V36C1.5 36.3978 1.65804 36.7794 1.93934 37.0607C2.22064 37.342 2.60218 37.5 3 37.5H30C30.3978 37.5 30.7794 37.342 31.0607 37.0607C31.342 36.7794 31.5 36.3978 31.5 36V28.5L46.5 37.5V10.5L31.5 19.5Z"
-              fill="currentColor"></path>
-    </symbol>
-    <symbol id="graph">
-        <path d="M11.6545 44.2727H4.56363V27.2546H11.6545V44.2727ZM31.5091 44.2727H24.4182V18.7455H31.5091V44.2727ZM41.4364 44.2727H34.3454V8.8182H41.4364V44.2727ZM21.5818 44.2727H14.4909V1.72729H21.5818V44.2727Z"
-              fill="currentColor"></path>
-    </symbol>
-    <symbol id="car">
-        <path d="M41.544 20.31L38.808 12.102C38.4111 10.907 37.6477 9.8674 36.6262 9.13102C35.6048 8.39463 34.3772 7.99888 33.118 8H14.882C13.6228 7.99888 12.3952 8.39463 11.3738 9.13102C10.3523 9.8674 9.5889 10.907 9.192 12.102L6.456 20.31C5.72844 20.6144 5.10712 21.1271 4.67013 21.7837C4.23315 22.4402 4 23.2113 4 24V34C4 35.476 4.808 36.752 6 37.446V42C6 42.5304 6.21071 43.0391 6.58579 43.4142C6.96086 43.7893 7.46957 44 8 44H10C10.5304 44 11.0391 43.7893 11.4142 43.4142C11.7893 43.0391 12 42.5304 12 42V38H36V42C36 42.5304 36.2107 43.0391 36.5858 43.4142C36.9609 43.7893 37.4696 44 38 44H40C40.5304 44 41.0391 43.7893 41.4142 43.4142C41.7893 43.0391 42 42.5304 42 42V37.446C42.6068 37.098 43.1111 36.5963 43.4623 35.9913C43.8134 35.3863 43.9989 34.6995 44 34V24C44 23.2113 43.7669 22.4402 43.3299 21.7837C42.8929 21.1271 42.2716 20.6144 41.544 20.31ZM14.882 12H33.116C33.978 12 34.742 12.548 35.014 13.368L37.226 20H10.774L12.984 13.368C13.1167 12.9696 13.3714 12.6231 13.7121 12.3775C14.0528 12.132 14.4621 11.9999 14.882 12V12ZM11 32C10.6059 31.9999 10.2157 31.9221 9.85164 31.7712C9.4876 31.6202 9.15684 31.3991 8.87827 31.1203C8.59969 30.8416 8.37875 30.5107 8.22806 30.1465C8.07736 29.7824 7.99987 29.3921 8 28.998C8.00013 28.6039 8.07788 28.2137 8.22882 27.8496C8.37976 27.4856 8.60092 27.1548 8.87968 26.8763C9.15844 26.5977 9.48934 26.3768 9.85349 26.2261C10.2176 26.0754 10.6079 25.9979 11.002 25.998C11.7979 25.9983 12.5611 26.3147 13.1237 26.8777C13.6863 27.4407 14.0023 28.2041 14.002 29C14.0017 29.7959 13.6853 30.5591 13.1223 31.1217C12.5593 31.6843 11.7959 32.0003 11 32V32ZM37 32C36.6059 31.9999 36.2157 31.9221 35.8516 31.7712C35.4876 31.6202 35.1568 31.3991 34.8783 31.1203C34.5997 30.8416 34.3787 30.5107 34.2281 30.1465C34.0774 29.7824 33.9999 29.3921 34 28.998C34.0001 28.6039 34.0779 28.2137 34.2288 27.8496C34.3798 27.4856 34.6009 27.1548 34.8797 26.8763C35.1584 26.5977 35.4893 26.3768 35.8535 26.2261C36.2176 26.0754 36.6079 25.9979 37.002 25.998C37.7979 25.9983 38.5611 26.3147 39.1237 26.8777C39.6863 27.4407 40.0023 28.2041 40.002 29C40.0017 29.7959 39.6853 30.5591 39.1223 31.1217C38.5593 31.6843 37.7959 32.0003 37 32V32Z"
-              fill="currentColor"></path>
-    </symbol>
-    <symbol id="truck">
-        <g clip-path="url(#clip0_21_33)">
-            <path d="M0 7.5C0 3.35625 3.35625 0 7.5 0H40.5C44.6438 0 48 3.35625 48 7.5V34.5C48 36.9563 46.8187 39.1312 45 40.5V45C45 46.6594 43.6594 48 42 48H39C37.3406 48 36 46.6594 36 45V42H12V45C12 46.6594 10.6594 48 9 48H6C4.34062 48 3 46.6594 3 45V40.5C1.18125 39.1312 0 36.9563 0 34.5V7.5ZM12.1781 14.2687L10.5 21H37.5L35.8219 14.2687C35.4844 12.9375 34.2844 12 32.9062 12H15.0938C13.7156 12 12.5156 12.9375 12.1875 14.2687H12.1781ZM12 30C12 28.3406 10.6594 27 9 27C7.34062 27 6 28.3406 6 30C6 31.6594 7.34062 33 9 33C10.6594 33 12 31.6594 12 30ZM39 33C40.6594 33 42 31.6594 42 30C42 28.3406 40.6594 27 39 27C37.3406 27 36 28.3406 36 30C36 31.6594 37.3406 33 39 33Z"
-                  fill="currentColor"></path>
-        </g>
-        <defs>
-            <clipPath id="clip0_21_33">
-                <rect fill="currentColor" height="48" width="48"></rect>
-            </clipPath>
-        </defs>
-    </symbol>
-    <symbol id="bus">
-        <g clip-path="url(#clip0_21_45)">
-            <path d="M45.75 12H45V7.5C45 3.3 35.7 0 24 0C12.3 0 3 3.3 3 7.5V12H2.25C1.00781 12 0 13.0069 0 14.25V21.75C0 22.9922 1.00781 24 2.25 24H3V39C3 40.6566 4.34344 42 6 42V45C6 46.6566 7.34344 48 9 48H12C13.6566 48 15 46.6566 15 45V42H33V45C33 46.6566 34.3434 48 36 48H39C40.6566 48 42 46.6566 42 45V42H42.6C44.1 42 45 40.8 45 39.6V24H45.75C46.9922 24 48 22.9922 48 21.75V14.25C48 13.0069 46.9922 12 45.75 12ZM10.5 37.5C8.84344 37.5 7.5 36.1566 7.5 34.5C7.5 32.8434 8.84344 31.5 10.5 31.5C12.1566 31.5 13.5 32.8434 13.5 34.5C13.5 36.1566 12.1566 37.5 10.5 37.5ZM12 27C10.3434 27 9 25.6566 9 24V12C9 10.3434 10.3434 9 12 9H36C37.6566 9 39 10.3434 39 12V24C39 25.6566 37.6566 27 36 27H12ZM37.5 37.5C35.8434 37.5 34.5 36.1566 34.5 34.5C34.5 32.8434 35.8434 31.5 37.5 31.5C39.1566 31.5 40.5 32.8434 40.5 34.5C40.5 36.1566 39.1566 37.5 37.5 37.5Z"
-                  fill="currentColor"></path>
-        </g>
-        <defs>
-            <clipPath id="clip0_21_45">
-                <rect fill="currentColor" height="48" width="48"></rect>
-            </clipPath>
-        </defs>
-    </symbol>
-</svg>
-<script crossorigin="anonymous"
-        integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+    <svg class="svg" style="display: none" xmlns="http://www.w3.org/2000/svg">
+        <symbol id="camera">
+            <path
+                d="M31.5 19.5V12C31.5 11.6022 31.342 11.2206 31.0607 10.9393C30.7794 10.658 30.3978 10.5 30 10.5H3C2.60218 10.5 2.22064 10.658 1.93934 10.9393C1.65804 11.2206 1.5 11.6022 1.5 12V36C1.5 36.3978 1.65804 36.7794 1.93934 37.0607C2.22064 37.342 2.60218 37.5 3 37.5H30C30.3978 37.5 30.7794 37.342 31.0607 37.0607C31.342 36.7794 31.5 36.3978 31.5 36V28.5L46.5 37.5V10.5L31.5 19.5Z"
+                fill="currentColor"></path>
+        </symbol>
+        <symbol id="graph">
+            <path
+                d="M11.6545 44.2727H4.56363V27.2546H11.6545V44.2727ZM31.5091 44.2727H24.4182V18.7455H31.5091V44.2727ZM41.4364 44.2727H34.3454V8.8182H41.4364V44.2727ZM21.5818 44.2727H14.4909V1.72729H21.5818V44.2727Z"
+                fill="currentColor"></path>
+        </symbol>
+        <symbol id="car">
+            <path
+                d="M41.544 20.31L38.808 12.102C38.4111 10.907 37.6477 9.8674 36.6262 9.13102C35.6048 8.39463 34.3772 7.99888 33.118 8H14.882C13.6228 7.99888 12.3952 8.39463 11.3738 9.13102C10.3523 9.8674 9.5889 10.907 9.192 12.102L6.456 20.31C5.72844 20.6144 5.10712 21.1271 4.67013 21.7837C4.23315 22.4402 4 23.2113 4 24V34C4 35.476 4.808 36.752 6 37.446V42C6 42.5304 6.21071 43.0391 6.58579 43.4142C6.96086 43.7893 7.46957 44 8 44H10C10.5304 44 11.0391 43.7893 11.4142 43.4142C11.7893 43.0391 12 42.5304 12 42V38H36V42C36 42.5304 36.2107 43.0391 36.5858 43.4142C36.9609 43.7893 37.4696 44 38 44H40C40.5304 44 41.0391 43.7893 41.4142 43.4142C41.7893 43.0391 42 42.5304 42 42V37.446C42.6068 37.098 43.1111 36.5963 43.4623 35.9913C43.8134 35.3863 43.9989 34.6995 44 34V24C44 23.2113 43.7669 22.4402 43.3299 21.7837C42.8929 21.1271 42.2716 20.6144 41.544 20.31ZM14.882 12H33.116C33.978 12 34.742 12.548 35.014 13.368L37.226 20H10.774L12.984 13.368C13.1167 12.9696 13.3714 12.6231 13.7121 12.3775C14.0528 12.132 14.4621 11.9999 14.882 12V12ZM11 32C10.6059 31.9999 10.2157 31.9221 9.85164 31.7712C9.4876 31.6202 9.15684 31.3991 8.87827 31.1203C8.59969 30.8416 8.37875 30.5107 8.22806 30.1465C8.07736 29.7824 7.99987 29.3921 8 28.998C8.00013 28.6039 8.07788 28.2137 8.22882 27.8496C8.37976 27.4856 8.60092 27.1548 8.87968 26.8763C9.15844 26.5977 9.48934 26.3768 9.85349 26.2261C10.2176 26.0754 10.6079 25.9979 11.002 25.998C11.7979 25.9983 12.5611 26.3147 13.1237 26.8777C13.6863 27.4407 14.0023 28.2041 14.002 29C14.0017 29.7959 13.6853 30.5591 13.1223 31.1217C12.5593 31.6843 11.7959 32.0003 11 32V32ZM37 32C36.6059 31.9999 36.2157 31.9221 35.8516 31.7712C35.4876 31.6202 35.1568 31.3991 34.8783 31.1203C34.5997 30.8416 34.3787 30.5107 34.2281 30.1465C34.0774 29.7824 33.9999 29.3921 34 28.998C34.0001 28.6039 34.0779 28.2137 34.2288 27.8496C34.3798 27.4856 34.6009 27.1548 34.8797 26.8763C35.1584 26.5977 35.4893 26.3768 35.8535 26.2261C36.2176 26.0754 36.6079 25.9979 37.002 25.998C37.7979 25.9983 38.5611 26.3147 39.1237 26.8777C39.6863 27.4407 40.0023 28.2041 40.002 29C40.0017 29.7959 39.6853 30.5591 39.1223 31.1217C38.5593 31.6843 37.7959 32.0003 37 32V32Z"
+                fill="currentColor"></path>
+        </symbol>
+        <symbol id="truck">
+            <g clip-path="url(#clip0_21_33)">
+                <path
+                    d="M0 7.5C0 3.35625 3.35625 0 7.5 0H40.5C44.6438 0 48 3.35625 48 7.5V34.5C48 36.9563 46.8187 39.1312 45 40.5V45C45 46.6594 43.6594 48 42 48H39C37.3406 48 36 46.6594 36 45V42H12V45C12 46.6594 10.6594 48 9 48H6C4.34062 48 3 46.6594 3 45V40.5C1.18125 39.1312 0 36.9563 0 34.5V7.5ZM12.1781 14.2687L10.5 21H37.5L35.8219 14.2687C35.4844 12.9375 34.2844 12 32.9062 12H15.0938C13.7156 12 12.5156 12.9375 12.1875 14.2687H12.1781ZM12 30C12 28.3406 10.6594 27 9 27C7.34062 27 6 28.3406 6 30C6 31.6594 7.34062 33 9 33C10.6594 33 12 31.6594 12 30ZM39 33C40.6594 33 42 31.6594 42 30C42 28.3406 40.6594 27 39 27C37.3406 27 36 28.3406 36 30C36 31.6594 37.3406 33 39 33Z"
+                    fill="currentColor"></path>
+            </g>
+            <defs>
+                <clipPath id="clip0_21_33">
+                    <rect fill="currentColor" height="48" width="48"></rect>
+                </clipPath>
+            </defs>
+        </symbol>
+        <symbol id="bus">
+            <g clip-path="url(#clip0_21_45)">
+                <path
+                    d="M45.75 12H45V7.5C45 3.3 35.7 0 24 0C12.3 0 3 3.3 3 7.5V12H2.25C1.00781 12 0 13.0069 0 14.25V21.75C0 22.9922 1.00781 24 2.25 24H3V39C3 40.6566 4.34344 42 6 42V45C6 46.6566 7.34344 48 9 48H12C13.6566 48 15 46.6566 15 45V42H33V45C33 46.6566 34.3434 48 36 48H39C40.6566 48 42 46.6566 42 45V42H42.6C44.1 42 45 40.8 45 39.6V24H45.75C46.9922 24 48 22.9922 48 21.75V14.25C48 13.0069 46.9922 12 45.75 12ZM10.5 37.5C8.84344 37.5 7.5 36.1566 7.5 34.5C7.5 32.8434 8.84344 31.5 10.5 31.5C12.1566 31.5 13.5 32.8434 13.5 34.5C13.5 36.1566 12.1566 37.5 10.5 37.5ZM12 27C10.3434 27 9 25.6566 9 24V12C9 10.3434 10.3434 9 12 9H36C37.6566 9 39 10.3434 39 12V24C39 25.6566 37.6566 27 36 27H12ZM37.5 37.5C35.8434 37.5 34.5 36.1566 34.5 34.5C34.5 32.8434 35.8434 31.5 37.5 31.5C39.1566 31.5 40.5 32.8434 40.5 34.5C40.5 36.1566 39.1566 37.5 37.5 37.5Z"
+                    fill="currentColor"></path>
+            </g>
+            <defs>
+                <clipPath id="clip0_21_45">
+                    <rect fill="currentColor" height="48" width="48"></rect>
+                </clipPath>
+            </defs>
+        </symbol>
+    </svg>
+    <script crossorigin="anonymous" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
         src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
-<script crossorigin="anonymous"
-        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+    <script crossorigin="anonymous" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"
         integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI"
         crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.1.2/chart.min.js"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.1.2/chart.min.js"
         integrity="sha512-fYE9wAJg2PYbpJPxyGcuzDSiMuWJiw58rKa9MWQICkAqEO+xeJ5hg5qPihF8kqa7tbgJxsmgY0Yp51+IMrSEVg=="
-        crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.1.2/chart.umd.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.1.2/chart.umd.min.js"
         integrity="sha512-KTyzZ0W6S8dUq9WIt8fSflj2ArYRGcGNIU5QcB1skGGd1EPFMupHZSexEsFFX18tZK4eO0iGGSZGuyrNIqjV8g=="
-        crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.1.2/helpers.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.1.2/helpers.min.js"
         integrity="sha512-JG3S/EICkp8Lx9YhtIpzAVJ55WGnxT3T6bfiXYbjPRUoN9yu+ZM+wVLDsI/L2BWRiKjw/67d+/APw/CDn+Lm0Q=="
-        crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-<script src="static/scripts/main.js"></script>
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+    <script src="static/scripts/relay.js"></script>
+    <script src="static/scripts/main.js"></script>
 </body>
 
 </html>

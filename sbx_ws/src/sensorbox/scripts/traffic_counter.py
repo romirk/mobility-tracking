@@ -62,7 +62,7 @@ class TrafficCounter:
         self.frame_sub = rospy.Subscriber(
             "/camera/color/image_raw", Image, self.frame_callback
         )
-        self.detection_pub = rospy.Publisher("/detect/raw", Detection2D, queue_size=10)
+        self.detection_pub = rospy.Publisher("/sbx/detect", Detection2D, queue_size=10)
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:

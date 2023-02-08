@@ -20,8 +20,8 @@ class YoloServer:
         rospy.init_node("detector")
         self.yolo = Yolov7Detector()
         self.counts = Counts(0, 0, 0, 0, 0, 0)
-        self.pub = rospy.Publisher("/detect/processed", Counts, queue_size=10)
-        self.sub = rospy.Subscriber("/detect/raw", Detection2D, self.callback)
+        self.pub = rospy.Publisher( "/sbx/result", Counts, queue_size=10)
+        self.sub = rospy.Subscriber("/sbx/detect", Detection2D, self.callback)
 
     def nearest_box(
         self, boxes: list, box: list
