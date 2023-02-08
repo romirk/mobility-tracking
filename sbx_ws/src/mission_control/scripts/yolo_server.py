@@ -8,6 +8,7 @@ from vision_msgs.msg import Detection2D
 from mission_control.msg import Counts
 from yolov7_package import Yolov7Detector
 from yolov7_package.model_utils import coco_names
+import numpy as np
 
 WHITELIST = ["car", "truck", "bus", "motorbike", "bicycle"]
 WHITELIST_IDX = [coco_names.index(c) for c in WHITELIST]
@@ -43,6 +44,7 @@ class YoloServer:
         total = self.counts.total + 1
         box = msg.bbox
         frame = msg.source_img
+        frame = np.frombuffer(frame.data, dtype=np.uint8).reshape(frame.height, frame.width, -1)
         r = self.yolo.detect(frame)
         dets = [
             d

@@ -56,7 +56,7 @@ class TrafficCounter:
         self._set_up_line(self.line_direction, self.line_position)
 
         self.rate_of_influence = 0.01
-        self.raw_avg = np.zeros((self._vid_height, self._vid_width))
+        self.raw_avg = np.zeros((self._vid_height, self._vid_width, 3))
 
         self.frame_sub = rospy.Subscriber(
             "/camera/color/image_raw", Image, self.frame_callback
@@ -196,7 +196,7 @@ class TrafficCounter:
     def frame_callback(self, frame: Image):
         height = frame.height
         width = frame.width
-        data = np.asarray(frame.data, dtype=np.uint8).reshape(height, width, 3)
+        data = np.frombuffer(frame.data, dtype=np.uint8).reshape(height, width, -1)
         frame_id = frame.header.seq  # get current frame index
         img = cv2.resize(data, (self._vid_width, self._vid_height))
 
