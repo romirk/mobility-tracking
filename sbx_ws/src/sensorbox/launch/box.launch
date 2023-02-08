@@ -3,6 +3,7 @@
     <arg name="camera" default="camera" />
 
     <group ns="$(arg prefix)">
+        <param name="prefix" value="$(arg prefix)" />
         <param name="camera_name" value="$(arg prefix)/$(arg camera)" />
         <param name="direction" value="V" />
         <param name="line_position" value="0.5" />
