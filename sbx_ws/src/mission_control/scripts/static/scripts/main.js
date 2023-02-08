@@ -50,7 +50,7 @@ class SensorLive {
             }
         });
 
-        setInterval(this.update.bind(this), 1000);
+        // setInterval(this.update.bind(this), 200);
         setInterval(this.updateGraphs.bind(this), 10000);
 
         this.relay.connect().then(this.relay_setup.bind(this));
@@ -64,10 +64,15 @@ class SensorLive {
 
     on_sensor(data) {
         this.sensor_data = data;
+        this.update();
     }
 
     on_detect(data) {
         this.counts = data;
+
+        // TODO calculate rate
+
+        this.update();
     }
 
     on_image(data) {
@@ -77,7 +82,6 @@ class SensorLive {
     update() {
         // uncomment as you implement
 
-        // document.getElementById('counter').innerHTML = this.counter;
         document.getElementById('total_count').innerHTML = this.counts.total;
         document.getElementById('counts_car').innerHTML = this.counts.cars;
         document.getElementById('counts_bus').innerHTML = this.counts.buses;
@@ -86,6 +90,9 @@ class SensorLive {
         document.getElementById('counts_car_2').innerHTML = this.counts.cars;
         document.getElementById('counts_bus_2').innerHTML = this.counts.buses;
         document.getElementById('counts_truck_2').innerHTML = this.counts.trucks;
+
+        // sensor data
+
 
         this.numberOfVehicles.data.datasets.forEach((dataset) => {
             dataset.data = [this.counts.cars, this.counts.trucks, this.counts.buses];
