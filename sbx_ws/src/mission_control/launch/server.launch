@@ -1,4 +1,8 @@
 <launch>
+    <include file="$(find mission_control)/launch/remote.launch">
+        <arg name="remote_addr" value="ubuntu.lan" />
+        <arg name="machine" value="sbx" />
+    </include>
     <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
     <node name="detector" pkg="mission_control" type="yolo_server.py" output="screen" />
     <node name="server" pkg="mission_control" type="http_server.py" output="screen" />

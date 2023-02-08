@@ -1,0 +1,9 @@
+<launch>
+    <arg name="remote_addr" default="ubuntu.lan" />
+    <arg name="machine" default="sbx" />
+
+    <machine name="$(arg machine)" address="$(arg remote_addr)" user="impactlab" password="urmomgay"
+        env-loader="/mobility-tracking/sbx_ws/setup.sh" />
+
+    <include file="$(find sensorbox)/launch/box.launch" machine="$(arg machine)" />
+</launch>
