@@ -185,7 +185,7 @@ class TrafficCounter:
                 detection_msg.bbox.center.y = cy
                 detection_msg.bbox.size_x = w
                 detection_msg.bbox.size_y = h
-                detection_msg.source_img = msgify(Image, orig_frame)
+                detection_msg.source_img = msgify(Image, orig_frame, encoding="bgr8")
                 self.detection_pub.publish(detection_msg)
 
             self._draw_bounding_boxes(
