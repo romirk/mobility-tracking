@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Traffic Counting
 """
@@ -228,3 +230,8 @@ class TrafficCounter:
         # down_sampled = cv2.resize(colored_final_img, (640, 480))
 
         # todo publish image
+
+
+if __name__ == "__main__":
+    t = TrafficCounter()
+    rospy.spin()
