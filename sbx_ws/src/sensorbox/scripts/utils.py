@@ -4,12 +4,6 @@ import pickle
 import sys
 from time import sleep
 
-if sys.platform == "win32":
-    import pyrealsense2 as rs
-else:
-    # noinspection PyPackageRequirements,PyUnresolvedReferences
-    from ..res import pyrealsense2 as rs
-
 
 def encode64(data):
     return codecs.encode(pickle.dumps(data), "base64").decode()
@@ -19,47 +13,20 @@ def decode64(data: str):
     return pickle.loads(codecs.decode(data.encode(), "base64"))
 
 
-def rs_pipeline_setup(width, height, fps):
-    # Configure depth and color streams
-    # noinspection PyArgumentList
-    pipeline = rs.pipeline()
-    config = rs.config()
-
-    # Get device product line for setting a supporting resolution
-    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
-    pipeline_profile = config.resolve(pipeline_wrapper)
-    device = pipeline_profile.get_device()
-    device_product_line = str(device.get_info(rs.camera_info.product_line))
-
-    # print(f"{device} | {device_product_line}\n")
-    print(f"configuring {device_product_line} with {width}x{height} @ {fps} fps")
-
-    # find RGB sensor
-    for s in device.sensors:
-        if s.get_info(rs.camera_info.name) == "RGB Camera":
-            break
-    else:
-        print("Requires Depth sensorbox with Color sensor")
-        exit(0)
-
-    # enable RGB stream
-    config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, fps)
-    pipeline.start(config)
-    return pipeline, config
-
-
 def countdown(secs):
     secs = int(secs)
     while secs:
-        print(secs, end=' ')
+        print(secs, end=" ")
         sleep(1)
         secs -= 1
-    print('0')
+    print("0")
 
 
-def parse_args_counter(parser=argparse.ArgumentParser(
-    description="traffic counter",
-)):
+def parse_args_counter(
+    parser=argparse.ArgumentParser(
+        description="traffic counter",
+    )
+):
     min_area_default = 200
     direction_default = ["H", "0.5"]
     num_count_default = 10
@@ -102,7 +69,7 @@ def parse_args_counter(parser=argparse.ArgumentParser(
         type=int,
         default=video_width_default,
         help=f"Videos will be resized to this width (default is {video_width_default}). Height will be computed "
-             f"automatically to preserve aspect ratio",
+        f"automatically to preserve aspect ratio",
     )
     parser.add_argument(
         "-vh",
@@ -110,7 +77,7 @@ def parse_args_counter(parser=argparse.ArgumentParser(
         type=int,
         default=video_height_default,
         help=f"Videos will be resized to this height (default is {video_width_default}). Width will be computed "
-             f"automatically to preserve aspect ratio",
+        f"automatically to preserve aspect ratio",
     )
 
     parser.add_argument(
@@ -119,7 +86,7 @@ def parse_args_counter(parser=argparse.ArgumentParser(
         type=int,
         default=starting_frame_default,
         help=f"Select the starting frame for video analysis (default is {starting_frame_default}). All frames before "
-             f"that will still be used for the background average",
+        f"that will still be used for the background average",
     )
     parser.add_argument(
         "-r",
@@ -140,9 +107,11 @@ def parse_args_counter(parser=argparse.ArgumentParser(
     return parser
 
 
-def parse_args_sensorbox(parser=argparse.ArgumentParser(
-    description="sensorbox",
-)):
+def parse_args_sensorbox(
+    parser=argparse.ArgumentParser(
+        description="sensorbox",
+    )
+):
     baud_default = 115200
     server_default = "localhost"
     port_default = "COM4"
@@ -169,23 +138,17 @@ def parse_args_sensorbox(parser=argparse.ArgumentParser(
         help=f"Serial baud rate (default is {baud_default})",
     )
     parser.add_argument(
-        "-x",
-        "--parallel",
-        action="store_true",
-        help="parallel processing"
+        "-x", "--parallel", action="store_true", help="parallel processing"
     )
-    parser.add_argument(
-        "-v",
-        "--visual",
-        action="store_true",
-        help="visualize"
-    )
+    parser.add_argument("-v", "--visual", action="store_true", help="visualize")
     return parser
 
 
-def parse_args(parser=argparse.ArgumentParser(
-    description="sensorbox",
-)):
+def parse_args(
+    parser=argparse.ArgumentParser(
+        description="sensorbox",
+    )
+):
     parser = parse_args_counter(parser)
     parser = parse_args_sensorbox(parser)
     return parser.parse_args()

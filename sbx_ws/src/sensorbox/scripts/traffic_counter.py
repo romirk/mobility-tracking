@@ -1,120 +1,65 @@
 """
 Traffic Counting
 """
-import _pickle as pickle
-import datetime
-import socket
 import time
-from multiprocessing import Value, Process, Queue
-from threading import Thread
+from multiprocessing import Event
 
 import cv2
-import imutils
 import numpy as np
-import requests
-
-from utils import encode64, rs_pipeline_setup, countdown
+import rospy
+from sensor_msgs.msg import Image
+from vision_msgs.msg import Detection2D
 
 # from jetson_inference import detectNet
-
-STREAM_Q = Queue(maxsize=100)
-
-
-def req_thread(url, data):
-    try:
-        requests.post(url, json=data)
-    except Exception as e:
-        print("Error in request thread: ", e)
-
-
-def streamer_thread(url: str, running: Value, queue: Queue):
-    transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    transport.connect((url, 9999))
-    print("Connected to streamer")
-
-    try:
-        while running.value:
-            frame = pickle.loads(queue.get())
-            if frame is None:
-                break
-            transport.sendall(frame)
-    except ConnectionResetError:
-        print("Connection reset by peer")
-    except KeyboardInterrupt:
-        pass
-    finally:
-        running.value = False
-        transport.close()
 
 
 # TEST_FILE = "./mobility-tracking/ignore/test.mp4"
 TEST_FILE = "./test.mp4"
 
 
-class TrafficCounter():
+class TrafficCounter:
     """
     Traffic Counter class.
     """
 
-    def __init__(self, config):
+    def __init__(self):
         self.name = __name__
-        self.running = Value("b", True)
+        rospy.init_node(self.name)
+        self.stopped = Event()
         self.crop_rect = []  # stores the click coordinates where to crop the frame
         self.mask_points = (
             []
         )  # stores the click coordinates of the mask to apply to cropped frame
         self.font = cv2.FONT_HERSHEY_SIMPLEX
-        self.p1_count_line = None
-        self.p2_count_line = None
+        self.p1_count_line: tuple = ()
+        self.p2_count_line: tuple = ()
         self.counter = 0
-        self.line_direction = config.direction[0]
-        self.line_position = float(config.direction[1])
-        self.min_area = config.min_area
-        self.num_contours = config.num_contours
-        self.starting_frame = config.starting_frame
-        self.server = config.server
+        self.line_direction = rospy.get_param("~direction", "H")
+        self.line_position = rospy.get_param("~line_position", 0.5)
+        self.min_area = rospy.get_param("~min_area", 5000)
+        self.num_contours = rospy.get_param("~num_contours", 10)
+        self.starting_frame = rospy.get_param("~starting_frame", 30)
         self.prev_centroids = (
             []
         )  # this will contain the coordinates of the centers in the previous
-        self.fps = config.fps
-        if not config.debug:
-            self.debug = False
-            self._vid_width = config.video_width
-            self._vid_height = config.video_height
-            self.debug = False
-            self.pipeline, self.pipeline_config = rs_pipeline_setup(self._vid_width, self._vid_height, self.fps)
-            self._compute_frame_dimensions()
-        else:
-            self.debug = True
-            print("Debug mode")
-            self.frames = np.fromfile("../hekinchonker.obj", dtype=np.uint8).reshape((900, 720, 1280, 3))
-            print(self.frames.shape)
-            self._vid_width = self.frames.shape[2]
-            self._vid_height = self.frames.shape[1]
-            print("Video dimensions: ", self._vid_width, self._vid_height)
+        self.fps = rospy.get_param("~fps", 30)
 
-        # self.net = detectNet("ssd-mobilenet-v2", sys.argv, 0.5)
+        self._vid_width = rospy.get_param("~video_width", 640)
+        self._vid_height = rospy.get_param("~video_height", 480)
 
         self.bg_subtractor = cv2.createBackgroundSubtractorMOG2(
             history=100, varThreshold=50, detectShadows=True
         )
 
-        self.record = config.record
+        self._set_up_line(self.line_direction, self.line_position)
 
-        self.visualize = config.visual
+        self.rate_of_influence = 0.01
+        self.raw_avg = np.zeros((self._vid_height, self._vid_width))
 
-        # Getting frame dimensions
-        self._set_up_line(config.direction[0], float(config.direction[1]))
-
-        if config.record:
-            filename = f"output/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.mp4"
-            self.out = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc('m', 'p', '4', 'v'), 30,
-                                       (self._vid_width, self._vid_height))
-            print(f"Recording to file {filename} ({self._vid_width}x{self._vid_height})")
-
-        self.streamer = Process(target=streamer_thread, args=(
-            config.server, self.running, STREAM_Q), daemon=True)
-        self.streamer.start()
+        self.frame_sub = rospy.Subscriber(
+            "/camera/color/image_raw", Image, self.frame_callback
+        )
+        self.detection_pub = rospy.Publisher("/detect/raw", Detection2D, queue_size=10)
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -129,17 +74,8 @@ class TrafficCounter():
         else:
             raise ValueError('Expected an "H" or a "V" only for line direction')
 
-    def _compute_frame_dimensions(self):
-        if self.debug:
-            self._vid_height = int(self.cap.get(4))
-        else:
-            frame = self.pipeline.wait_for_frames().get_color_frame()
-            img = imutils.resize(np.asanyarray(frame.get_data()), width=self._vid_width)
-            self._vid_height = img.shape[0]
-            self._vid_width = img.shape[1]
-
     def _draw_bounding_boxes(
-            self, frame, contour_id, bounding_points, cx, cy, prev_cx, prev_cy, area
+        self, frame, contour_id, bounding_points, cx, cy, prev_cx, prev_cy, area
     ):
         cv2.drawContours(frame, [bounding_points], 0, (0, 255, 0), 1)
         cv2.line(
@@ -147,30 +83,26 @@ class TrafficCounter():
         )  # line between last position and current position
         cv2.circle(frame, (cx, cy), 3, (0, 0, 255), 4)
         cv2.putText(
-            frame, str(contour_id) + " " + str(area), (cx, cy - 15), self.font, 0.4, (255, 0, 0), 2
+            frame,
+            str(contour_id) + " " + str(area),
+            (cx, cy - 15),
+            self.font,
+            0.4,
+            (255, 0, 0),
+            2,
         )
-
-    def __remote_update(self, frame: np.ndarray, rect: np.ndarray, dir: str, cnt: int):
-        thread = Thread(target=req_thread, args=(f"http://{self.server}:5000/detect", {
-            "frame": encode64(frame),
-            "count": cnt,
-            "rect": encode64(rect),
-            "direction": dir,
-            "T": str(datetime.datetime.now())
-        }))
-        thread.start()
 
     def _is_line_crossed(self, frame, cx, cy, prev_cx, prev_cy):
         if self.line_direction.upper() == "H":
             if (prev_cy <= self.p1_count_line[1] <= cy) or (
-                    cy <= self.p1_count_line[1] <= prev_cy
+                cy <= self.p1_count_line[1] <= prev_cy
             ):
                 self.counter += 1
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
                 return True, "u" if cy - self.p1_count_line[1] < 0 else "d"
         elif self.line_direction.upper() == "V":
             if (prev_cx <= self.p1_count_line[0] <= cx) or (
-                    cx <= self.p1_count_line[0] <= prev_cx
+                cx <= self.p1_count_line[0] <= prev_cx
             ):
                 self.counter += 1
                 cv2.line(frame, self.p1_count_line, self.p2_count_line, (0, 255, 0), 5)
@@ -181,24 +113,24 @@ class TrafficCounter():
     #     detections = self.net.Detect(frame, overlay="box,labels,conf")
 
     def bind_objects(self, frame, thresh_img):
-        """Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be 
-        drawn onto thresh_img: numpy image after subtracting the background and all thresholds and noise reduction 
+        """Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be
+        drawn onto thresh_img: numpy image after subtracting the background and all thresholds and noise reduction
         operations are applied
         """
         orig_frame = frame.copy()
         contours, _ = cv2.findContours(
             thresh_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )  # this line is for opencv 2.4, and also now for OpenCV 4.4, so this is the current one
-        contours = sorted(contours, key=cv2.contourArea, reverse=True)[: self.num_contours]
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)[
+            : self.num_contours
+        ]
 
         cnt_id = 1
         cur_centroids = []
         for c in contours:
             area = cv2.contourArea(c)
 
-            if (
-                    area < self.min_area
-            ):  # ignore contours that are smaller than this area
+            if area < self.min_area:  # ignore contours that are smaller than this area
                 continue
             rect = cv2.minAreaRect(c)
             bounding = cv2.boundingRect(c)
@@ -239,112 +171,60 @@ class TrafficCounter():
                     prev_cx, prev_cy = cx, cy
                 # prev_cx,prev_cy = min_point
 
-            _is_crossed, direction = self._is_line_crossed(frame, cx, cy, prev_cx, prev_cy)
+            _is_crossed, direction = self._is_line_crossed(
+                frame, cx, cy, prev_cx, prev_cy
+            )
             if _is_crossed:
-                self.__remote_update(orig_frame, bounding, direction, self.counter)
-                print(f"\r{self.counter}", end="")
-            self._draw_bounding_boxes(frame, cnt_id, points, cx, cy, prev_cx, prev_cy, area)
+                detection_msg = Detection2D()
+                detection_msg.header.frame_id = "camera"
+                detection_msg.header.stamp = rospy.Time.now()
+                detection_msg.bbox.center.x = cx
+                detection_msg.bbox.center.y = cy
+                detection_msg.bbox.size_x = w
+                detection_msg.bbox.size_y = h
+                self.detection_pub.publish(detection_msg)
+
+            self._draw_bounding_boxes(
+                frame, cnt_id, points, cx, cy, prev_cx, prev_cy, area
+            )
 
             cnt_id += 1
         self.prev_centroids = cur_centroids  # updating centroids for next frame
 
-    def _set_up_masks(self):
-        """Sets up the masks for the background subtraction and the thresholding operations"""
+    def frame_callback(self, frame: Image):
+        height = frame.height
+        width = frame.width
+        data = np.asarray(frame.data, dtype=np.uint8).reshape(height, width, 3)
+        frame_id = frame.header.seq  # get current frame index
+        img = cv2.resize(data, (self._vid_width, self._vid_height))
 
-        if self.debug:
-            frame = self.frames[0].copy()
-            img = frame
-        else:
-            frame = self.pipeline.wait_for_frames().get_color_frame()
-            img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
+        working_img = img.copy()
 
-        self.raw_avg = np.copy(img).astype(np.float32)
+        cv2.accumulateWeighted(working_img, self.raw_avg, self.rate_of_influence)
+        if frame_id < self.starting_frame:
+            return
 
-        print(self.raw_avg.shape)
-        print("Ready. Starting in")
-        countdown(5)
+        background_avg = cv2.convertScaleAbs(
+            self.raw_avg
+        )  # reference background average image
 
-    def main_loop(self, running: Value):
-        self._set_up_masks()
-        rate_of_influence = 0.01
-        print("running")
+        # Background subtraction
+        fg_mask = self.bg_subtractor.apply(
+            working_img, background_avg, self.rate_of_influence
+        )
+        blurred = cv2.GaussianBlur(fg_mask, (31, 31), 0)
+        ret1, th1 = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
 
-        try:
-            i = 0
-            while running.value:
-                t0 = time.time()
-                if self.debug:
-                    if i == 900: raise KeyboardInterrupt
-                    print(f"\r{i / 900 * 100:.2f}% ", end="")
-                    frame = self.frames[i]
-                    i += 1
-                    img = frame
-                    frame_id = i
-                else:
-                    frame = self.pipeline.wait_for_frames().get_color_frame()
-                    frame_id = int(frame.frame_number)  # get current frame index
-                    img = cv2.resize(np.asanyarray(frame.get_data()), (self._vid_width, self._vid_height))
+        kernel = np.ones((7, 7), np.uint8)
+        dilated = cv2.dilate(th1, kernel)
+        final_img = cv2.dilate(dilated, None)
 
-                working_img = img.copy()
-                cv2.accumulateWeighted(working_img, self.raw_avg, rate_of_influence)
+        # Drawing bounding boxes and counting
+        t2 = time.time()
+        self.bind_objects(img, final_img)
 
-                if frame_id < self.starting_frame:
-                    continue
+        # colored_final_img = img
 
-                background_avg = cv2.convertScaleAbs(
-                    self.raw_avg
-                )  # reference background average image
+        # down_sampled = cv2.resize(colored_final_img, (640, 480))
 
-                # Background subtraction
-                fg_mask = self.bg_subtractor.apply(working_img, background_avg, rate_of_influence)
-                blurred = cv2.GaussianBlur(fg_mask, (31, 31), 0)
-                ret1, th1 = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
-
-                kernel = np.ones((7, 7), np.uint8)
-                dilated = cv2.dilate(th1, kernel)
-                final_img = cv2.dilate(dilated, None)
-
-                # Drawing bounding boxes and counting
-                t2 = time.time()
-                self.bind_objects(img, final_img)
-                # sys.stdout.write(f"\rbound objects in {time.time() - t2} at frame")
-
-                # if self.debug:
-                #     frame_1 = cv2.cvtColor(fg_mask, cv2.COLOR_GRAY2BGR)
-                #     frame_2 = cv2.cvtColor(blurred, cv2.COLOR_GRAY2BGR)
-                #     frame_3 = cv2.cvtColor(dilated, cv2.COLOR_GRAY2BGR)
-                #     frame_4 = img
-                #
-                #     frame_12 = np.hstack((frame_1, frame_2))
-                #     frame_34 = np.hstack((frame_3, frame_4))
-                #     final_img = np.vstack((frame_12, frame_34))
-
-                # Displaying the frame
-                # colored_final_img = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
-                # colored_final_img = final_img
-                colored_final_img = img
-
-                down_sampled = cv2.resize(colored_final_img, (640, 480))
-
-                STREAM_Q.put(pickle.dumps(down_sampled))
-
-                if self.record:
-                    print("type of frame", type(down_sampled))
-                    self.out.write(down_sampled)
-
-                t1 = time.time()
-                # sys.stdout.write(f" {frame_id} {1 / (t1 - t0)}")
-        except KeyboardInterrupt:
-            pass
-        finally:
-            self.running.value = False
-            STREAM_Q.put(None)
-            if not self.debug:
-                self.pipeline.stop()
-            if self.record:
-                self.out.release()
-
-            print("[Camera] Stopping counter...")
-
-    def subtract(self, background_avg, working_img):
-        return np.linalg.norm(background_avg - working_img, axis=2)
+        # todo publish image
