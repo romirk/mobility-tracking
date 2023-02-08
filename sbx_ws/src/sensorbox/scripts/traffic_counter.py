@@ -11,6 +11,7 @@ import numpy as np
 import rospy
 from sensor_msgs.msg import Image
 from vision_msgs.msg import Detection2D
+from ros_numpy import msgify, numpify
 
 # from jetson_inference import detectNet
 
@@ -184,7 +185,7 @@ class TrafficCounter:
                 detection_msg.bbox.center.y = cy
                 detection_msg.bbox.size_x = w
                 detection_msg.bbox.size_y = h
-                detection_msg.source_img = orig_frame
+                detection_msg.source_img = msgify(Image, orig_frame)
                 self.detection_pub.publish(detection_msg)
 
             self._draw_bounding_boxes(

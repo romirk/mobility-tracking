@@ -1,0 +1,3 @@
+[submodule "sbx_ws/src/ros_numpy"]
+	path = sbx_ws/src/ros_numpy
+	url = git@github.com:eric-wieser/ros_numpy.git
