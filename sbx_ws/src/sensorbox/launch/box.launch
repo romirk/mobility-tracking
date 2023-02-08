@@ -19,8 +19,8 @@
         <node type="aqi_node.py" name="aqi" pkg="sensorbox" />
         <node type="traffic_counter.py" name="counter" pkg="sensorbox" />
     </group>
-
+    <!-- 
     <include file="$(find realsense2_camera)/launch/rs_camera.launch">
         <arg name="camera" value="$(arg camera)" />
-    </include>
+    </include> -->
 </launch>
