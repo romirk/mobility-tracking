@@ -52,7 +52,7 @@ add_message_files(
   FILES
   AQI.msg
   BoxArray.msg
-  Sync.msg
+  AnnotatedImage.msg
 #   Message2.msg
 )
 

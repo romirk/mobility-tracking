@@ -1,4 +1,9 @@
 const screen = document.getElementById('live');
+
+function stamp_to_millis(stamp) {
+    return stamp.secs * 1000 + stamp.nsecs / 1000000;
+}
+
 class SensorLive {
     constructor() {
         this.counter = 0;
@@ -13,6 +18,7 @@ class SensorLive {
         this.paint = false;
         this.last_box = 0;
         this.seq = 0;
+        this.latency = {network: 0, processing: 0, total: 0};
 
         this.canvas = document.getElementById('canvas');
         this.ctx = this.canvas.getContext('2d');
@@ -70,7 +76,7 @@ class SensorLive {
     relay_setup() {
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_detect.bind(this));
-        this.relay.createListener("/sbx/sync", "sensorbox/Sync", this.on_image.bind(this));
+        this.relay.createListener("/sbx/bboxed", "sensorbox/AnnotatedImage", this.on_image.bind(this));
         // this.relay.createListener("/sbx/bounds", "sensorbox/BoxArray", this.on_box.bind(this));
         window.requestAnimationFrame(this.box_anim.bind(this));
 
@@ -97,6 +103,10 @@ class SensorLive {
         this.img.src = "data:image/jpeg;base64," + msg.img.data;
         this.on_box(msg);
         this.seq = msg.img.header.seq;
+        this.latency.network = Date.now() - stamp_to_millis(msg.img.header.stamp);
+        this.latency.processing = stamp_to_millis(msg.img.header.stamp) - stamp_to_millis(msg.img.header.stamp);
+        this.latency.total = this.latency.network + this.latency.processing;
+        console.log(this.latency);
         // this.paint = true;
     }
 

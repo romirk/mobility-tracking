@@ -13,7 +13,7 @@ import cv2
 import numpy as np
 import rospy
 from sensor_msgs.msg import Image, CompressedImage
-from sensorbox.msg import Sync
+from sensorbox.msg import AnnotatedImage
 from vision_msgs.msg import BoundingBox2D, Detection2D
 
 
@@ -69,7 +69,9 @@ class MobilityTracker:
         self.detection_pub = rospy.Publisher(
             f"/{self.prefix}/detect", Detection2D, queue_size=10
         )
-        self.sync_pub = rospy.Publisher(f"/{self.prefix}/sync", Sync, queue_size=10)
+        self.sync_pub = rospy.Publisher(
+            f"/{self.prefix}/bboxed", AnnotatedImage, queue_size=10
+        )
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -215,7 +217,7 @@ class MobilityTracker:
         dilated = cv2.dilate(th1, kernel)
         final_img = cv2.dilate(dilated, None)
         boxes = self.bind_objects(frame, img, final_img)
-        
+
         # final_img_color = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
         # cv2.line(final_img_color, self.p1_count_line, self.p2_count_line, (0,255,0))
         compressed_img = cv2.imencode(".jpg", final_img)[1].tostring()
@@ -226,7 +228,9 @@ class MobilityTracker:
         compressed_img_msg.data = compressed_img
         header = rospy.Header()
         header.stamp = rospy.Time.now()
-        synced_boxes = Sync(header=header, img=compressed_img_msg, boxes=boxes)
+        synced_boxes = AnnotatedImage(
+            header=header, img=compressed_img_msg, boxes=boxes
+        )
         self.sync_pub.publish(synced_boxes)
 
 
