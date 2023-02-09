@@ -51,7 +51,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   AQI.msg
-  Box.msg
+  BoxArray.msg
+  Sync.msg
 #   Message2.msg
 )
 

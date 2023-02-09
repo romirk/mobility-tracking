@@ -7,21 +7,14 @@ Copyright (C) 2023 YES!Delft
 by Romir Kulshreshtha and Anthony Nikolaidis
 """
 
-import time
 from multiprocessing import Event
 
 import cv2
 import numpy as np
 import rospy
-from sensor_msgs.msg import Image
-from vision_msgs.msg import Detection2D
-from sensorbox.msg import Box
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:  # VS Code doesn't like this
-    from ros_numpy.src.ros_numpy.image import numpy_to_image, image_to_numpy
-else:
-    from ros_numpy.image import numpy_to_image, image_to_numpy
+from sensor_msgs.msg import Image, CompressedImage
+from sensorbox.msg import Sync
+from vision_msgs.msg import BoundingBox2D, Detection2D
 
 
 class MobilityTracker:
@@ -45,7 +38,7 @@ class MobilityTracker:
         self._vid_width = rospy.get_param("video_width", 640)
         self._vid_height = rospy.get_param("video_height", 480)
 
-        rospy.logerr(f"Starting {self.prefix} node")
+        rospy.logwarn(f"Starting {self.prefix}/counter node")
 
         self.stopped = Event()
         self.crop_rect = []  # stores the click coordinates where to crop the frame
@@ -69,13 +62,14 @@ class MobilityTracker:
         self.rate_of_influence = 0.01
         self.raw_avg = np.zeros((self._vid_height, self._vid_width, 3))
 
+        # rostopics
         self.frame_sub = rospy.Subscriber(
             f"/{self.camera_name}/color/image_raw", Image, self.frame_callback
         )
         self.detection_pub = rospy.Publisher(
             f"/{self.prefix}/detect", Detection2D, queue_size=10
         )
-        self.boxes_pub = rospy.Publisher(f"/{self.prefix}/bounds", Box, queue_size=10)
+        self.sync_pub = rospy.Publisher(f"/{self.prefix}/sync", Sync, queue_size=10)
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -123,6 +117,7 @@ class MobilityTracker:
 
         cnt_id = 1
         cur_centroids = []
+        boxes: list[BoundingBox2D] = []
         for c in contours:
             area = cv2.contourArea(c)
 
@@ -169,26 +164,28 @@ class MobilityTracker:
 
             _is_crossed, direction = self._is_line_crossed(cx, cy, prev_cx, prev_cy)
             if _is_crossed:
-                detection_msg = Detection2D()
-                detection_msg.header.frame_id = "camera"
-                detection_msg.header.stamp = rospy.Time.now()
+                detection_msg = Detection2D(
+                    header=incoming_frame.header, source_img=incoming_frame
+                )
                 detection_msg.bbox.center.x = cx
                 detection_msg.bbox.center.y = cy
                 detection_msg.bbox.size_x = w
                 detection_msg.bbox.size_y = h
-                detection_msg.source_img = numpy_to_image(orig_frame, "bgr8")
                 self.detection_pub.publish(detection_msg)
-            box_msg = Box()
-            box_msg.header = incoming_frame.header
-            box_msg.box.center.x = bounding[0] + bounding[2] / 2
-            box_msg.box.center.y = bounding[1] + bounding[3] / 2
-            box_msg.box.center.theta = 0
-            box_msg.box.size_x = bounding[2]
-            box_msg.box.size_y = bounding[3]
-            self.boxes_pub.publish(box_msg)
+
+            box_msg = BoundingBox2D()
+            box_msg.center.x = bounding[0] + bounding[2] / 2
+            box_msg.center.y = bounding[1] + bounding[3] / 2
+            box_msg.center.theta = 0
+            box_msg.size_x = bounding[2]
+            box_msg.size_y = bounding[3]
+            boxes.append(box_msg)
+            # self.boxes_pub.publish(box_msg)
 
             cnt_id += 1
         self.prev_centroids = cur_centroids  # updating centroids for next frame
+
+        return boxes
 
     def frame_callback(self, frame: Image):
         height = frame.height
@@ -212,15 +209,25 @@ class MobilityTracker:
             working_img, background_avg, self.rate_of_influence
         )
         blurred = cv2.GaussianBlur(fg_mask, (31, 31), 0)
-        ret1, th1 = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
+        _, th1 = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
 
         kernel = np.ones((7, 7), np.uint8)
         dilated = cv2.dilate(th1, kernel)
         final_img = cv2.dilate(dilated, None)
+        boxes = self.bind_objects(frame, img, final_img)
+        
+        # final_img_color = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
+        # cv2.line(final_img_color, self.p1_count_line, self.p2_count_line, (0,255,0))
+        compressed_img = cv2.imencode(".jpg", final_img)[1].tostring()
 
-        # Drawing bounding boxes and counting
-        t2 = time.time()
-        self.bind_objects(frame, img, final_img)
+        compressed_img_msg = CompressedImage()
+        compressed_img_msg.header = frame.header
+        compressed_img_msg.format = "jpeg"
+        compressed_img_msg.data = compressed_img
+        header = rospy.Header()
+        header.stamp = rospy.Time.now()
+        synced_boxes = Sync(header=header, img=compressed_img_msg, boxes=boxes)
+        self.sync_pub.publish(synced_boxes)
 
 
 if __name__ == "__main__":

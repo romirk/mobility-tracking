@@ -7,7 +7,7 @@
         <param name="camera_name" value="$(arg prefix)/$(arg camera)" />
         <param name="direction" value="V" />
         <param name="line_position" value="0.5" />
-        <param name="min_area" value="5000" />
+        <param name="min_area" value="2000" />
         <param name="num_contours" value="10" />
         <param name="starting_frame" value="30" />
         <param name="fps" value="30" />
