@@ -18,7 +18,7 @@ class SensorLive {
         this.paint = false;
         this.last_box = 0;
         this.seq = 0;
-        this.latency = {network: 0, processing: 0, total: 0};
+        this.latency = { network: 0, processing: 0, total: 0 };
 
         this.canvas = document.getElementById('canvas');
         this.ctx = this.canvas.getContext('2d');
@@ -77,7 +77,6 @@ class SensorLive {
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_detect.bind(this));
         this.relay.createListener("/sbx/bboxed", "sensorbox/AnnotatedImage", this.on_image.bind(this));
-        // this.relay.createListener("/sbx/bounds", "sensorbox/BoxArray", this.on_box.bind(this));
         window.requestAnimationFrame(this.box_anim.bind(this));
 
     }
@@ -104,7 +103,7 @@ class SensorLive {
         this.on_box(msg);
         this.seq = msg.img.header.seq;
         this.latency.network = Date.now() - stamp_to_millis(msg.img.header.stamp);
-        this.latency.processing = stamp_to_millis(msg.img.header.stamp) - stamp_to_millis(msg.img.header.stamp);
+        this.latency.processing = stamp_to_millis(msg.header.stamp) - stamp_to_millis(msg.img.header.stamp);
         this.latency.total = this.latency.network + this.latency.processing;
         console.log(this.latency);
         // this.paint = true;
@@ -119,9 +118,6 @@ class SensorLive {
         }
         this.last_box = stamp;
         this.paint = true;
-        // this.paint = this.box_frames.length !== 0;
-        // if (this.paint) console.log(data);
-        // this.last_box = da
     }
 
     draw_box(center_x, center_y, size_x, size_y) {
@@ -147,7 +143,7 @@ class SensorLive {
 
                 for (const box of this.boxes) {
                     if (Date.now() - box.mstamp > 50) {
-                        console.log("skipped", Date.now() - box.mstamp);
+                        console.log("dropped", Date.now() - box.mstamp);
                         continue;
                     }
                     new_boxes.push(box);
@@ -157,7 +153,7 @@ class SensorLive {
             }
             else {
 
-                console.log("no boxes", Date.now() - this.last_box);
+                // console.log("no boxes", Date.now() - this.last_box);
             }
             // console.log("painted");
         }
@@ -232,15 +228,3 @@ class SensorLive {
 
 
 const sensor_live = new SensorLive();
-sensor_live.log()
-
-window.onkeyup = function (e) {
-    const key = e.code;
-
-    if (key === 'KeyL') {
-        let old_data = sensor_live.counts;
-        console.log(old_data);
-        old_data.car.total += 1;
-        sensor_live.on_detect({ counts: old_data });
-    }
-}

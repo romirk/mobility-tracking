@@ -7,12 +7,14 @@
     <meta content="IE=edge" http-equiv="X-UA-Compatible">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Mobility Tracking</title>
+    <link rel="shortcut icon" href="static/img/icon-yesdelft.png">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css" rel="stylesheet">
     <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
         integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" rel="stylesheet">
-    <link href="static/css/main.css" rel="stylesheet">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0" />
+    <link href="static/css/main.css" rel="stylesheet">
 </head>
 
 <body>
@@ -48,7 +50,8 @@
                 <div class="fixed-bottom d-flex justify-content-end" style="z-index: 5;">
                     <div class="me-3 mb-3 grid d-flex align-items-center" id="stats">
                         <div class="g-col-4 mx-3 d-flex align-items-center">
-                            <span class="me-2 lblue" id="total_count" style="font-weight: bold;">0</span>&nbsp;detections
+                            <span class="me-2 lblue" id="total_count"
+                                style="font-weight: bold;">0</span>&nbsp;detections
                         </div>
                     </div>
                 </div>
@@ -59,7 +62,8 @@
             <canvas id="canvas"></canvas>
         </div>
 
-        <div class="tab-pane fade d-flex align-items-center show active" id="nav-stats" role="tabpanel" aria-labelledby="nav-stats-tab">
+        <div class="tab-pane fade d-flex align-items-center show active" id="nav-stats" role="tabpanel"
+            aria-labelledby="nav-stats-tab">
             <div id="stats-page" class="container gx-0 text-center">
                 <div class="col" style="height: 100%; width: calc(100% - 20px); margin: auto;">
                     <div id="header" class="row gx-0" style="height: 8%;">
@@ -67,8 +71,8 @@
                             <div class="row gx-0" style="height: 100%;">
                                 <div class="col-2 text-start" style="height: 100%;">
                                     <div class="ms-3 d-flex justify-content-center flex-column" style="height: 100%;">
-                                        <img src="static/img/yd_mono.png"
-                                            alt="YES!Delft ImpactLab logo" style="height: 50%; width: fit-content;">
+                                        <img src="static/img/yd_mono.png" alt="YES!Delft ImpactLab logo"
+                                            style="height: 50%; width: fit-content;">
                                     </div>
                                 </div>
                                 <div class="col-sm-8 col-10 my-auto text-end text-sm-center pe-3 pe-sm-0">
@@ -110,8 +114,8 @@
                                             <span id="counts_car_2" class="medium-number">4</span>
                                         </div>
                                         <div class="row gx-0 text-white">
-                                            <svg class="svg white" fill="none" height="48" viewBox="0 0 48 48" width="48"
-                                                xmlns="http://www.w3.org/2000/svg">
+                                            <svg class="svg white" fill="none" height="48" viewBox="0 0 48 48"
+                                                width="48" xmlns="http://www.w3.org/2000/svg">
                                                 <use href="#car" x="0" y="0"></use>
                                             </svg>
                                         </div>
@@ -121,8 +125,8 @@
                                             <span id="counts_bus_2" class="medium-number">4</span>
                                         </div>
                                         <div class="row gx-0 text-white" style="padding: 3px 0 3px 0">
-                                            <svg class="svg white" fill="none" height="42" viewBox="0 0 48 48" width="42"
-                                                xmlns="http://www.w3.org/2000/svg">
+                                            <svg class="svg white" fill="none" height="42" viewBox="0 0 48 48"
+                                                width="42" xmlns="http://www.w3.org/2000/svg">
                                                 <use href="#bus" x="0" y="0"></use>
                                             </svg>
                                         </div>
@@ -132,8 +136,8 @@
                                             <span id="counts_truck_2" class="medium-number">4</span>
                                         </div>
                                         <div class="row gx-0 text-white" style="padding: 3px 0 3px 0">
-                                            <svg class="svg white" fill="none" height="42" viewBox="0 0 48 48" width="42"
-                                                xmlns="http://www.w3.org/2000/svg">
+                                            <svg class="svg white" fill="none" height="42" viewBox="0 0 48 48"
+                                                width="42" xmlns="http://www.w3.org/2000/svg">
                                                 <use href="#truck" x="0" y="0"></use>
                                             </svg>
                                         </div>
@@ -142,7 +146,7 @@
                             </div>
                         </div>
                         <div class="col d-flex flex-column justify-content-between"
-                             style="min-width: 320px; min-height: 400px;">
+                            style="min-width: 320px; min-height: 400px;">
                             <div class="card shadow">
                                 <div class="row gx-0 text-start px-3 pt-3">
                                     <h2>Types of Vehicles</h2>
@@ -158,8 +162,7 @@
                     </div>
 
                     <div class="row gx-0" style="height: 46%;">
-                        <div class="col d-flex"
-                            style="height: 100%; min-width: 320px; min-height: 400px;">
+                        <div class="col d-flex" style="height: 100%; min-width: 320px; min-height: 400px;">
                             <div class="card shadow">
                                 <div class="row gx-0 px-3 pt-3">
                                     <div class="d-flex align-items-center justify-content-between">
@@ -175,7 +178,7 @@
                                 </div>
                                 <div class="row gx-0">
                                     <div class="col pt-4 pb-5">
-                                        <div class="row gx-0 pb-3"><span class="big-number">8</span></div>
+                                        <div class="row gx-0 pb-3"><span id="tmp" class="big-number">8</span></div>
                                         <div class="row gx-0"><span class="unit">°Celsius</span></div>
                                     </div>
                                 </div>
@@ -184,8 +187,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col d-flex"
-                            style="height: 100%;  min-width: 320px; min-height: 400px;">
+                        <div class="col d-flex" style="height: 100%;  min-width: 320px; min-height: 400px;">
                             <div class="card shadow">
                                 <div class="row gx-0 px-3 pt-3">
                                     <div class="d-flex align-items-center justify-content-between">
@@ -201,7 +203,7 @@
                                 </div>
                                 <div class="row gx-0">
                                     <div class="col pt-4 pb-5">
-                                        <div class="row gx-0 pb-3"><span class="big-number">95</span></div>
+                                        <div class="row gx-0 pb-3"><span id="hum" class="big-number">95</span></div>
                                         <div class="row gx-0"><span class="unit">%RH</span></div>
                                     </div>
                                 </div>
@@ -210,8 +212,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col d-flex"
-                            style="height: 100%;  min-width: 320px; min-height: 400px;">
+                        <div class="col d-flex" style="height: 100%;  min-width: 320px; min-height: 400px;">
                             <div class="card shadow">
                                 <div class="row gx-0 px-3 pt-3">
                                     <div class="d-flex align-items-center justify-content-between">
@@ -227,7 +228,7 @@
                                 </div>
                                 <div class="row gx-0">
                                     <div class="col pt-4 pb-5">
-                                        <div class="row gx-0 pb-3"><span class="big-number">419</span></div>
+                                        <div class="row gx-0 pb-3"><span id="co2" class="big-number">419</span></div>
                                         <div class="row gx-0"><span class="unit">PPM</span></div>
                                     </div>
                                 </div>
@@ -255,11 +256,13 @@
                                             </div>
                                             <div class="row gx-0 py-3" style="height: 72%;">
                                                 <div class="col-xl-8 col-9">
-                                                    <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>
+                                                    <div class="ms-auto bg-light" style="height: 100%; width: 95%;">
+                                                    </div>
                                                 </div>
-                                                <div class="col-xl-4 col-3 d-flex align-items-center justify-content-center">
+                                                <div
+                                                    class="col-xl-4 col-3 d-flex align-items-center justify-content-center">
                                                     <div>
-                                                        <span class="medium-number">70</span>
+                                                        <span id="pm25" class="medium-number">70</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -281,11 +284,13 @@
                                             </div>
                                             <div class="row gx-0 py-3 pt-3" style="height: 72%;">
                                                 <div class="col-xl-8 col-9">
-                                                    <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>
+                                                    <div class="ms-auto bg-light" style="height: 100%; width: 95%;">
+                                                    </div>
                                                 </div>
-                                                <div class="col-xl-4 col-3 d-flex align-items-center justify-content-center">
+                                                <div
+                                                    class="col-xl-4 col-3 d-flex align-items-center justify-content-center">
                                                     <div>
-                                                        <span class="medium-number">20</span>
+                                                        <span id="pm10" class="medium-number">20</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -293,60 +298,60 @@
                                     </div>
                                 </div>
                             </div>
-<!--                            <div class="row gx-0" style="height: 50%;">-->
-<!--                                <div class="card shadow">-->
-<!--                                    <div class="col">-->
-<!--                                        <div class="row gx-0 px-3 pt-3">-->
-<!--                                            <div class="d-flex align-items-center justify-content-between">-->
-<!--                                                <div class="me-2">-->
-<!--                                                    <h2>PM<sub>2.5</sub></h2>-->
-<!--                                                </div>-->
-<!--                                                <div>-->
-<!--                                                    <div>-->
-<!--                                                        <span class="material-symbols-rounded">error</span>-->
-<!--                                                    </div>-->
-<!--                                                </div>-->
-<!--                                            </div>-->
-<!--                                        </div>-->
-<!--                                        <div class="row gx-0 py-3" style="height: 72%;">-->
-<!--                                            <div class="col-xl-8 col-10">-->
-<!--                                                <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>-->
-<!--                                            </div>-->
-<!--                                            <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">-->
-<!--                                                <div>-->
-<!--                                                    <span class="medium-number">70</span>-->
-<!--                                                </div>-->
-<!--                                            </div>-->
-<!--                                        </div>-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="row gx-0" style="height: 50%;">-->
-<!--                                 <div class="card shadow">-->
-<!--                                     <div class="col">-->
-<!--                                        <div class="row gx-0 px-3 pt-3">-->
-<!--                                            <div class="d-flex align-items-center justify-content-between">-->
-<!--                                                <div class="me-2">-->
-<!--                                                    <h2>PM<sub>10</sub></h2>-->
-<!--                                                </div>-->
-<!--                                                <div>-->
-<!--                                                    <span class="material-symbols-rounded">error</span>-->
-<!--                                                </div>-->
-<!--                                            </div>-->
-<!--                                        </div>-->
-<!--                                        <div class="row gx-0 py-3 pt-3" style="height: 72%;">-->
-<!--                                            <div class="col-xl-8 col-10">-->
-<!--                                                <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>-->
-<!--                                            </div>-->
-<!--                                            <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">-->
-<!--                                                <div>-->
-<!--                                                    <span class="medium-number">20</span>-->
-<!--                                                </div>-->
-<!--                                            </div>-->
-<!--                                        </div>-->
-<!--                                    </div>-->
-<!--                                </div>-->
-<!--                            </div>-->
+                            <!--                            <div class="row gx-0" style="height: 50%;">-->
+                            <!--                                <div class="card shadow">-->
+                            <!--                                    <div class="col">-->
+                            <!--                                        <div class="row gx-0 px-3 pt-3">-->
+                            <!--                                            <div class="d-flex align-items-center justify-content-between">-->
+                            <!--                                                <div class="me-2">-->
+                            <!--                                                    <h2>PM<sub>2.5</sub></h2>-->
+                            <!--                                                </div>-->
+                            <!--                                                <div>-->
+                            <!--                                                    <div>-->
+                            <!--                                                        <span class="material-symbols-rounded">error</span>-->
+                            <!--                                                    </div>-->
+                            <!--                                                </div>-->
+                            <!--                                            </div>-->
+                            <!--                                        </div>-->
+                            <!--                                        <div class="row gx-0 py-3" style="height: 72%;">-->
+                            <!--                                            <div class="col-xl-8 col-10">-->
+                            <!--                                                <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>-->
+                            <!--                                            </div>-->
+                            <!--                                            <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">-->
+                            <!--                                                <div>-->
+                            <!--                                                    <span class="medium-number">70</span>-->
+                            <!--                                                </div>-->
+                            <!--                                            </div>-->
+                            <!--                                        </div>-->
+                            <!--                                    </div>-->
+                            <!--                                </div>-->
+                            <!--                            </div>-->
+                            <!--                            <div class="row gx-0" style="height: 50%;">-->
+                            <!--                                 <div class="card shadow">-->
+                            <!--                                     <div class="col">-->
+                            <!--                                        <div class="row gx-0 px-3 pt-3">-->
+                            <!--                                            <div class="d-flex align-items-center justify-content-between">-->
+                            <!--                                                <div class="me-2">-->
+                            <!--                                                    <h2>PM<sub>10</sub></h2>-->
+                            <!--                                                </div>-->
+                            <!--                                                <div>-->
+                            <!--                                                    <span class="material-symbols-rounded">error</span>-->
+                            <!--                                                </div>-->
+                            <!--                                            </div>-->
+                            <!--                                        </div>-->
+                            <!--                                        <div class="row gx-0 py-3 pt-3" style="height: 72%;">-->
+                            <!--                                            <div class="col-xl-8 col-10">-->
+                            <!--                                                <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>-->
+                            <!--                                            </div>-->
+                            <!--                                            <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">-->
+                            <!--                                                <div>-->
+                            <!--                                                    <span class="medium-number">20</span>-->
+                            <!--                                                </div>-->
+                            <!--                                            </div>-->
+                            <!--                                        </div>-->
+                            <!--                                    </div>-->
+                            <!--                                </div>-->
+                            <!--                            </div>-->
                         </div>
                         <div id="extra-space" class="row"></div>
                     </div>

@@ -6,10 +6,7 @@ from typing import Tuple
 
 import numpy as np
 import rospy
-import message_filters
-from mission_control.msg import Counts, Sync
-from sensorbox.msg import BoxArray
-from sensor_msgs.msg import CompressedImage
+from mission_control.msg import Counts
 from vision_msgs.msg import Detection2D
 from yolov7_package import Yolov7Detector
 from yolov7_package.model_utils import coco_names
