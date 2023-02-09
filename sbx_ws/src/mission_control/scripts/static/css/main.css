@@ -170,6 +170,8 @@ body {
     background-color: rgba(33, 33, 33, 0.3);
 
     backdrop-filter: blur(5px);
+
+    z-index: 6;
 }
 
 #stats-page {
