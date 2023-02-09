@@ -48,15 +48,17 @@
                 <div class="fixed-bottom d-flex justify-content-end" style="z-index: 5;">
                     <div class="me-3 mb-3 grid d-flex align-items-center" id="stats">
                         <div class="g-col-4 mx-3 d-flex align-items-center">
-                            <span class="me-2 lblue" id="total_count" style="font-weight: bold;">0</span>&nbsp;detections
+                            <span class="me-2 lblue" id="total_count"
+                                style="font-weight: bold;">0</span>&nbsp;detections
                         </div>
                     </div>
                 </div>
             </div>
-<!--                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wgARCAANAAkDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUAQEAAAAAAAAAAAAAAAAAAAAH/9oADAMBAAIQAxAAAAGQKAf/AP/EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAQUCH//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEABj8CH//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8hH//aAAwDAQACAAMAAAAQ8//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Qf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Qf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8QH//Z"-->
+            <!--                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wgARCAANAAkDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUAQEAAAAAAAAAAAAAAAAAAAAH/9oADAMBAAIQAxAAAAGQKAf/AP/EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAQUCH//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEABj8CH//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8hH//aAAwDAQACAAMAAAAQ8//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Qf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Qf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8QH//Z"-->
             <img id="live"
                 src="https://az837918.vo.msecnd.net/publishedimages/articles/1733/en-CA/images/cover/1/free-download-this-stunning-alberta-scene-for-your-device-background-image-L-6.jpg"
                 alt="Camera live-stream" />
+            <canvas id="canvas"></canvas>
         </div>
 
         <div class="tab-pane fade" id="nav-stats" role="tabpanel" aria-labelledby="nav-stats-tab">
@@ -66,8 +68,8 @@
                         <div class="row gx-0" style="height: 100%;">
                             <div class="col-2 text-start" style="height: 100%;">
                                 <div class="ms-3 d-flex justify-content-center flex-column" style="height: 100%;">
-                                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9d2ywjOKcFq0xvbLH1bkR40VJ0stVx1ubQE_zfPN9&s.png"
-                                        alt="YES!Delft ImpactLab logo" style="height: 50%; width: fit-content;">
+                                    <img src="static/img/yd_mono.png" alt="YES!Delft ImpactLab logo"
+                                        style="height: 50%; width: fit-content;">
                                 </div>
                             </div>
                             <div class="col-sm-8 col-10 my-auto text-end text-sm-center pe-3 pe-sm-0">
@@ -141,7 +143,7 @@
                         </div>
                     </div>
                     <div class="col d-flex flex-column justify-content-between"
-                         style="height: 46vh; min-width: 320px; min-height: 400px;">
+                        style="height: 46vh; min-width: 320px; min-height: 400px;">
                         <div class="card shadow me-3 ms-2 my-2">
                             <div class="row gx-0 text-start px-3 pt-3">
                                 <h2>Types of Vehicles</h2>
@@ -157,8 +159,7 @@
                 </div>
 
                 <div class="row gx-0" style="height: 46vh;">
-                    <div class="col"
-                        style="height: 100%; min-width: 320px; min-height: 440px;">
+                    <div class="col" style="height: 100%; min-width: 320px; min-height: 440px;">
                         <div class="card shadow ms-3 me-2 my-2">
                             <div class="row gx-0 px-3 pt-3">
                                 <div class="d-flex align-items-center justify-content-between">
@@ -174,7 +175,7 @@
                             </div>
                             <div class="row gx-0">
                                 <div class="col pt-4 pb-5">
-                                    <div class="row gx-0 pb-3"><span class="big-number">8</span></div>
+                                    <div class="row gx-0 pb-3"><span id="tmp" class="big-number">8</span></div>
                                     <div class="row gx-0"><span class="unit">° Celsius</span></div>
                                 </div>
                             </div>
@@ -183,8 +184,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col"
-                        style="height: 100%;  min-width: 320px; min-height: 440px;">
+                    <div class="col" style="height: 100%;  min-width: 320px; min-height: 440px;">
                         <div class="card shadow ms-2 me-2 my-2">
                             <div class="row gx-0 px-3 pt-3">
                                 <div class="d-flex align-items-center justify-content-between">
@@ -200,7 +200,7 @@
                             </div>
                             <div class="row gx-0">
                                 <div class="col pt-4 pb-5">
-                                    <div class="row gx-0 pb-3"><span class="big-number">95</span></div>
+                                    <div class="row gx-0 pb-3"><span id="hum" class="big-number">95</span></div>
                                     <div class="row gx-0"><span class="unit">%RH</span></div>
                                 </div>
                             </div>
@@ -209,8 +209,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col"
-                        style="height: 100%;  min-width: 320px; min-height: 440px;">
+                    <div class="col" style="height: 100%;  min-width: 320px; min-height: 440px;">
                         <div class="card shadow ms-2 me-2 my-2">
                             <div class="row gx-0 px-3 pt-3">
                                 <div class="d-flex align-items-center justify-content-between">
@@ -226,7 +225,7 @@
                             </div>
                             <div class="row gx-0">
                                 <div class="col pt-4 pb-5">
-                                    <div class="row gx-0 pb-3"><span class="big-number">419</span></div>
+                                    <div class="row gx-0 pb-3"><span id="co2" class="big-number">419</span></div>
                                     <div class="row gx-0"><span class="unit">PPM</span></div>
                                 </div>
                             </div>
@@ -256,7 +255,7 @@
                                     </div>
                                     <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">
                                         <div>
-                                            <span class="medium-number">70</span>
+                                            <span id="pm25" class="medium-number">70</span>
                                         </div>
                                     </div>
                                 </div>
@@ -281,7 +280,7 @@
                                     </div>
                                     <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">
                                         <div>
-                                            <span class="medium-number">20</span>
+                                            <span id="pm10" class="medium-number">20</span>
                                         </div>
                                     </div>
                                 </div>

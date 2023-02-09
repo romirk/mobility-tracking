@@ -10,6 +10,11 @@ class SensorLive {
         };
         this.last_count = -1;
 
+        this.canvas = document.getElementById('canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.canvas.width = 640;
+        this.canvas.height = 480;
+
         this.relay = new Relay(window.location.hostname, 9090);
 
 
@@ -60,11 +65,12 @@ class SensorLive {
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_detect.bind(this));
         this.relay.createListener("/sbx/camera/color/image_raw/compressed", "sensor_msgs/CompressedImage", this.on_image.bind(this));
+        this.relay.createListener("/sbx/bounds", "vision_msgs/BoundingBox2DArray", this.on_box.bind(this));
     }
 
     on_sensor(data) {
         this.sensor_data = data;
-        this.log();
+        // this.log();
         this.update();
     }
 
@@ -72,7 +78,7 @@ class SensorLive {
         this.counts = data;
 
         // TODO calculate rate
-        this.log();
+        // this.log();
         this.update();
     }
 
@@ -80,13 +86,25 @@ class SensorLive {
         screen.src = "data:image/jpeg;base64," + data.data;
     }
 
+    on_box(data) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.lineWidth = "4";
+        this.ctx.strokeStyle = "#1cbbed";
+        for (const box of data.boxes) {
+            this.ctx.rect(box.center.x - box.size_x / 2, box.center.y - box.size_y / 2, box.size_x, box.size_y);
+        }
+        this.ctx.stroke();
+        console.log(data);
+    }
+
+
     update() {
         // uncomment as you implement
 
         document.getElementById('total_count').innerHTML = this.counts.total;
-        document.getElementById('counts_car').innerHTML = this.counts.cars;
-        document.getElementById('counts_bus').innerHTML = this.counts.buses;
-        document.getElementById('counts_truck').innerHTML = this.counts.trucks;
+        // document.getElementById('counts_car').innerHTML = this.counts.cars;
+        // document.getElementById('counts_bus').innerHTML = this.counts.buses;
+        // document.getElementById('counts_truck').innerHTML = this.counts.trucks;
         document.getElementById('total_count_2').innerHTML = this.counts.total;
         document.getElementById('counts_car_2').innerHTML = this.counts.cars;
         document.getElementById('counts_bus_2').innerHTML = this.counts.buses;
@@ -94,6 +112,13 @@ class SensorLive {
 
         // sensor data
 
+        document.getElementById('pm10').innerHTML = Math.round(this.sensor_data.pm10 * 100) / 100;
+        document.getElementById('pm25').innerHTML = Math.round(this.sensor_data.pm25 * 100) / 100;
+        // document.getElementById('pm50').innerHTML = this.sensor_data.pm50;
+        // document.getElementById('pm100').innerHTML = this.sensor_data.pm100;
+        document.getElementById('tmp').innerHTML = Math.round(this.sensor_data.tmp * 100) / 100;
+        document.getElementById('hum').innerHTML = Math.round(this.sensor_data.hum * 100) / 100;
+        document.getElementById('co2').innerHTML = Math.round(this.sensor_data.co2 * 100) / 100;
 
         this.numberOfVehicles.data.datasets.forEach((dataset) => {
             dataset.data = [this.counts.cars, this.counts.trucks, this.counts.buses];
