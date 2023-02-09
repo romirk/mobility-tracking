@@ -12,8 +12,8 @@ from multiprocessing import Event
 import cv2
 import numpy as np
 import rospy
-from sensor_msgs.msg import Image
-from sensorbox.msg import BoxArray
+from sensor_msgs.msg import Image, CompressedImage
+from sensorbox.msg import BoxArray, Sync
 from vision_msgs.msg import BoundingBox2D, Detection2D
 
 
@@ -69,9 +69,7 @@ class MobilityTracker:
         self.detection_pub = rospy.Publisher(
             f"/{self.prefix}/detect", Detection2D, queue_size=10
         )
-        self.boxes_pub = rospy.Publisher(
-            f"/{self.prefix}/bounds", BoxArray, queue_size=10
-        )
+        self.sync_pub = rospy.Publisher(f"/{self.prefix}/sync", Sync, queue_size=10)
 
     def _set_up_line(self, line_direction, line_position):
         if line_direction.upper() == "H" or line_direction is None:
@@ -218,10 +216,16 @@ class MobilityTracker:
         final_img = cv2.dilate(dilated, None)
 
         boxes = self.bind_objects(frame, img, final_img)
-        # if len(boxes) == 0:
-        #     return
-        boxes_msg = BoxArray(header=frame.header, boxes=boxes)
-        self.boxes_pub.publish(boxes_msg)
+        compressed_img = cv2.imencode(".jpg", final_img)[1].tostring()
+
+        compressed_img_msg = CompressedImage()
+        compressed_img_msg.header = frame.header
+        compressed_img_msg.format = "jpeg"
+        compressed_img_msg.data = compressed_img
+        header = rospy.Header()
+        header.stamp = rospy.Time.now()
+        synced_boxes = Sync(header=header, img=compressed_img_msg, boxes=boxes)
+        self.sync_pub.publish(synced_boxes)
 
 
 if __name__ == "__main__":

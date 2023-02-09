@@ -9,7 +9,7 @@ import rospy
 import message_filters
 from mission_control.msg import Counts, Sync
 from sensorbox.msg import BoxArray
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import CompressedImage
 from vision_msgs.msg import Detection2D
 from yolov7_package import Yolov7Detector
 from yolov7_package.model_utils import coco_names
@@ -39,21 +39,9 @@ class YoloServer:
         else:
             self.sub = rospy.Subscriber("/sbx/detect", Detection2D, self.exec_callback)
 
-        # sync
-        self.image_sub = message_filters.Subscriber(
-            "/sbx/camera/image_raw/compressed", Image
-        )
-        self.bound_sub = message_filters.Subscriber("/sbx/bounds", BoxArray)
-        self.ts = message_filters.TimeSynchronizer([self.image_sub, self.bound_sub], 10)
-        self.ts.registerCallback(self.sync_callback)
-        self.sync_pub = rospy.Publisher("/sbx/sync", Sync, queue_size=10)
-
     def __del__(self) -> None:
         if self.multiprocessing:
             self.executor.shutdown()
-
-    def sync_callback(self, image: Image, boxes: BoxArray) -> None:
-        self.sync_pub.publish(Sync(image, boxes))
 
     def nearest_box(
         self, boxes: list, box: list

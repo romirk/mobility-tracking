@@ -52,6 +52,7 @@ add_message_files(
   FILES
   AQI.msg
   BoxArray.msg
+  Sync.msg
 #   Message2.msg
 )
 

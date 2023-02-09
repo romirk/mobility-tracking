@@ -12,8 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  vision_msgs
-  sensorbox
+  # vision_msgs
+  # sensorbox
 )
 
 ## System dependencies are found with CMake's conventions
@@ -53,7 +53,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Counts.msg
-  Sync.msg
+  # Sync.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -74,8 +74,8 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
-  sensorbox
-  vision_msgs
+  # sensorbox
+  # vision_msgs
 )
 
 ################################################

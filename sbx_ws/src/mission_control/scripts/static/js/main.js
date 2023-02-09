@@ -12,6 +12,7 @@ class SensorLive {
         this.boxes = []
         this.paint = false;
         this.last_box = 0;
+        this.seq = 0;
 
         this.canvas = document.getElementById('canvas');
         this.ctx = this.canvas.getContext('2d');
@@ -69,7 +70,7 @@ class SensorLive {
     relay_setup() {
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_detect.bind(this));
-        this.relay.createListener("/sbx/sync", "mission_control/Sync", this.on_image.bind(this));
+        this.relay.createListener("/sbx/sync", "sensorbox/Sync", this.on_image.bind(this));
         // this.relay.createListener("/sbx/bounds", "sensorbox/BoxArray", this.on_box.bind(this));
         window.requestAnimationFrame(this.box_anim.bind(this));
 
@@ -90,8 +91,10 @@ class SensorLive {
     }
 
     on_image(msg) {
+        if (msg.img.header.seq <= this.seq) return;
         this.img.src = "data:image/jpeg;base64," + msg.img.data;
         this.on_box(msg.boxes);
+        this.seq = msg.img.header.seq;
         // this.paint = true;
     }
 
@@ -122,7 +125,7 @@ class SensorLive {
     }
 
     box_anim() {
-        if (this.paint || Date.now() - this.last_box > 200) {
+        if (this.paint || Date.now() - this.last_box > 100) {
             this.paint = false;
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
