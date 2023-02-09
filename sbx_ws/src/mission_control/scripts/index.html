@@ -48,67 +48,50 @@
                 <div class="fixed-bottom d-flex justify-content-end" style="z-index: 5;">
                     <div class="me-3 mb-3 grid d-flex align-items-center" id="stats">
                         <div class="g-col-4 mx-3 d-flex align-items-center">
-                            Total:&nbsp;<span class="ms-2" id="total_count">0</span>
-                        </div>
-                        <div class="divider"></div>
-                        <div class="g-col-4 mx-3 d-flex align-items-center">
-                            <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <use href="#car" x="0" y="0"></use>
-                            </svg>
-                            <span class="ms-2" id="counts_car">0</span>
-                        </div>
-                        <div class="divider"></div>
-                        <div class="g-col-4 mx-3 d-flex align-items-center">
-                            <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <use href="#truck" x="0" y="0"></use>
-                            </svg>
-                            <span class="ms-2" id="counts_truck">0</span>
-                        </div>
-                        <div class="divider"></div>
-                        <div class="g-col-4 mx-3 d-flex align-items-center">
-                            <svg class="svg" fill="none" height="48" viewBox="0 0 48 48" width="48"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <use href="#bus" x="0" y="0"></use>
-                            </svg>
-                            <span class="ms-2" id="counts_bus">0</span>
+                            <span class="me-2 lblue" id="total_count" style="font-weight: bold;">0</span>&nbsp;detections
                         </div>
                     </div>
                 </div>
             </div>
+<!--                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wgARCAANAAkDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUAQEAAAAAAAAAAAAAAAAAAAAH/9oADAMBAAIQAxAAAAGQKAf/AP/EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAQUCH//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEABj8CH//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8hH//aAAwDAQACAAMAAAAQ8//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Qf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Qf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8QH//Z"-->
             <img id="live"
-                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wgARCAANAAkDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUAQEAAAAAAAAAAAAAAAAAAAAH/9oADAMBAAIQAxAAAAGQKAf/AP/EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAQUCH//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEABj8CH//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8hH//aAAwDAQACAAMAAAAQ8//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Qf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Qf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8QH//Z"
+                src="https://az837918.vo.msecnd.net/publishedimages/articles/1733/en-CA/images/cover/1/free-download-this-stunning-alberta-scene-for-your-device-background-image-L-6.jpg"
                 alt="Camera live-stream" />
         </div>
 
         <div class="tab-pane fade" id="nav-stats" role="tabpanel" aria-labelledby="nav-stats-tab">
             <div id="stats-page" class="container gx-0 text-center">
-                <div id="header" class="row gx-0 bg-white" style="height: 8vh;">
-                    <div class="col-2 text-start" style="height: 100%;">
-                        <div class="ms-3 d-flex justify-content-center flex-column" style="height: 100%;">
-                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9d2ywjOKcFq0xvbLH1bkR40VJ0stVx1ubQE_zfPN9&s.png"
-                                alt="YES!Delft ImpactLab logo" style="height: 50%; width: fit-content;">
-                        </div>
-                    </div>
-                    <div class="col-sm-8 col-10 my-auto text-end text-sm-center pe-3 pe-sm-0">
-                        <div>
-                            <h1>Dashboard</h1>
+                <div id="header" class="row gx-0" style="height: 8vh;">
+                    <div class="card">
+                        <div class="row gx-0" style="height: 100%;">
+                            <div class="col-2 text-start" style="height: 100%;">
+                                <div class="ms-3 d-flex justify-content-center flex-column" style="height: 100%;">
+                                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9d2ywjOKcFq0xvbLH1bkR40VJ0stVx1ubQE_zfPN9&s.png"
+                                        alt="YES!Delft ImpactLab logo" style="height: 50%; width: fit-content;">
+                                </div>
+                            </div>
+                            <div class="col-sm-8 col-10 my-auto text-end text-sm-center pe-3 pe-sm-0">
+                                <div>
+                                    <h1>Dashboard</h1>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="row gx-0">
-                    <div class="col bg-white right-border bottom-border d-flex flex-column justify-content-between"
+                    <div class="col d-flex flex-column justify-content-between"
                         style="height: 46vh; min-width: 320px; min-height: 400px;">
-                        <div class="card shadow m-2">
-                            <div style="height: 100%;">
-                                <div class="row gx-0 text-start px-3 pt-2">
-                                    <h2>Traffic Flow</h2>
-                                </div>
-                                <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
-                                    style="height: 80%;">
-                                    <div style="width: 90%; height: 100%;">
-                                        <canvas id="numberOfVehicles"></canvas>
+                        <div class="card shadow ms-3 me-2 my-2">
+                            <div class="col">
+                                <div style="height: 100%;">
+                                    <div class="row gx-0 text-start px-3 pt-3">
+                                        <h2>Traffic Flow</h2>
+                                    </div>
+                                    <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
+                                        style="height: 80%;">
+                                        <div style="width: 90%; height: 100%;">
+                                            <canvas id="numberOfVehicles"></canvas>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -117,16 +100,16 @@
                                     <div class="row gx-0 pb-2">
                                         <span id="total_count_2" class="medium-number">4</span>
                                     </div>
-                                    <div class="row gx-0">
-                                        <span>Total</span>
+                                    <div class="row gx-0 text-white">
+                                        <span class="stat">Detections</span>
                                     </div>
                                 </div>
                                 <div class="col">
                                     <div class="row gx-0 pb-2">
                                         <span id="counts_car_2" class="medium-number">4</span>
                                     </div>
-                                    <div class="row gx-0">
-                                        <svg class="svg dblue" fill="none" height="48" viewBox="0 0 48 48" width="48"
+                                    <div class="row gx-0 text-white">
+                                        <svg class="svg white" fill="none" height="48" viewBox="0 0 48 48" width="48"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <use href="#car" x="0" y="0"></use>
                                         </svg>
@@ -136,8 +119,8 @@
                                     <div class="row gx-0 pb-2">
                                         <span id="counts_bus_2" class="medium-number">4</span>
                                     </div>
-                                    <div class="row gx-0" style="padding: 3px 0 3px 0">
-                                        <svg class="svg dblue" fill="none" height="42" viewBox="0 0 48 48" width="42"
+                                    <div class="row gx-0 text-white" style="padding: 3px 0 3px 0">
+                                        <svg class="svg white" fill="none" height="42" viewBox="0 0 48 48" width="42"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <use href="#bus" x="0" y="0"></use>
                                         </svg>
@@ -147,8 +130,8 @@
                                     <div class="row gx-0 pb-2">
                                         <span id="counts_truck_2" class="medium-number">4</span>
                                     </div>
-                                    <div class="row gx-0" style="padding: 3px 0 3px 0">
-                                        <svg class="svg dblue" fill="none" height="42" viewBox="0 0 48 48" width="42"
+                                    <div class="row gx-0 text-white" style="padding: 3px 0 3px 0">
+                                        <svg class="svg white" fill="none" height="42" viewBox="0 0 48 48" width="42"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <use href="#truck" x="0" y="0"></use>
                                         </svg>
@@ -157,25 +140,27 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col bg-white bottom-border" style="height: 46vh; min-width: 320px; min-height: 400px;">
-                        <div class="row gx-0 text-start px-3 pt-2">
-                            <h2>Types of Vehicles</h2>
-                        </div>
-                        <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
-                            style="height: 85%;">
-                            <div style="width: 90%; height: 100%;">
-                                <canvas id="typesOfVehicles"></canvas>
+                    <div class="col d-flex flex-column justify-content-between"
+                         style="height: 46vh; min-width: 320px; min-height: 400px;">
+                        <div class="card shadow me-3 ms-2 my-2">
+                            <div class="row gx-0 text-start px-3 pt-3">
+                                <h2>Types of Vehicles</h2>
+                            </div>
+                            <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
+                                style="height: 85%;">
+                                <div style="width: 90%; height: 100%;">
+                                    <canvas id="typesOfVehicles"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <hr>
 
                 <div class="row gx-0" style="height: 46vh;">
-                    <div class="col bottom-border right-border bg-white"
+                    <div class="col"
                         style="height: 100%; min-width: 320px; min-height: 440px;">
-                        <div class="card shadow m-2">
-                            <div class="row gx-0 px-3 pt-2">
+                        <div class="card shadow ms-3 me-2 my-2">
+                            <div class="row gx-0 px-3 pt-3">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div class="me-2">
                                         <h2>Temperature</h2>
@@ -194,14 +179,14 @@
                                 </div>
                             </div>
                             <div class="row gx-0" style="height: 34%">
-                                <div class="mx-auto all-border" style="height: 100%; width: 80%;"></div>
+                                <div class="mx-auto" style="height: 100%; width: 80%;"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="col right-border bg-white bottom-border"
+                    <div class="col"
                         style="height: 100%;  min-width: 320px; min-height: 440px;">
-                        <div class="card shadow m-2">
-                            <div class="row gx-0 px-3 pt-2">
+                        <div class="card shadow ms-2 me-2 my-2">
+                            <div class="row gx-0 px-3 pt-3">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div class="me-2">
                                         <h2>Humidity</h2>
@@ -220,15 +205,14 @@
                                 </div>
                             </div>
                             <div class="row gx-0" style="height: 34%">
-                                <div class="mx-auto all-border" style="height: 100%; width: 80%;"></div>
+                                <div class="mx-auto" style="height: 100%; width: 80%;"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="col right-border bottom-border bg-white"
+                    <div class="col"
                         style="height: 100%;  min-width: 320px; min-height: 440px;">
-                        <div class="card shadow m-2">
-
-                            <div class="row gx-0 px-3 pt-2">
+                        <div class="card shadow ms-2 me-2 my-2">
+                            <div class="row gx-0 px-3 pt-3">
                                 <div class="d-flex align-items-center justify-content-between">
                                     <div class="me-2">
                                         <h2>CO<sub>2</sub></h2>
@@ -247,14 +231,14 @@
                                 </div>
                             </div>
                             <div class="row gx-0" style="height: 34%">
-                                <div class="mx-auto all-border" style="height: 100%; width: 80%;"></div>
+                                <div class="mx-auto" style="height: 100%; width: 80%;"></div>
                             </div>
                         </div>
                     </div>
                     <div class="col" style="height: 100%; min-width: 320px;">
-                        <div class="row gx-0 bottom-border bg-white" style="height: 50%;">
+                        <div class="card row gx-0 ms-2 me-3 my-2" style="height: 50%;">
                             <div class="col">
-                                <div class="row gx-0 px-3 pt-2">
+                                <div class="row gx-0 px-3 pt-3">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <div class="me-2">
                                             <h2>PM<sub>2.5</sub></h2>
@@ -268,7 +252,7 @@
                                 </div>
                                 <div class="row gx-0 py-3" style="height: 72%;">
                                     <div class="col-xl-8 col-10">
-                                        <div class="ms-auto all-border" style="height: 100%; width: 100%;"></div>
+                                        <div class="ms-auto" style="height: 100%; width: 100%;"></div>
                                     </div>
                                     <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">
                                         <div>
@@ -278,9 +262,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row gx-0 bg-white" style="height: 50%;">
+                        <div class="row my-2"></div>
+                        <div class="card row gx-0 ms-2 me-3 my-2" style="height: 50%;">
                             <div class="col">
-                                <div class="row gx-0 px-3 pt-2">
+                                <div class="row gx-0 px-3 pt-3">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <div class="me-2">
                                             <h2>PM<sub>10</sub></h2>
@@ -290,9 +275,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row gx-0 py-3" style="height: 72%;">
+                                <div class="row gx-0 py-3 pt-3" style="height: 72%;">
                                     <div class="col-xl-8 col-10">
-                                        <div class="ms-auto all-border" style="height: 100%; width: 100%;"></div>
+                                        <div class="ms-auto" style="height: 100%; width: 100%;"></div>
                                     </div>
                                     <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">
                                         <div>

@@ -1,20 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap');
 
 :root {
     --y-blue: #029FE3;
     --y-blue-transparent: rgba(2, 159, 227, 0.5);
-    --y-dblue: rgb(40, 58, 89);
-    --y-dblue-transparent: rgba(40, 58, 89, 0.8);
+    --y-dblue: #212121;
+    --y-dblue-transparent: rgba(33, 33, 33, 0.8);
     --y-border-radius: 15px;
     --y-button-radius: 13px;
 
     --y-heading: 32px;
-    /*--y-big-number: 96px;*/
     --y-big-number: 5rem;
     --y-medium-number: 2.75rem;
     --y-unit: 1.75rem;
-    --y-letter-spacing: -0.025em;
+    --y-letter-spacing: 0;
 }
 
 body {
@@ -22,7 +22,7 @@ body {
     height: 100vh;
     width: 100vw;
 
-    font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
+    font-family: 'Space Grotesk', 'Roboto Mono', 'Consolas', 'Menlo', monospace;
 
     background-color: var(--y-blue);
 
@@ -86,7 +86,7 @@ body {
 
     background: var(--y-dblue-transparent);
     border: 2px solid var(--y-blue);
-    /* component */
+    /*component */
 
     box-shadow: 0 10px 15px rgba(0, 0, 0, 0.25);
     backdrop-filter: blur(20px);
@@ -97,6 +97,7 @@ body {
     /*z-index: 1;*/
 
     font-size: 1.5rem;
+    font-weight: normal;
 }
 
 .divider {
@@ -133,10 +134,10 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    object-fit: contain;
+    object-fit: fill;
     z-index: 0;
 
-    background-color: white;
+    background-color: var(--y-dblue);
 }
 
 #nav-stats {
@@ -149,7 +150,7 @@ body {
 
     overflow: scroll;
 
-    background-color: white;
+    background-color: var(--y-dblue-transparent);
 }
 
 #stats-page {
@@ -158,25 +159,23 @@ body {
 
     height: auto;
 
-    border-style: solid;
-    border-width: 0 1px 0 1px;
-    border-color: var(--y-blue);
+    /*border-style: solid;*/
+    /*border-width: 0 1px 0 1px;*/
+    /*border-color: var(--y-blue);*/
 }
 
 #header {
     width: 100%;
 
-    border-style: solid;
-    border-width: 0 0 1px 0;
-    border-color: var(--y-blue);
+    /*border-style: solid;*/
+    /*border-width: 0 0 1px 0;*/
+    /*border-color: var(--y-blue);*/
 }
 
 .header-text {
     font-size: 22px;
     color: var(--y-dblue);
 }
-
-
 
 #test {
     color: red;
@@ -203,27 +202,27 @@ body {
 h1 {
     margin: 0;
 
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
+    font-family: 'Space Grotesk', sans-serif;
+    /*font-weight: bold;*/
     letter-spacing: var(--y-letter-spacing);
     /*font-size: 32px;*/
 
-    color: var(--y-dblue);
+    color: white;
 }
 
 h2 {
     margin: 0;
 
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
+    font-family: 'Space Grotesk', sans-serif;
+    /*font-weight: bold;*/
     letter-spacing: var(--y-letter-spacing);
     /*font-size: 32px;*/
 
-    color: var(--y-dblue);
+    color: white;
 }
 
 .big-number {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-weight: bold;
     font-size: var(--y-big-number);
     line-height: var(--y-big-number);
@@ -233,7 +232,7 @@ h2 {
 }
 
 .medium-number {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Space Grotesk', sans-serif;
     font-weight: bold;
     font-size: var(--y-medium-number);
     line-height: var(--y-medium-number);
@@ -243,13 +242,13 @@ h2 {
 }
 
 .unit {
-    font-family: 'Roboto', sans-serif;
-    font-weight: bold;
+    font-family: 'Space Grotesk', sans-serif;
+    /*font-weight: bold;*/
     font-size: var(--y-unit);
     line-height: var(--y-unit);
     letter-spacing: var(--y-letter-spacing);
 
-    color: var(--y-dblue);
+    color: white;
 }
 
 .svg {
@@ -262,9 +261,22 @@ h2 {
 }
 
 .dblue {
-    color: var(--y-dblue)
+    color: var(--y-dblue);
+}
+
+.lblue {
+    color: var(--y-blue);
+}
+
+.stat {
+    font-size: 24px;
 }
 
 .card {
-    height: 80%;
+    height: calc(100% - 20px);
+    width: calc(100% - 20px);
+    margin: auto;
+    background: var(--y-dblue);
+    border: 1px var(--y-blue) solid;
+    border-radius: 15px;
 }
