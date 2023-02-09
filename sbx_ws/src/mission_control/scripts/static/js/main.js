@@ -9,7 +9,7 @@ class SensorLive {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
         };
         this.last_count = -1;
-        this.boxes = []
+        this.box_frames = []
         this.paint = false;
         this.last_box = 0;
 
@@ -93,24 +93,41 @@ class SensorLive {
 
     on_box(data) {
         if (data.boxes.length === 0) return;
-        this.boxes = [];
-        this.paint = true;
-        console.log(data);
+        this.box_frames.push(data);
+        this.last_box = data.header.stamp.secs * 1000 + data.header.stamp.nsecs / 1000000;
+        // this.paint = this.box_frames.length !== 0;
+        // if (this.paint) console.log(data);
         // this.last_box = da
     }
 
+    draw_box(center_x, center_y, size_x, size_y) {
+        // this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        const x = center_x - size_x / 2;
+        const y = center_y - size_y / 2;
+        // console.log(x, y, size_x, size_y);
+        this.ctx.lineWidth = 4;
+        this.ctx.strokeStyle = "#1cbbed";
+        this.ctx.strokeRect(center_x - size_x / 2, center_y - size_y / 2, size_x, size_y);
+        // this.ctx.fillRect(center_x - size_x / 2, center_y - size_y / 2, size_x, size_y);
+        // this.ctx.stroke();
+    }
+
     box_anim() {
+
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        if (this.paint) {
-            this.paint = false;
-            this.ctx.lineWidth = "4";
-            this.ctx.strokeStyle = "#1cbbed";
-            for (const box of this.boxes) {
-                this.ctx.rect(box.center.x - box.size_x / 2, box.center.y - box.size_y / 2, box.size_x, box.size_y);
-            }
-            this.ctx.stroke();
-        } else
-            window.requestAnimationFrame(this.box_anim.bind(this));
+        const new_frames = this.box_frames;
+        for (const frame of this.box_frames) {
+            if (Date.now() - (frame.header.stamp.secs * 1000 + frame.header.stamp.nsecs / 1000000) > 1200)
+                continue;
+            new_frames.push(frame);
+            for (const box of frame.boxes)
+                this.draw_box(box.center.x, box.center.y, box.size_x, box.size_y);
+        }
+        this.box_frames = new_frames;
+        // console.log("painted");
+
+
+        window.requestAnimationFrame(this.box_anim.bind(this));
     }
 
 

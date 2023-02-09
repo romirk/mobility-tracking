@@ -140,6 +140,7 @@ body {
     z-index: 0;
 
     background-color: var(--y-dblue);
+    transform: rotate(180deg)
 }
 
 #canvas {
@@ -149,6 +150,7 @@ body {
     z-index: 1;
     width: 100%;
     height: 100%;
+    transform: rotate(180deg);
 }
 
 #nav-stats {
