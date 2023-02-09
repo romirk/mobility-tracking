@@ -51,6 +51,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   AQI.msg
+  Box.msg
 #   Message2.msg
 )
 
@@ -72,6 +73,7 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  vision_msgs
 )
 
 ################################################

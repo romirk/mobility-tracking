@@ -1,0 +1,7 @@
+<launch>
+    <include file="$(find mission_control)/launch/server.launch" />
+    <include file="$(find mission_control)/launch/remote.launch">
+        <arg name="remote_addr" value="ubuntu.lan" />
+        <arg name="machine" value="sbx" />
+    </include>
+</launch>

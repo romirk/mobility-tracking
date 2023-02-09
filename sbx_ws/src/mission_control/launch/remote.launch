@@ -1,0 +1,11 @@
+<launch>
+    <arg name="remote_addr" default="ubuntu.lan" />
+    <arg name="machine" default="sbx" />
+
+    <group>
+        <machine name="$(arg machine)" address="$(arg remote_addr)" user="impactlab" default="true"
+            password="urmomgay" env-loader="/mobility-tracking/setup.sh" />
+
+        <include file="$(find sensorbox)/launch/box.launch" />
+    </group>
+</launch>
