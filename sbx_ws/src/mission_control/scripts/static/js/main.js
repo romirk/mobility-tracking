@@ -9,6 +9,9 @@ class SensorLive {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
         };
         this.last_count = -1;
+        this.boxes = []
+        this.paint = false;
+        this.last_box = 0;
 
         this.canvas = document.getElementById('canvas');
         this.ctx = this.canvas.getContext('2d');
@@ -66,6 +69,8 @@ class SensorLive {
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_detect.bind(this));
         this.relay.createListener("/sbx/camera/color/image_raw/compressed", "sensor_msgs/CompressedImage", this.on_image.bind(this));
         this.relay.createListener("/sbx/bounds", "sensorbox/BoxArray", this.on_box.bind(this));
+        window.requestAnimationFrame(this.box_anim.bind(this));
+
     }
 
     on_sensor(data) {
@@ -87,14 +92,25 @@ class SensorLive {
     }
 
     on_box(data) {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.lineWidth = "4";
-        this.ctx.strokeStyle = "#1cbbed";
-        for (const box of data.boxes) {
-            this.ctx.rect(box.center.x - box.size_x / 2, box.center.y - box.size_y / 2, box.size_x, box.size_y);
-        }
-        this.ctx.stroke();
+        if (data.boxes.length === 0) return;
+        this.boxes = [];
+        this.paint = true;
         console.log(data);
+        // this.last_box = da
+    }
+
+    box_anim() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.paint) {
+            this.paint = false;
+            this.ctx.lineWidth = "4";
+            this.ctx.strokeStyle = "#1cbbed";
+            for (const box of this.boxes) {
+                this.ctx.rect(box.center.x - box.size_x / 2, box.center.y - box.size_y / 2, box.size_x, box.size_y);
+            }
+            this.ctx.stroke();
+        } else
+            window.requestAnimationFrame(this.box_anim.bind(this));
     }
 
 

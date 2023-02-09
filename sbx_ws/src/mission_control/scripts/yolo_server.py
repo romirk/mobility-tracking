@@ -13,7 +13,7 @@ from concurrent.futures import ProcessPoolExecutor, Future
 
 WHITELIST = ["car", "truck", "bus", "motorbike", "bicycle"]
 WHITELIST_IDX = [coco_names.index(c) for c in WHITELIST]
-CONFIDENCE_THRESHOLD = 0.3
+CONFIDENCE_THRESHOLD = 0
 
 
 class YoloServer:

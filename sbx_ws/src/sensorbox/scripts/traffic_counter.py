@@ -7,15 +7,14 @@ Copyright (C) 2023 YES!Delft
 by Romir Kulshreshtha and Anthony Nikolaidis
 """
 
-import time
 from multiprocessing import Event
 
 import cv2
 import numpy as np
 import rospy
 from sensor_msgs.msg import Image
-from vision_msgs.msg import Detection2D, BoundingBox2D
 from sensorbox.msg import BoxArray
+from vision_msgs.msg import BoundingBox2D, Detection2D
 
 
 class MobilityTracker:
@@ -39,7 +38,7 @@ class MobilityTracker:
         self._vid_width = rospy.get_param("video_width", 640)
         self._vid_height = rospy.get_param("video_height", 480)
 
-        rospy.logerr(f"Starting {self.prefix} node")
+        rospy.logwarn(f"Starting {self.prefix}/counter node")
 
         self.stopped = Event()
         self.crop_rect = []  # stores the click coordinates where to crop the frame
@@ -63,7 +62,7 @@ class MobilityTracker:
         self.rate_of_influence = 0.01
         self.raw_avg = np.zeros((self._vid_height, self._vid_width, 3))
 
-        # rostopics 
+        # rostopics
         self.frame_sub = rospy.Subscriber(
             f"/{self.camera_name}/color/image_raw", Image, self.frame_callback
         )
@@ -167,12 +166,15 @@ class MobilityTracker:
 
             _is_crossed, direction = self._is_line_crossed(cx, cy, prev_cx, prev_cy)
             if _is_crossed:
-                detection_msg = Detection2D(header=incoming_frame.header, source_img=incoming_frame)
+                detection_msg = Detection2D(
+                    header=incoming_frame.header, source_img=incoming_frame
+                )
                 detection_msg.bbox.center.x = cx
                 detection_msg.bbox.center.y = cy
                 detection_msg.bbox.size_x = w
                 detection_msg.bbox.size_y = h
                 self.detection_pub.publish(detection_msg)
+
             box_msg = BoundingBox2D()
             box_msg.center.x = bounding[0] + bounding[2] / 2
             box_msg.center.y = bounding[1] + bounding[3] / 2
