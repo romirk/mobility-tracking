@@ -14,7 +14,8 @@ import cv2
 import numpy as np
 import rospy
 from sensor_msgs.msg import Image
-from vision_msgs.msg import Detection2D, BoundingBox2DArray, BoundingBox2D
+from vision_msgs.msg import Detection2D, BoundingBox2D
+from sensorbox.msg import BoxArray
 
 
 class MobilityTracker:
@@ -70,7 +71,7 @@ class MobilityTracker:
             f"/{self.prefix}/detect", Detection2D, queue_size=10
         )
         self.boxes_pub = rospy.Publisher(
-            f"/{self.prefix}/bounds", BoundingBox2DArray, queue_size=10
+            f"/{self.prefix}/bounds", BoxArray, queue_size=10
         )
 
     def _set_up_line(self, line_direction, line_position):
@@ -215,7 +216,7 @@ class MobilityTracker:
         final_img = cv2.dilate(dilated, None)
 
         boxes = self.bind_objects(frame, img, final_img)
-        boxes_msg = BoundingBox2DArray(header=frame.header, boxes=boxes)
+        boxes_msg = BoxArray(header=frame.header, boxes=boxes)
         self.boxes_pub.publish(boxes_msg)
 
 

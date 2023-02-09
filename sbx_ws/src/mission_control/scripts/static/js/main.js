@@ -65,7 +65,7 @@ class SensorLive {
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_detect.bind(this));
         this.relay.createListener("/sbx/camera/color/image_raw/compressed", "sensor_msgs/CompressedImage", this.on_image.bind(this));
-        this.relay.createListener("/sbx/bounds", "vision_msgs/BoundingBox2DArray", this.on_box.bind(this));
+        this.relay.createListener("/sbx/bounds", "sensorbox/BoxArray", this.on_box.bind(this));
     }
 
     on_sensor(data) {
