@@ -218,8 +218,8 @@ class MobilityTracker:
         final_img = cv2.dilate(dilated, None)
 
         boxes = self.bind_objects(frame, img, final_img)
-        if len(boxes) == 0:
-            return
+        # if len(boxes) == 0:
+        #     return
         boxes_msg = BoxArray(header=frame.header, boxes=boxes)
         self.boxes_pub.publish(boxes_msg)
 

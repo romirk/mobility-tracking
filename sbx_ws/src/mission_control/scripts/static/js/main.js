@@ -9,7 +9,7 @@ class SensorLive {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
         };
         this.last_count = -1;
-        this.box_frames = []
+        this.boxes = []
         this.paint = false;
         this.last_box = 0;
 
@@ -17,6 +17,8 @@ class SensorLive {
         this.ctx = this.canvas.getContext('2d');
         this.canvas.width = 640;
         this.canvas.height = 480;
+
+        this.img = document.getElementById('live');
 
         this.relay = new Relay(window.location.hostname, 9090);
 
@@ -67,8 +69,8 @@ class SensorLive {
     relay_setup() {
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_detect.bind(this));
-        this.relay.createListener("/sbx/camera/color/image_raw/compressed", "sensor_msgs/CompressedImage", this.on_image.bind(this));
-        this.relay.createListener("/sbx/bounds", "sensorbox/BoxArray", this.on_box.bind(this));
+        this.relay.createListener("/sbx/sync", "mission_control/Sync", this.on_image.bind(this));
+        // this.relay.createListener("/sbx/bounds", "sensorbox/BoxArray", this.on_box.bind(this));
         window.requestAnimationFrame(this.box_anim.bind(this));
 
     }
@@ -87,14 +89,21 @@ class SensorLive {
         this.update();
     }
 
-    on_image(data) {
-        screen.src = "data:image/jpeg;base64," + data.data;
+    on_image(msg) {
+        this.img.src = "data:image/jpeg;base64," + msg.img.data;
+        this.on_box(msg.boxes);
+        // this.paint = true;
     }
 
     on_box(data) {
         if (data.boxes.length === 0) return;
-        this.box_frames.push(data);
-        this.last_box = data.header.stamp.secs * 1000 + data.header.stamp.nsecs / 1000000;
+        const stamp = Date.now();
+        for (const box of data.boxes) {
+            box.mstamp = stamp;
+            this.boxes.push(box);
+        }
+        this.last_box = stamp;
+        this.paint = true;
         // this.paint = this.box_frames.length !== 0;
         // if (this.paint) console.log(data);
         // this.last_box = da
@@ -113,19 +122,30 @@ class SensorLive {
     }
 
     box_anim() {
+        if (this.paint || Date.now() - this.last_box > 200) {
+            this.paint = false;
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        const new_frames = this.box_frames;
-        for (const frame of this.box_frames) {
-            if (Date.now() - (frame.header.stamp.secs * 1000 + frame.header.stamp.nsecs / 1000000) > 1200)
-                continue;
-            new_frames.push(frame);
-            for (const box of frame.boxes)
-                this.draw_box(box.center.x, box.center.y, box.size_x, box.size_y);
+            if (this.boxes.length > 0) {
+
+                const new_boxes = [];
+
+                for (const box of this.boxes) {
+                    if (Date.now() - box.mstamp > 50) {
+                        console.log("skipped", Date.now() - box.mstamp);
+                        continue;
+                    }
+                    new_boxes.push(box);
+                    this.draw_box(box.center.x, box.center.y, box.size_x, box.size_y);
+                }
+                this.boxes = new_boxes;
+            }
+            else {
+
+                console.log("no boxes", Date.now() - this.last_box);
+            }
+            // console.log("painted");
         }
-        this.box_frames = new_frames;
-        // console.log("painted");
-
 
         window.requestAnimationFrame(this.box_anim.bind(this));
     }

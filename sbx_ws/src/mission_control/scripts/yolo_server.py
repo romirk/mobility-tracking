@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+from concurrent.futures import Future, ProcessPoolExecutor
 from typing import Tuple
 
+import numpy as np
 import rospy
+import message_filters
+from mission_control.msg import Counts, Sync
+from sensorbox.msg import BoxArray
+from sensor_msgs.msg import Image
 from vision_msgs.msg import Detection2D
-from mission_control.msg import Counts
 from yolov7_package import Yolov7Detector
 from yolov7_package.model_utils import coco_names
-import numpy as np
-from concurrent.futures import ProcessPoolExecutor, Future
 
 WHITELIST = ["car", "truck", "bus", "motorbike", "bicycle"]
 WHITELIST_IDX = [coco_names.index(c) for c in WHITELIST]
@@ -36,9 +39,21 @@ class YoloServer:
         else:
             self.sub = rospy.Subscriber("/sbx/detect", Detection2D, self.exec_callback)
 
+        # sync
+        self.image_sub = message_filters.Subscriber(
+            "/sbx/camera/image_raw/compressed", Image
+        )
+        self.bound_sub = message_filters.Subscriber("/sbx/bounds", BoxArray)
+        self.ts = message_filters.TimeSynchronizer([self.image_sub, self.bound_sub], 10)
+        self.ts.registerCallback(self.sync_callback)
+        self.sync_pub = rospy.Publisher("/sbx/sync", Sync, queue_size=10)
+
     def __del__(self) -> None:
         if self.multiprocessing:
             self.executor.shutdown()
+
+    def sync_callback(self, image: Image, boxes: BoxArray) -> None:
+        self.sync_pub.publish(Sync(image, boxes))
 
     def nearest_box(
         self, boxes: list, box: list
@@ -74,8 +89,6 @@ class YoloServer:
             self.pub.publish(Counts(*future.result()))
 
     def exec_callback(self, msg: Detection2D) -> tuple[int, int, int, int, int, int]:
-        if not self.multiprocessing:
-            rospy.logwarn("Received detection")
         total = self.counts.total + 1
         box = msg.bbox
         frame = msg.source_img
@@ -83,6 +96,8 @@ class YoloServer:
             frame.height, frame.width, -1
         )
         r = self.yolo.detect(frame)
+        if not self.multiprocessing:
+            rospy.logwarn(f"Received detection {r}")
         dets = [
             d
             for d in zip(r[0][0], r[1][0], r[2][0])
