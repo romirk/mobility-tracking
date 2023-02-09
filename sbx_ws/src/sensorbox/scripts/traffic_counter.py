@@ -18,7 +18,7 @@ from vision_msgs.msg import Detection2D
 from sensorbox.msg import Box
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # VS Code doesn't like this
     from ros_numpy.src.ros_numpy.image import numpy_to_image, image_to_numpy
 else:
     from ros_numpy.image import numpy_to_image, image_to_numpy
@@ -108,13 +108,12 @@ class MobilityTracker:
     # def classify(self, frame, bounding_box):
     #     detections = self.net.Detect(frame, overlay="box,labels,conf")
 
-    def bind_objects(self, incoming_frame: Image, thresh_img):
+    def bind_objects(self, incoming_frame: Image, orig_frame, thresh_img):
         """
         Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be
         drawn onto thresh_img: numpy image after subtracting the background and all thresholds and noise reduction
         operations are applied
         """
-        orig_frame = image_to_numpy(incoming_frame.data)
         contours, _ = cv2.findContours(
             thresh_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )  # this line is for opencv 2.4, and also now for OpenCV 4.4, so this is the current one
@@ -221,7 +220,7 @@ class MobilityTracker:
 
         # Drawing bounding boxes and counting
         t2 = time.time()
-        self.bind_objects(frame, final_img)
+        self.bind_objects(frame, img, final_img)
 
 
 if __name__ == "__main__":
