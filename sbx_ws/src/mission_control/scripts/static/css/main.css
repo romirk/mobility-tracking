@@ -157,7 +157,8 @@ body {
     max-width: 1400px;
     margin: 0 auto;
 
-    height: auto;
+    /*height: auto;*/
+    height: calc(100vh - 20px);
 
     /*border-style: solid;*/
     /*border-width: 0 1px 0 1px;*/
@@ -277,6 +278,28 @@ h2 {
     width: calc(100% - 20px);
     margin: auto;
     background: var(--y-dblue);
-    border: 1px var(--y-blue) solid;
+    border: 2px var(--y-blue) solid;
     border-radius: 15px;
+}
+
+.small-box-container {
+    height: 100%;
+    min-width: 320px;
+    width: 100%;
+}
+
+#top-graphs-container {
+    height: 46%;
+}
+
+@media only screen and (max-width: 659px) {
+    #top-graphs-container {
+        height: auto;
+    }
+}
+
+@media only screen and (max-width: 1299px) {
+    #extra-space {
+        height: 85px;
+    }
 }

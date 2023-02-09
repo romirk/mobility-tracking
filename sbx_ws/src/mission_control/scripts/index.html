@@ -20,7 +20,7 @@
         <div id="viewer">
             <nav>
                 <div class="ms-3 mb-3 btn-group nav nav-pills fixed-bottom" id="selector" role="tablist">
-                    <button class="btn btn-primary nav-link text-white active"
+                    <button class="btn btn-primary nav-link text-white"
                         style="border-radius: var(--y-button-radius) 0 0 var(--y-button-radius);" type="button"
                         data-bs-toggle="tab" data-bs-target="#nav-video" role="tab" aria-controls="nav-video"
                         aria-selected="true">
@@ -30,7 +30,7 @@
                         </svg>
                     </button>
                     <div class="divider"></div>
-                    <button class="btn btn-primary nav-link text-white"
+                    <button class="btn btn-primary nav-link text-white active"
                         style="border-radius: 0 var(--y-button-radius) var(--y-button-radius) 0;" type="button"
                         data-bs-toggle="tab" data-bs-target="#nav-stats" role="tab" aria-controls="nav-stats"
                         aria-selected="false">
@@ -44,7 +44,7 @@
         </div>
 
         <div class="tab-content" id="nav-tabContent">
-            <div class="tab-pane fade show active" id="nav-video" role="tabpanel" aria-labelledby="nav-video-tab">
+            <div class="tab-pane fade" id="nav-video" role="tabpanel" aria-labelledby="nav-video-tab">
                 <div class="fixed-bottom d-flex justify-content-end" style="z-index: 5;">
                     <div class="me-3 mb-3 grid d-flex align-items-center" id="stats">
                         <div class="g-col-4 mx-3 d-flex align-items-center">
@@ -53,195 +53,117 @@
                     </div>
                 </div>
             </div>
-<!--                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAAQABAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wgARCAANAAkDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAT/xAAUAQEAAAAAAAAAAAAAAAAAAAAH/9oADAMBAAIQAxAAAAGQKAf/AP/EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAQUCH//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Bf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Bf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEABj8CH//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8hH//aAAwDAQACAAMAAAAQ8//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQMBAT8Qf//EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQIBAT8Qf//EABQQAQAAAAAAAAAAAAAAAAAAACD/2gAIAQEAAT8QH//Z"-->
             <img id="live"
                 src="https://az837918.vo.msecnd.net/publishedimages/articles/1733/en-CA/images/cover/1/free-download-this-stunning-alberta-scene-for-your-device-background-image-L-6.jpg"
                 alt="Camera live-stream" />
         </div>
 
-        <div class="tab-pane fade" id="nav-stats" role="tabpanel" aria-labelledby="nav-stats-tab">
+        <div class="tab-pane fade d-flex align-items-center show active" id="nav-stats" role="tabpanel" aria-labelledby="nav-stats-tab">
             <div id="stats-page" class="container gx-0 text-center">
-                <div id="header" class="row gx-0" style="height: 8vh;">
-                    <div class="card">
-                        <div class="row gx-0" style="height: 100%;">
-                            <div class="col-2 text-start" style="height: 100%;">
-                                <div class="ms-3 d-flex justify-content-center flex-column" style="height: 100%;">
-                                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9d2ywjOKcFq0xvbLH1bkR40VJ0stVx1ubQE_zfPN9&s.png"
-                                        alt="YES!Delft ImpactLab logo" style="height: 50%; width: fit-content;">
+                <div class="col" style="height: 100%; width: calc(100% - 20px); margin: auto;">
+                    <div id="header" class="row gx-0" style="height: 8%;">
+                        <div class="card shadow">
+                            <div class="row gx-0" style="height: 100%;">
+                                <div class="col-2 text-start" style="height: 100%;">
+                                    <div class="ms-3 d-flex justify-content-center flex-column" style="height: 100%;">
+                                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9d2ywjOKcFq0xvbLH1bkR40VJ0stVx1ubQE_zfPN9&s.png"
+                                            alt="YES!Delft ImpactLab logo" style="height: 50%; width: fit-content;">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-sm-8 col-10 my-auto text-end text-sm-center pe-3 pe-sm-0">
-                                <div>
-                                    <h1>Dashboard</h1>
+                                <div class="col-sm-8 col-10 my-auto text-end text-sm-center pe-3 pe-sm-0">
+                                    <div>
+                                        <h2>Dashboard</h2>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row gx-0">
-                    <div class="col d-flex flex-column justify-content-between"
-                        style="height: 46vh; min-width: 320px; min-height: 400px;">
-                        <div class="card shadow ms-3 me-2 my-2">
-                            <div class="col">
-                                <div style="height: 100%;">
-                                    <div class="row gx-0 text-start px-3 pt-3">
-                                        <h2>Traffic Flow</h2>
+                    <div id="top-graphs-container" class="row gx-0">
+                        <div class="col d-flex flex-column justify-content-between"
+                            style="min-width: 320px; min-height: 400px;">
+                            <div class="card shadow">
+                                <div class="col">
+                                    <div style="height: 100%;">
+                                        <div class="row gx-0 text-start px-3 pt-3">
+                                            <h2>Traffic Flow</h2>
+                                        </div>
+                                        <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
+                                            style="height: 80%;">
+                                            <div style="width: 90%; height: 100%;">
+                                                <canvas id="numberOfVehicles"></canvas>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
-                                        style="height: 80%;">
-                                        <div style="width: 90%; height: 100%;">
-                                            <canvas id="numberOfVehicles"></canvas>
+                                </div>
+                                <div class="row gx-0 mb-3 mx-3">
+                                    <div class="col">
+                                        <div class="row gx-0 pb-2">
+                                            <span id="total_count_2" class="medium-number">4</span>
+                                        </div>
+                                        <div class="row gx-0 text-white mt-1">
+                                            <span class="stat">Detections</span>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="row gx-0 pb-2">
+                                            <span id="counts_car_2" class="medium-number">4</span>
+                                        </div>
+                                        <div class="row gx-0 text-white">
+                                            <svg class="svg white" fill="none" height="48" viewBox="0 0 48 48" width="48"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <use href="#car" x="0" y="0"></use>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="row gx-0 pb-2">
+                                            <span id="counts_bus_2" class="medium-number">4</span>
+                                        </div>
+                                        <div class="row gx-0 text-white" style="padding: 3px 0 3px 0">
+                                            <svg class="svg white" fill="none" height="42" viewBox="0 0 48 48" width="42"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <use href="#bus" x="0" y="0"></use>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="row gx-0 pb-2">
+                                            <span id="counts_truck_2" class="medium-number">4</span>
+                                        </div>
+                                        <div class="row gx-0 text-white" style="padding: 3px 0 3px 0">
+                                            <svg class="svg white" fill="none" height="42" viewBox="0 0 48 48" width="42"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <use href="#truck" x="0" y="0"></use>
+                                            </svg>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row gx-0 mb-3">
-                                <div class="col">
-                                    <div class="row gx-0 pb-2">
-                                        <span id="total_count_2" class="medium-number">4</span>
-                                    </div>
-                                    <div class="row gx-0 text-white">
-                                        <span class="stat">Detections</span>
-                                    </div>
+                        </div>
+                        <div class="col d-flex flex-column justify-content-between"
+                             style="min-width: 320px; min-height: 400px;">
+                            <div class="card shadow">
+                                <div class="row gx-0 text-start px-3 pt-3">
+                                    <h2>Types of Vehicles</h2>
                                 </div>
-                                <div class="col">
-                                    <div class="row gx-0 pb-2">
-                                        <span id="counts_car_2" class="medium-number">4</span>
-                                    </div>
-                                    <div class="row gx-0 text-white">
-                                        <svg class="svg white" fill="none" height="48" viewBox="0 0 48 48" width="48"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <use href="#car" x="0" y="0"></use>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="row gx-0 pb-2">
-                                        <span id="counts_bus_2" class="medium-number">4</span>
-                                    </div>
-                                    <div class="row gx-0 text-white" style="padding: 3px 0 3px 0">
-                                        <svg class="svg white" fill="none" height="42" viewBox="0 0 48 48" width="42"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <use href="#bus" x="0" y="0"></use>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="row gx-0 pb-2">
-                                        <span id="counts_truck_2" class="medium-number">4</span>
-                                    </div>
-                                    <div class="row gx-0 text-white" style="padding: 3px 0 3px 0">
-                                        <svg class="svg white" fill="none" height="42" viewBox="0 0 48 48" width="42"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <use href="#truck" x="0" y="0"></use>
-                                        </svg>
+                                <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
+                                    style="height: 85%;">
+                                    <div style="width: 90%; height: 100%;">
+                                        <canvas id="typesOfVehicles"></canvas>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col d-flex flex-column justify-content-between"
-                         style="height: 46vh; min-width: 320px; min-height: 400px;">
-                        <div class="card shadow me-3 ms-2 my-2">
-                            <div class="row gx-0 text-start px-3 pt-3">
-                                <h2>Types of Vehicles</h2>
-                            </div>
-                            <div class="row gx-0 pt-3 d-flex align-items-center justify-content-center"
-                                style="height: 85%;">
-                                <div style="width: 90%; height: 100%;">
-                                    <canvas id="typesOfVehicles"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="row gx-0" style="height: 46vh;">
-                    <div class="col"
-                        style="height: 100%; min-width: 320px; min-height: 440px;">
-                        <div class="card shadow ms-3 me-2 my-2">
-                            <div class="row gx-0 px-3 pt-3">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="me-2">
-                                        <h2>Temperature</h2>
-                                    </div>
-                                    <div>
-                                        <div>
-                                            <span class="material-symbols-rounded">error</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row gx-0">
-                                <div class="col pt-4 pb-5">
-                                    <div class="row gx-0 pb-3"><span class="big-number">8</span></div>
-                                    <div class="row gx-0"><span class="unit">° Celsius</span></div>
-                                </div>
-                            </div>
-                            <div class="row gx-0" style="height: 34%">
-                                <div class="mx-auto" style="height: 100%; width: 80%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col"
-                        style="height: 100%;  min-width: 320px; min-height: 440px;">
-                        <div class="card shadow ms-2 me-2 my-2">
-                            <div class="row gx-0 px-3 pt-3">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="me-2">
-                                        <h2>Humidity</h2>
-                                    </div>
-                                    <div>
-                                        <div>
-                                            <span class="material-symbols-rounded">error</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row gx-0">
-                                <div class="col pt-4 pb-5">
-                                    <div class="row gx-0 pb-3"><span class="big-number">95</span></div>
-                                    <div class="row gx-0"><span class="unit">%RH</span></div>
-                                </div>
-                            </div>
-                            <div class="row gx-0" style="height: 34%">
-                                <div class="mx-auto" style="height: 100%; width: 80%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col"
-                        style="height: 100%;  min-width: 320px; min-height: 440px;">
-                        <div class="card shadow ms-2 me-2 my-2">
-                            <div class="row gx-0 px-3 pt-3">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="me-2">
-                                        <h2>CO<sub>2</sub></h2>
-                                    </div>
-                                    <div>
-                                        <div>
-                                            <span class="material-symbols-rounded">error</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row gx-0">
-                                <div class="col pt-4 pb-5">
-                                    <div class="row gx-0 pb-3"><span class="big-number">419</span></div>
-                                    <div class="row gx-0"><span class="unit">PPM</span></div>
-                                </div>
-                            </div>
-                            <div class="row gx-0" style="height: 34%">
-                                <div class="mx-auto" style="height: 100%; width: 80%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col" style="height: 100%; min-width: 320px;">
-                        <div class="card row gx-0 ms-2 me-3 my-2" style="height: 50%;">
-                            <div class="col">
+                    <div class="row gx-0" style="height: 46%;">
+                        <div class="col d-flex"
+                            style="height: 100%; min-width: 320px; min-height: 400px;">
+                            <div class="card shadow">
                                 <div class="row gx-0 px-3 pt-3">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <div class="me-2">
-                                            <h2>PM<sub>2.5</sub></h2>
+                                            <h2>Temperature</h2>
                                         </div>
                                         <div>
                                             <div>
@@ -250,43 +172,182 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row gx-0 py-3" style="height: 72%;">
-                                    <div class="col-xl-8 col-10">
-                                        <div class="ms-auto" style="height: 100%; width: 100%;"></div>
+                                <div class="row gx-0">
+                                    <div class="col pt-4 pb-5">
+                                        <div class="row gx-0 pb-3"><span class="big-number">8</span></div>
+                                        <div class="row gx-0"><span class="unit">° Celsius</span></div>
                                     </div>
-                                    <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">
-                                        <div>
-                                            <span class="medium-number">70</span>
-                                        </div>
-                                    </div>
+                                </div>
+                                <div class="row gx-0" style="height: 34%">
+                                    <div class="mx-auto bg-light" style="height: 100%; width: 80%;"></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="row my-2"></div>
-                        <div class="card row gx-0 ms-2 me-3 my-2" style="height: 50%;">
-                            <div class="col">
+                        <div class="col d-flex"
+                            style="height: 100%;  min-width: 320px; min-height: 400px;">
+                            <div class="card shadow">
                                 <div class="row gx-0 px-3 pt-3">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <div class="me-2">
-                                            <h2>PM<sub>10</sub></h2>
+                                            <h2>Humidity</h2>
                                         </div>
                                         <div>
-                                            <span class="material-symbols-rounded">error</span>
+                                            <div>
+                                                <span class="material-symbols-rounded">error</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row gx-0 py-3 pt-3" style="height: 72%;">
-                                    <div class="col-xl-8 col-10">
-                                        <div class="ms-auto" style="height: 100%; width: 100%;"></div>
+                                <div class="row gx-0">
+                                    <div class="col pt-4 pb-5">
+                                        <div class="row gx-0 pb-3"><span class="big-number">95</span></div>
+                                        <div class="row gx-0"><span class="unit">%RH</span></div>
                                     </div>
-                                    <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">
+                                </div>
+                                <div class="row gx-0" style="height: 34%">
+                                    <div class="mx-auto bg-light" style="height: 100%; width: 80%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col d-flex"
+                            style="height: 100%;  min-width: 320px; min-height: 400px;">
+                            <div class="card shadow">
+                                <div class="row gx-0 px-3 pt-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="me-2">
+                                            <h2>CO<sub>2</sub></h2>
+                                        </div>
                                         <div>
-                                            <span class="medium-number">20</span>
+                                            <div>
+                                                <span class="material-symbols-rounded">error</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row gx-0">
+                                    <div class="col pt-4 pb-5">
+                                        <div class="row gx-0 pb-3"><span class="big-number">419</span></div>
+                                        <div class="row gx-0"><span class="unit">PPM</span></div>
+                                    </div>
+                                </div>
+                                <div class="row gx-0" style="height: 34%">
+                                    <div class="mx-auto bg-light" style="height: 100%; width: 80%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col d-flex" style="height: 50%; min-width: 320px;">
+                            <div class="row gx-0" style="height: 100%; width: 100%;">
+                                <div class="col d-flex small-box-container">
+                                    <div class="card shadow">
+                                        <div class="col">
+                                            <div class="row gx-0 px-3 pt-3">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="me-2">
+                                                        <h2>PM<sub>2.5</sub></h2>
+                                                    </div>
+                                                    <div>
+                                                        <div>
+                                                            <span class="material-symbols-rounded">error</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row gx-0 py-3" style="height: 72%;">
+                                                <div class="col-xl-8 col-9">
+                                                    <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>
+                                                </div>
+                                                <div class="col-xl-4 col-3 d-flex align-items-center justify-content-center">
+                                                    <div>
+                                                        <span class="medium-number">70</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col d-flex small-box-container">
+                                    <div class="card shadow">
+                                        <div class="col">
+                                            <div class="row gx-0 px-3 pt-3">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="me-2">
+                                                        <h2>PM<sub>10</sub></h2>
+                                                    </div>
+                                                    <div>
+                                                        <span class="material-symbols-rounded">error</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row gx-0 py-3 pt-3" style="height: 72%;">
+                                                <div class="col-xl-8 col-9">
+                                                    <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>
+                                                </div>
+                                                <div class="col-xl-4 col-3 d-flex align-items-center justify-content-center">
+                                                    <div>
+                                                        <span class="medium-number">20</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+<!--                            <div class="row gx-0" style="height: 50%;">-->
+<!--                                <div class="card shadow">-->
+<!--                                    <div class="col">-->
+<!--                                        <div class="row gx-0 px-3 pt-3">-->
+<!--                                            <div class="d-flex align-items-center justify-content-between">-->
+<!--                                                <div class="me-2">-->
+<!--                                                    <h2>PM<sub>2.5</sub></h2>-->
+<!--                                                </div>-->
+<!--                                                <div>-->
+<!--                                                    <div>-->
+<!--                                                        <span class="material-symbols-rounded">error</span>-->
+<!--                                                    </div>-->
+<!--                                                </div>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                        <div class="row gx-0 py-3" style="height: 72%;">-->
+<!--                                            <div class="col-xl-8 col-10">-->
+<!--                                                <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>-->
+<!--                                            </div>-->
+<!--                                            <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">-->
+<!--                                                <div>-->
+<!--                                                    <span class="medium-number">70</span>-->
+<!--                                                </div>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="row gx-0" style="height: 50%;">-->
+<!--                                 <div class="card shadow">-->
+<!--                                     <div class="col">-->
+<!--                                        <div class="row gx-0 px-3 pt-3">-->
+<!--                                            <div class="d-flex align-items-center justify-content-between">-->
+<!--                                                <div class="me-2">-->
+<!--                                                    <h2>PM<sub>10</sub></h2>-->
+<!--                                                </div>-->
+<!--                                                <div>-->
+<!--                                                    <span class="material-symbols-rounded">error</span>-->
+<!--                                                </div>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                        <div class="row gx-0 py-3 pt-3" style="height: 72%;">-->
+<!--                                            <div class="col-xl-8 col-10">-->
+<!--                                                <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>-->
+<!--                                            </div>-->
+<!--                                            <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">-->
+<!--                                                <div>-->
+<!--                                                    <span class="medium-number">20</span>-->
+<!--                                                </div>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
                         </div>
+                        <div id="extra-space" class="row"></div>
                     </div>
                 </div>
             </div>
