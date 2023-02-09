@@ -13,7 +13,7 @@ import cv2
 import numpy as np
 import rospy
 from sensor_msgs.msg import Image, CompressedImage
-from sensorbox.msg import BoxArray, Sync
+from sensorbox.msg import Sync
 from vision_msgs.msg import BoundingBox2D, Detection2D
 
 
@@ -214,8 +214,10 @@ class MobilityTracker:
         kernel = np.ones((7, 7), np.uint8)
         dilated = cv2.dilate(th1, kernel)
         final_img = cv2.dilate(dilated, None)
-
         boxes = self.bind_objects(frame, img, final_img)
+        
+        # final_img_color = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
+        # cv2.line(final_img_color, self.p1_count_line, self.p2_count_line, (0,255,0))
         compressed_img = cv2.imencode(".jpg", final_img)[1].tostring()
 
         compressed_img_msg = CompressedImage()
