@@ -31,7 +31,7 @@ class YoloServer:
             self.executor = ProcessPoolExecutor(max_workers=5)
             self.tasks = {}
 
-        self.pub = rospy.Publisher("/sbx/result", Counts, queue_size=10)
+        self.pub = rospy.Publisher("/sbx/result", Counts, queue_size=10, latch=True)
         if self.multiprocessing:
             self.sub = rospy.Subscriber(
                 "/sbx/detect", Detection2D, self.detect_callback

@@ -49,10 +49,10 @@ class SensorLive {
         this.numberOfVehicles = new Chart(this.ctxNumberOfVehicles, {
             type: 'doughnut',
             data: {
-                labels: ['Cars', 'Trucks', 'Buses'],
+                labels: ['Cars', 'Trucks', 'Buses', 'Other'],
                 datasets: [{
                     label: 'Types of vehicles',
-                    data: [0.0000001, 0.0000001, 0.0000001],
+                    data: [0.0000001, 0.0000001, 0.0000001, 0.0000001],
                     backgroundColor: ['rgb(2, 159, 227)', 'rgb(26,122,165)', 'rgb(31,84,108)'],
                     hoverOffset: 4
                 }]
@@ -84,7 +84,9 @@ class SensorLive {
 
     on_detect(data) {
         this.counts = data;
-
+        if (this.last_count === -1) {
+            this.last_count = data.total;
+        }
         // TODO calculate rate
         // this.log();
         this.update();
@@ -93,7 +95,7 @@ class SensorLive {
     on_image(msg) {
         if (msg.img.header.seq <= this.seq) return;
         this.img.src = "data:image/jpeg;base64," + msg.img.data;
-        this.on_box(msg.boxes);
+        this.on_box(msg);
         this.seq = msg.img.header.seq;
         // this.paint = true;
     }
@@ -149,6 +151,11 @@ class SensorLive {
             }
             // console.log("painted");
         }
+        // this.ctx.strokeStyle = "green";
+        // this.ctx.lineWidth = 2;
+        // this.ctx.moveTo(this.canvas.width / 2, 0);
+        // this.ctx.lineTo(this.canvas.width / 2, this.canvas.height);
+        // this.ctx.stroke();
 
         window.requestAnimationFrame(this.box_anim.bind(this));
     }
@@ -177,7 +184,7 @@ class SensorLive {
         document.getElementById('co2').innerHTML = Math.round(this.sensor_data.co2 * 100) / 100;
 
         this.numberOfVehicles.data.datasets.forEach((dataset) => {
-            dataset.data = [this.counts.cars, this.counts.trucks, this.counts.buses];
+            dataset.data = [this.counts.cars, this.counts.trucks, this.counts.buses, this.counts.total - this.counts.cars - this.counts.trucks - this.counts.buses];
         });
 
         this.numberOfVehicles.update();
@@ -199,9 +206,9 @@ class SensorLive {
             if (this.last_count === -1) {
                 dataset.data.push(0);
             } else {
-                dataset.data.push(this.counter - this.last_count);
+                dataset.data.push(this.counts.total - this.last_count);
+                this.last_count = this.counts.total;
             }
-            this.last_count = this.counter;
         });
 
         this.vehiclesOverTime.update();
