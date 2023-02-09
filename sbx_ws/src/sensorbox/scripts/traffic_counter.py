@@ -16,7 +16,12 @@ import rospy
 from sensor_msgs.msg import Image
 from vision_msgs.msg import Detection2D
 from sensorbox.msg import Box
-from ros_numpy.src.ros_numpy.image import numpy_to_image, image_to_numpy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ros_numpy.src.ros_numpy.image import numpy_to_image, image_to_numpy
+else:
+    from ros_numpy.image import numpy_to_image, image_to_numpy
 
 
 class MobilityTracker:
