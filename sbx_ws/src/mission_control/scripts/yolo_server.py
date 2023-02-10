@@ -46,19 +46,11 @@ class YoloServer:
         self.lock = Lock()
 
         # load last count
-        try:
-            self.cur.execute(LOAD_COUNT_STMT)
-        except sl.OperationalError:
-            self.cur.execute(
-                "CREATE TABLE counts (timestamp DATETIME, total INT, cars INT, trucks INT, buses INT, motorcycles INT, bicycles INT)"
-            )
-            self.cur.execute(STORE_COUNT_STMT, (datetime.now(), 0, 0, 0, 0, 0, 0))
-            self.con.commit()
-            self.cur.execute(LOAD_COUNT_STMT)
-        row = self.cur.fetchone()
-        if row:
-            self.counts = Counts(*row[1:])
+        self.load_last_count()
+
         # self.con.close()
+
+        rospy.loginfo(f"Loaded last count: {self.counts.total}")
 
         if self.multiprocessing:
             self.executor = ProcessPoolExecutor(max_workers=5)
@@ -77,6 +69,21 @@ class YoloServer:
         self.con.close()
         if self.multiprocessing:
             self.executor.shutdown()
+
+    def load_last_count(self):
+        with self.lock:
+            try:
+                self.cur.execute(LOAD_COUNT_STMT)
+            except sl.OperationalError:
+                self.cur.execute(
+                    "CREATE TABLE counts (timestamp DATETIME, total INT, cars INT, trucks INT, buses INT, motorcycles INT, bicycles INT)"
+                )
+                self.cur.execute(STORE_COUNT_STMT, (datetime.now(), 0, 0, 0, 0, 0, 0))
+                self.con.commit()
+                self.cur.execute(LOAD_COUNT_STMT)
+            row = self.cur.fetchone()
+            if row:
+                self.counts = Counts(*row[1:])
 
     def exec_callback(self, msg: Detection2D) -> tuple[int, int, int, int, int, int]:
         box = msg.bbox
@@ -169,7 +176,11 @@ class YoloServer:
         if future.exception():
             rospy.logerr(f"Exception in task: {future.exception()}")
         else:
-            self.pub.publish(Counts(*future.result()))
+            result = future.result()
+            self.pub.publish(Counts(*result))
+            with self.lock:
+                self.cur.execute(STORE_COUNT_STMT, (datetime.now(), *result))
+                self.con.commit()
 
 
 if __name__ == "__main__":
