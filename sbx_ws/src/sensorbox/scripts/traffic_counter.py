@@ -7,7 +7,7 @@ Copyright (C) 2023 YES!Delft
 by Romir Kulshreshtha and Anthony Nikolaidis
 """
 
-from __future__ import annotations
+# from __future__ import annotations
 
 from math import pi
 from multiprocessing import Event
@@ -19,6 +19,7 @@ from geometry_msgs.msg import Polygon, Pose2D
 from sensor_msgs.msg import CompressedImage, Image
 from sensorbox.msg import AnnotatedImage
 from vision_msgs.msg import BoundingBox2D, Detection2D
+from typing import Tuple
 
 
 class MobilityTracker:
@@ -52,7 +53,7 @@ class MobilityTracker:
         self.p1_count_line: tuple = ()
         self.p2_count_line: tuple = ()
         self.counter = 0
-        self.mask: Polygon | None = None
+        self.mask: Polygon = Polygon()
         self.mask_img: np.ndarray = np.zeros(
             (self._vid_height, self._vid_width, 3), np.uint8
         )
@@ -83,7 +84,7 @@ class MobilityTracker:
         self.mask_sub = rospy.Subscriber(f"/{self.prefix}/mask", Polygon, self.set_mask)
         self.line_sub = rospy.Subscriber(f"/{self.prefix}/line", Pose2D, self.set_line)
         self.roi_sub = rospy.Subscriber(f"/{self.prefix}/roi", float, self.set_roi)
-        self.area_sub = rospy.Subscriber(f"/{self.prefix}/area", float, self.set_area)
+        self.area_sub = rospy.Subscriber(f"/{self.prefix}/area", float, self.set_min_area)
 
     def _set_up_line(self, theta, position):
         if theta > 90 or theta < -90:
@@ -110,8 +111,9 @@ class MobilityTracker:
         Sets up the mask for the video stream
         """
         self.mask_img = np.zeros((self._vid_height, self._vid_width, 3), np.uint8)
-        if self.mask is not None:
-            cv2.fillPoly(self.mask_img, [self.mask.points], (255, 255, 255))
+        if self.mask.points is not None:
+            points = np.array(self.mask.points, np.int32)[:,:2]
+            cv2.fillPoly(self.mask_img, points, (255, 255, 255))
 
     def _distance_from_line(self, cx, cy):
         """
@@ -121,7 +123,7 @@ class MobilityTracker:
         x2, y2 = self.p2_count_line
         return (cx - x1) * (y2 - y1) - (cy - y1) * (x2 - x1)
 
-    def _is_line_crossed(self, cx, cy, prev_cx, prev_cy) -> tuple[bool, bool]:
+    def _is_line_crossed(self, cx, cy, prev_cx, prev_cy) -> Tuple[bool, bool]:
         """
         Checks if a line is crossed
         """
@@ -226,7 +228,7 @@ class MobilityTracker:
         frame_id = frame.header.seq  # get current frame index
         img = cv2.resize(data, (self._vid_width, self._vid_height))
 
-        if self.mask_img is not None:
+        if self.mask.points:
             img = cv2.bitwise_and(img, img, mask=self.mask_img)
 
         working_img = img.copy()
@@ -264,7 +266,7 @@ class MobilityTracker:
         self.animg_pub.publish(annotated_img)
 
     def set_mask(self, mask: Polygon):
-        self.mask = mask if mask.points else None
+        self.mask = mask
         self._set_up_mask()
 
     def set_roi(self, roi: float):
