@@ -46,7 +46,7 @@
         </div>
 
         <div class="tab-content" id="nav-tabContent">
-            <div class="tab-pane fade" id="nav-video" role="tabpanel" aria-labelledby="nav-video-tab">
+            <div class="tab-pane fade show active" id="nav-video" role="tabpanel" aria-labelledby="nav-video-tab">
                 <div class="fixed-bottom d-flex justify-content-end" style="z-index: 5;">
                     <div class="me-3 mb-3 grid d-flex align-items-center" id="stats">
                         <div class="g-col-4 mx-3 d-flex align-items-center">
@@ -62,7 +62,7 @@
             <canvas id="canvas"></canvas>
         </div>
 
-        <div class="tab-pane fade d-flex align-items-center show active" id="nav-stats" role="tabpanel"
+        <div class="tab-pane fade d-flex align-items-center" id="nav-stats" role="tabpanel"
             aria-labelledby="nav-stats-tab">
             <div id="stats-page" class="container gx-0 text-center">
                 <div class="col" style="height: 100%; width: calc(100% - 20px); margin: auto;">
@@ -359,8 +359,22 @@
             </div>
 
         </div>
-
+        <div class="toast-container position-fixed top-0 end-0 p-4">
+            <div aria-atomic="true" aria-live="assertive" class="toast" id="errorToast" role="alert">
+                <div class="toast-header">
+                    <svg aria-hidden="true" class="bd-placeholder-img rounded me-2" focusable="false" height="20"
+                        preserveAspectRatio="xMidYMid slice" width="20" xmlns="http://www.w3.org/2000/svg">
+                        <rect height="100%" id=toast-rect width="100%"></rect>
+                    </svg>
+                    <strong class="me-auto" id="toast-title">Error</strong>
+                    <small id="toast-small"></small>
+                    <button aria-label="Close" class="btn-close" data-bs-dismiss="toast" type="button"></button>
+                </div>
+                <div class="toast-body" id="toast-msg"></div>
+            </div>
+        </div>
     </div>
+
     <svg class="svg" style="display: none" xmlns="http://www.w3.org/2000/svg">
         <symbol id="camera">
             <path

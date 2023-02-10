@@ -15,6 +15,11 @@
     --y-medium-number: 2.75rem;
     --y-unit: 1.75rem;
     --y-letter-spacing: 0;
+
+    --y-success: rgb(48, 209, 88);
+    --y-warning: rgb(255, 204, 0);
+    --y-danger: rgb(255, 69, 58);
+    --y-info: rgb(10, 132, 255);
 }
 
 body {
@@ -326,3 +331,17 @@ h2 {
         height: 85px;
     }
 }
+
+/* .toast {
+    background-color: var(--y-dblue);
+    color: white;
+    border-color: transparent;
+}
+
+.toast-header {
+    background-color: var(--y-dblue);
+}
+
+.toast-body {
+    background-color: var(--y-blue);
+} */

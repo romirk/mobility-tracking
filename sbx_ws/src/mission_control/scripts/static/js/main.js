@@ -1,14 +1,23 @@
 const screen = document.getElementById('live');
 
-const Y_BLUE = "#1cbbed";
+// get colors from css
+const Y_BLUE = getComputedStyle(document.documentElement).getPropertyValue('--y-blue');
+const Y_SUCCESS = getComputedStyle(document.documentElement).getPropertyValue('--y-success');
+const Y_WARNING = getComputedStyle(document.documentElement).getPropertyValue('--y-warning');
+const Y_DANGER = getComputedStyle(document.documentElement).getPropertyValue('--y-danger');
+
 
 function stamp_to_millis(stamp) {
     return stamp.secs * 1000 + stamp.nsecs / 1000000;
 }
 
+
 class SensorLive {
+
+    canvas = document.getElementById('canvas');
+    toastElement = new bootstrap.Toast(document.getElementById("errorToast"));
+
     constructor() {
-        this.counter = 0;
         this.counts = {
             total: 0, cars: 0, trucks: 0, buses: 0, motorcycles: 0, bicycles: 0,
         };
@@ -22,10 +31,9 @@ class SensorLive {
         this.seq = 0;
         this.latency = { network: 0, processing: 0, total: 0 };
 
-        this.canvas = document.getElementById('canvas');
-        this.ctx = this.canvas.getContext('2d');
         this.canvas.width = 640;
         this.canvas.height = 480;
+        this.ctx = this.canvas.getContext('2d');
 
         this.img = document.getElementById('live');
 
@@ -69,19 +77,34 @@ class SensorLive {
             }
         });
 
-        // setInterval(this.update.bind(this), 200);
-        setInterval(this.updateGraphs.bind(this), 10000);
-
-        this.relay.connect().then(this.relay_setup.bind(this));
+        this.connect();
     }
 
-    relay_setup() {
+
+    /**
+     * Connect to ROSBridge
+     */
+    connect() {
+        this.startTime = Date.now();
+        this.relay.connect().then(() => this.setup(), () => this.reconnect("Failed to connect"));
+    }
+
+    /**
+     * Handle disconnection.
+    */
+    reconnect(err) {
+        this.toastError("Mission Control", `Disconnected: ${err}`);
+        this.relay.reset();
+        setTimeout(() => this.connect(), 10000);
+    }
+
+    setup() {
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_count.bind(this));
         this.relay.createListener("/sbx/bboxed", "sensorbox/AnnotatedImage", this.on_image.bind(this));
         this.relay.createListener("/sbx/detect", "vision_msgs/Detection2D", this.on_detect.bind(this));
+        setInterval(this.updateGraphs.bind(this), 10000);
         window.requestAnimationFrame(this.box_anim.bind(this));
-
     }
 
     on_sensor(msg) {
@@ -94,7 +117,7 @@ class SensorLive {
         // this.draw_box(msg.bbox.center.x, msg.bbox.center.y, msg.bbox.size_x, msg.bbox.size_y, (48, 209, 88));
         const box = msg.bbox;
         box.mstamp = Date.now();
-        box.color = "rgb(48, 209, 88)";
+        box.color = Y_SUCCESS;
         this.boxes.push(box);
         console.log("box", box);
     }
@@ -146,6 +169,7 @@ class SensorLive {
     }
 
     box_anim() {
+        if (!this.relay.connected) return this.reconnect("Connection lost!");
         if (this.paint || Date.now() - this.last_box > 100) {
             this.paint = false;
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -156,7 +180,6 @@ class SensorLive {
 
                 for (const box of this.boxes) {
                     if (Date.now() - box.mstamp > 50) {
-                        // console.log("dropped", Date.now() - box.mstamp);
                         continue;
                     }
                     new_boxes.push(box);
@@ -164,17 +187,7 @@ class SensorLive {
                 }
                 this.boxes = new_boxes;
             }
-            else {
-
-                // console.log("no boxes", Date.now() - this.last_box);
-            }
-            // console.log("painted");
         }
-        // this.ctx.strokeStyle = "green";
-        // this.ctx.lineWidth = 2;
-        // this.ctx.moveTo(this.canvas.width / 2, 0);
-        // this.ctx.lineTo(this.canvas.width / 2, this.canvas.height);
-        // this.ctx.stroke();
 
         window.requestAnimationFrame(this.box_anim.bind(this));
     }
@@ -231,6 +244,39 @@ class SensorLive {
         });
 
         this.vehiclesOverTime.update();
+    }
+
+    // utilities
+
+    /**
+     * Displays a temporary notification at the bottom of the screen.
+     * @param title
+     * @param module
+     * @param msg
+     * @param color
+     */
+    toast(title, module, msg, color) {
+        $("#toast-small").text(module);
+        $("#toast-msg").text(msg);
+        $("#toast-title").text(title);
+        $("#toast-rect").attr("fill", color);
+        this.toastElement.show();
+    }
+
+    toastError(module, message) {
+        this.toast("Error", module, message, "#dc3545");
+    }
+
+    toastInfo(module, message) {
+        this.toast("Info", module, message, "#0d6efd");
+    }
+
+    toastSuccess(module, message) {
+        this.toast("Success", module, message, Y_SUCCESS);
+    }
+
+    toastWarning(module, message) {
+        this.toast("Warning", module, message, Y_WARNING);
     }
 
     log() {
