@@ -6,19 +6,26 @@ from typing import Tuple
 
 import numpy as np
 import rospy
+import cv2
+from datetime import datetime
 from mission_control.msg import Counts
 from vision_msgs.msg import Detection2D
 from yolov7_package import Yolov7Detector
 from yolov7_package.model_utils import coco_names
+import os
 
 WHITELIST = ["car", "truck", "bus", "motorbike", "bicycle"]
 WHITELIST_IDX = [coco_names.index(c) for c in WHITELIST]
 CONFIDENCE_THRESHOLD = 0
+ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 class YoloServer:
     def __init__(self) -> None:
         rospy.init_node("detector")
+        self.frame_width = rospy.get_param("/sbx/video_width", 640)
+        self.frame_height = rospy.get_param("/sbx/video_height", 480)
+
         self.yolo = Yolov7Detector()
         self.counts = Counts(0, 0, 0, 0, 0, 0)
 
@@ -46,7 +53,7 @@ class YoloServer:
         if boxes is None or len(boxes) == 0 or box is None:
             return None, float("inf")
         if len(boxes) == 1:
-            return boxes[0], (boxes[0][0] - box[0]) ** 2 + (boxes[0][1] - box[1]) ** 2
+            return 0, (boxes[0][0] - box[0]) ** 2 + (boxes[0][1] - box[1]) ** 2
 
         nearest = 0
         min_dist = float("inf")
@@ -77,22 +84,37 @@ class YoloServer:
         total = self.counts.total + 1
         box = msg.bbox
         frame = msg.source_img
-        frame = np.frombuffer(frame.data, dtype=np.uint8).reshape(
-            frame.height, frame.width, -1
+        img = cv2.cvtColor(
+            np.frombuffer(frame.data, dtype=np.uint8).reshape(
+                frame.height, frame.width, -1
+            ),
+            cv2.COLOR_RGB2BGR,
         )
-        r = self.yolo.detect(frame)
+        scale = frame.width / self.frame_width, frame.height / self.frame_height
+        x, y, w, h = (
+            (box.center.x - box.size_x / 2) * scale[0],
+            (box.center.y - box.size_y / 2) * scale[1],
+            (box.size_x) * scale[0],
+            (box.size_y) * scale[1],
+        )
+        cv2.rectangle(img, (int(x), int(y)), (int(x + w), int(y + h)), (0, 255, 0), 2)
+        cv2.imwrite(f"{ROOT}/out/{frame.encoding}{datetime.now().isoformat()}.png", img)
+        r = self.yolo.detect(img)
         if not self.multiprocessing:
             rospy.logwarn(f"Received detection {r}")
         dets = [
             d
             for d in zip(r[0][0], r[1][0], r[2][0])
-            if d[0] in WHITELIST_IDX and d[2] > CONFIDENCE_THRESHOLD
+            # if d[0] in WHITELIST_IDX and d[2] > CONFIDENCE_THRESHOLD
         ]
+        rospy.loginfo(f"Filtered detections: {dets}")
 
         boxes = [d[1] for d in dets]
         nearest, _ = self.nearest_box(boxes, [box.center.x, box.center.y])
-
-        nearest_class: int = dets[nearest][0] if nearest is not None else -1
+        nearest_class = -1
+        if nearest is not None:
+            rospy.loginfo(f"Nearest box: {nearest}")
+            nearest_class: int = dets[nearest][0]
         cars = self.counts.cars + (nearest_class == WHITELIST_IDX[0])
         trucks = self.counts.trucks + (nearest_class == WHITELIST_IDX[1])
         buses = self.counts.buses + (nearest_class == WHITELIST_IDX[2])
@@ -101,6 +123,10 @@ class YoloServer:
 
         if nearest_class == -1:
             rospy.logwarn("Sensorbox reports detection, but no vehicle was detected.")
+        else:
+            rospy.loginfo(
+                f"Detected {coco_names[nearest_class]} at {box.center.x}, {box.center.y}"
+            )
 
         if not self.multiprocessing:
             self.counts = Counts(total, cars, trucks, buses, motorcycles, bicycles)

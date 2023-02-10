@@ -216,6 +216,7 @@ class MobilityTracker:
         kernel = np.ones((7, 7), np.uint8)
         dilated = cv2.dilate(th1, kernel)
         final_img = cv2.dilate(dilated, None)
+
         boxes = self.bind_objects(frame, img, final_img)
 
         # final_img_color = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
