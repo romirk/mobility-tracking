@@ -170,7 +170,7 @@ body {
     /* background-color: var(--y-dblue); */
     /* transform: rotate(180deg); */
 
-    display: none;
+    display: grid;
 }
 
 #nav-stats {
