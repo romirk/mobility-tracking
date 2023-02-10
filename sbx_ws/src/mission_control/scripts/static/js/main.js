@@ -26,10 +26,11 @@ class SensorLive {
         };
         this.last_count = -1;
         this.boxes = []
-        this.paint = false;
+        this.paint = true;
         this.last_box = 0;
         this.last_frame = 0;
         this.seq = 0;
+        this.los = false;
         this.latency = { network: 0, processing: 0, total: 0 };
 
         this.canvas.width = 640;
@@ -87,6 +88,7 @@ class SensorLive {
      */
     connect() {
         this.startTime = Date.now();
+        this.los_screen_off();
         this.toastInfo("Mission Control", "Connecting...");
         this.relay.connect().then(() => this.setup(), () => this.reconnect("Failed to connect"));
     }
@@ -174,35 +176,46 @@ class SensorLive {
 
     los_screen() {
         document.getElementById("los").style.display = "grid";
+        this.los = true;
+        // console.log("los");
     }
     los_screen_off() {
         document.getElementById("los").style.display = "none";
+        this.los = false;
+        // console.log("los off");
     }
 
     box_anim() {
         if (!this.relay.connected) return this.reconnect("Connection lost!");
 
         const now = Date.now();
-        if (now - this.last_frame > 1500 && !this.paint)
-            this.los_screen();
-        else if (this.boxes.length > 0 || now - this.last_box > 100) {
-            this.paint = false;
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            this.los_screen_off();
-
-            if (this.boxes.length > 0) {
-
-                const new_boxes = [];
-
-                for (const box of this.boxes) {
-                    if (now - box.mstamp > 50) {
-                        continue;
-                    }
-                    new_boxes.push(box);
-                    this.draw_box(box.center.x, box.center.y, box.size_x, box.size_y);
-                }
-                this.boxes = new_boxes;
+        if (!this.los) {
+            if (now - this.last_frame > 5000 && !this.paint) {
+                this.boxes = [];
+                this.los_screen();
+                this.toastWarning("Mission Control", "No frames received");
             }
+            else if (this.boxes.length > 0 || now - this.last_box > 100) {
+                this.paint = false;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                if (this.boxes.length > 0) {
+
+                    const new_boxes = [];
+
+                    for (const box of this.boxes) {
+                        if (now - box.mstamp > 50) {
+                            continue;
+                        }
+                        new_boxes.push(box);
+                        this.draw_box(box.center.x, box.center.y, box.size_x, box.size_y, box.color);
+                    }
+                    this.boxes = new_boxes;
+                }
+            }
+        }
+        else if (this.paint) {
+            this.los_screen_off();
         }
 
         window.requestAnimationFrame(this.box_anim.bind(this));
