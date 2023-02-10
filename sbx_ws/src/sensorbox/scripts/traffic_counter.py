@@ -19,6 +19,7 @@ from geometry_msgs.msg import Polygon, Pose2D
 from sensor_msgs.msg import CompressedImage, Image
 from sensorbox.msg import AnnotatedImage
 from vision_msgs.msg import BoundingBox2D, Detection2D
+from std_msgs.msg import Float32
 from typing import Tuple
 
 
@@ -83,8 +84,10 @@ class MobilityTracker:
         # control topics
         self.mask_sub = rospy.Subscriber(f"/{self.prefix}/mask", Polygon, self.set_mask)
         self.line_sub = rospy.Subscriber(f"/{self.prefix}/line", Pose2D, self.set_line)
-        self.roi_sub = rospy.Subscriber(f"/{self.prefix}/roi", float, self.set_roi)
-        self.area_sub = rospy.Subscriber(f"/{self.prefix}/area", float, self.set_min_area)
+        self.roi_sub = rospy.Subscriber(f"/{self.prefix}/roi", Float32, self.set_roi)
+        self.area_sub = rospy.Subscriber(
+            f"/{self.prefix}/area", Float32, self.set_min_area
+        )
 
     def _set_up_line(self, theta, position):
         if theta > 90 or theta < -90:
@@ -110,10 +113,15 @@ class MobilityTracker:
         """
         Sets up the mask for the video stream
         """
-        self.mask_img = np.zeros((self._vid_height, self._vid_width, 3), np.uint8)
-        if self.mask.points is not None:
-            points = np.array(self.mask.points, np.int32)[:,:2]
+        if self.mask.points:
+            self.mask_img = np.zeros((self._vid_height, self._vid_width, 3), np.uint8)
+            points = np.array(self.mask.points, np.int32)
+            rospy.logwarn(f"Mask: {points}")
             cv2.fillPoly(self.mask_img, points, (255, 255, 255))
+        else:
+            self.mask_img = (
+                np.ones((self._vid_height, self._vid_width, 3), np.uint8) * 255
+            )
 
     def _distance_from_line(self, cx, cy):
         """
@@ -229,6 +237,7 @@ class MobilityTracker:
         img = cv2.resize(data, (self._vid_width, self._vid_height))
 
         if self.mask.points:
+            rospy.logwarn_once("Masks enabled")
             img = cv2.bitwise_and(img, img, mask=self.mask_img)
 
         working_img = img.copy()
@@ -249,7 +258,7 @@ class MobilityTracker:
         _, th1 = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
 
         kernel = np.ones((7, 7), np.uint8)
-        dilated = cv2.dilate(th1, kernel, iterations=5)
+        dilated = cv2.dilate(th1, kernel, iterations=3)
         final_img = cv2.dilate(dilated, None)
 
         boxes = self.bind_objects(frame, final_img)
@@ -269,11 +278,11 @@ class MobilityTracker:
         self.mask = mask
         self._set_up_mask()
 
-    def set_roi(self, roi: float):
-        self.rate_of_influence = roi
+    def set_roi(self, roi: Float32):
+        self.rate_of_influence = roi.data
 
-    def set_min_area(self, min_area: float):
-        self.min_area = min_area
+    def set_min_area(self, min_area: Float32):
+        self.min_area = min_area.data
 
     def set_line(self, line: Pose2D):
         self._set_up_line(line.theta, line.y)
