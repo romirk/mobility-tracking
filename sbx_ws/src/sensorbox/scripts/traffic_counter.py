@@ -41,14 +41,14 @@ class MobilityTracker:
         rospy.logwarn(f"Starting {self.prefix}/counter node")
 
         self.stopped = Event()
-        self.crop_rect = []  # stores the click coordinates where to crop the frame
-        self.mask_points = (
-            []
-        )  # stores the click coordinates of the mask to apply to cropped frame
+
+        self.rate_of_influence = 0.01
         self.font = cv2.FONT_HERSHEY_SIMPLEX
+
         self.p1_count_line: tuple = ()
         self.p2_count_line: tuple = ()
         self.counter = 0
+
         self.prev_centroids = (
             []
         )  # this will contain the coordinates of the centers in the previous
@@ -59,7 +59,6 @@ class MobilityTracker:
 
         self._set_up_line(self.line_direction, self.line_position)
 
-        self.rate_of_influence = 0.01
         self.raw_avg = np.zeros((self._vid_height, self._vid_width, 3))
 
         # rostopics
@@ -69,7 +68,7 @@ class MobilityTracker:
         self.detection_pub = rospy.Publisher(
             f"/{self.prefix}/detect", Detection2D, queue_size=10
         )
-        self.sync_pub = rospy.Publisher(
+        self.animg_pub = rospy.Publisher(
             f"/{self.prefix}/bboxed", AnnotatedImage, queue_size=10
         )
 
@@ -229,10 +228,10 @@ class MobilityTracker:
         compressed_img_msg.data = compressed_img
         header = rospy.Header()
         header.stamp = rospy.Time.now()
-        synced_boxes = AnnotatedImage(
+        annotated_img = AnnotatedImage(
             header=header, img=compressed_img_msg, boxes=boxes
         )
-        self.sync_pub.publish(synced_boxes)
+        self.animg_pub.publish(annotated_img)
 
 
 if __name__ == "__main__":
