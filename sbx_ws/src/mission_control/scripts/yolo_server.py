@@ -26,10 +26,14 @@ class YoloServer:
         self.frame_width = rospy.get_param("/sbx/video_width", 640)
         self.frame_height = rospy.get_param("/sbx/video_height", 480)
 
-        self.yolo = Yolov7Detector()
-        self.counts = Counts(0, 0, 0, 0, 0, 0)
+        rospy.logwarn(f"Starting {rospy.get_name()} node")
+        rospy.logwarn(f"Whitelist: {WHITELIST} ({WHITELIST_IDX})")
 
         self.multiprocessing = False
+
+        self.yolo = Yolov7Detector(traced=True)
+        self.counts = Counts(0, 0, 0, 0, 0, 0)
+
 
         if self.multiprocessing:
             self.executor = ProcessPoolExecutor(max_workers=5)
@@ -67,7 +71,7 @@ class YoloServer:
         cx, cy = x + w / 2, y + h / 2
 
         # cv2.rectangle(img, (int(x), int(y)), (int(x + w), int(y + h)), (0, 255, 0), 2)
-        cv2.imwrite(f"{ROOT}/out/{frame.encoding}{datetime.now().isoformat()}.png", img)
+        cv2.imwrite(f"{ROOT}/out/{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_{total:04}.png", img)
         r = self.yolo.detect(img)
         dets = [
             d
@@ -77,7 +81,7 @@ class YoloServer:
         rospy.loginfo(f"Filtered detections: {dets}")
 
         if len(dets) == 0:
-            rospy.logwarn("No detections")
+            rospy.logwarn("Sensorbox reports a detection, but YOLO did not detect a vehicle")
             result = (
                 total,
                 self.counts.cars,

@@ -7,11 +7,15 @@ Copyright (C) 2023 YES!Delft
 by Romir Kulshreshtha and Anthony Nikolaidis
 """
 
+from __future__ import annotations
+
+from math import pi
 from multiprocessing import Event
 
 import cv2
 import numpy as np
 import rospy
+from geometry_msgs.msg import Polygon, Pose2D
 from sensor_msgs.msg import CompressedImage, Image
 from sensorbox.msg import AnnotatedImage
 from vision_msgs.msg import BoundingBox2D, Detection2D
@@ -29,8 +33,8 @@ class MobilityTracker:
         rospy.init_node("mt")
         self.prefix = rospy.get_param("prefix")
         self.camera_name = rospy.get_param("camera_name")
-        self.line_direction = rospy.get_param("direction", "H")
-        self.line_position = rospy.get_param("line_position", 0.5)
+        theta = rospy.get_param("theta", 0)  # degrees
+        line_posistion = rospy.get_param("line_position", 0.5)
         self.min_area = rospy.get_param("min_area", 5000)
         self.num_contours = rospy.get_param("num_contours", 10)
         self.starting_frame = rospy.get_param("starting_frame", 30)
@@ -48,7 +52,11 @@ class MobilityTracker:
         self.p1_count_line: tuple = ()
         self.p2_count_line: tuple = ()
         self.counter = 0
-
+        self.mask: Polygon | None = None
+        self.mask_img: np.ndarray = np.zeros(
+            (self._vid_height, self._vid_width, 3), np.uint8
+        )
+        self.raw_avg = np.zeros((self._vid_height, self._vid_width, 3))
         self.prev_centroids = (
             []
         )  # this will contain the coordinates of the centers in the previous
@@ -57,11 +65,10 @@ class MobilityTracker:
             history=100, varThreshold=50, detectShadows=True
         )
 
-        self._set_up_line(self.line_direction, self.line_position)
+        self._set_up_line(theta, line_posistion)
+        self._set_up_mask()
 
-        self.raw_avg = np.zeros((self._vid_height, self._vid_width, 3))
-
-        # rostopics
+        # data topics
         self.frame_sub = rospy.Subscriber(
             f"/{self.camera_name}/color/image_raw", Image, self.frame_callback
         )
@@ -72,42 +79,65 @@ class MobilityTracker:
             f"/{self.prefix}/bboxed", AnnotatedImage, queue_size=10
         )
 
-    def _set_up_line(self, line_direction, line_position):
-        if line_direction.upper() == "H" or line_direction is None:
-            fract = int(self._vid_height * float(line_position))
-            self.p1_count_line = (0, fract)
-            self.p2_count_line = (self._vid_width, fract)
-        elif line_direction.upper() == "V":
-            fract = int(self._vid_width * float(line_position))
-            self.p1_count_line = (fract, 0)
-            self.p2_count_line = (fract, self._vid_height)
-            print(f"vertical line at {fract}")
+        # control topics
+        self.mask_sub = rospy.Subscriber(f"/{self.prefix}/mask", Polygon, self.set_mask)
+        self.line_sub = rospy.Subscriber(f"/{self.prefix}/line", Pose2D, self.set_line)
+        self.roi_sub = rospy.Subscriber(f"/{self.prefix}/roi", float, self.set_roi)
+        self.area_sub = rospy.Subscriber(f"/{self.prefix}/area", float, self.set_area)
+
+    def _set_up_line(self, theta, position):
+        if theta > 90 or theta < -90:
+            raise ValueError("Theta must be between -90 and 90")
+        if position > 1 or position < 0:
+            raise ValueError("Position must be between 0 and 1")
+
+        if theta == 0:
+            self.p1_count_line = (0, self._vid_height * position)
+            self.p2_count_line = (self._vid_width, self._vid_height * position)
+
+        elif theta == 90 or theta == -90:
+            self.p1_count_line = (self._vid_width * position, 0)
+            self.p2_count_line = (self._vid_width * position, self._vid_height)
+
         else:
-            raise ValueError('Expected an "H" or a "V" only for line direction')
+            m = np.tan(theta * pi / 180)
+            b = self._vid_height * position - m * self._vid_width * position
+            self.p1_count_line = (0, b)
+            self.p2_count_line = (self._vid_width, m * self._vid_width + b)
 
-    def _is_line_crossed(self, cx, cy, prev_cx, prev_cy):
-        if self.line_direction.upper() == "H":
-            if (prev_cy <= self.p1_count_line[1] <= cy) or (
-                cy <= self.p1_count_line[1] <= prev_cy
-            ):
-                self.counter += 1
-                return True, "u" if cy - self.p1_count_line[1] < 0 else "d"
-        elif self.line_direction.upper() == "V":
-            if (prev_cx <= self.p1_count_line[0] <= cx) or (
-                cx <= self.p1_count_line[0] <= prev_cx
-            ):
-                self.counter += 1
-                return True, "l" if cx - self.p1_count_line[0] < 0 else "r"
-        return False, None
+    def _set_up_mask(self):
+        """
+        Sets up the mask for the video stream
+        """
+        self.mask_img = np.zeros((self._vid_height, self._vid_width, 3), np.uint8)
+        if self.mask is not None:
+            cv2.fillPoly(self.mask_img, [self.mask.points], (255, 255, 255))
 
-    # def classify(self, frame, bounding_box):
-    #     detections = self.net.Detect(frame, overlay="box,labels,conf")
+    def _distance_from_line(self, cx, cy):
+        """
+        Calculates the distance of a point from a line
+        """
+        x1, y1 = self.p1_count_line
+        x2, y2 = self.p2_count_line
+        return (cx - x1) * (y2 - y1) - (cy - y1) * (x2 - x1)
 
-    def bind_objects(self, incoming_frame: Image, orig_frame, thresh_img):
+    def _is_line_crossed(self, cx, cy, prev_cx, prev_cy) -> tuple[bool, bool]:
+        """
+        Checks if a line is crossed
+        """
+        if cx == prev_cx and cy == prev_cy:
+            return False, False
+        d1 = self._distance_from_line(cx, cy)
+        d2 = self._distance_from_line(prev_cx, prev_cy)
+        return d1 * d2 < 0, d1 > 0
+
+    def bind_objects(self, incoming_frame: Image, thresh_img):
         """
         Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be
         drawn onto thresh_img: numpy image after subtracting the background and all thresholds and noise reduction
         operations are applied
+
+        See https://github.com/andresberejnoi/ComputerVision
         """
         contours, _ = cv2.findContours(
             thresh_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
@@ -116,14 +146,15 @@ class MobilityTracker:
             : self.num_contours
         ]
 
-        cnt_id = 1
         cur_centroids = []
         boxes: list[BoundingBox2D] = []
+
         for c in contours:
             area = cv2.contourArea(c)
 
             if area < self.min_area:  # ignore contours that are smaller than this area
                 continue
+
             rect = cv2.minAreaRect(c)
             bounding = cv2.boundingRect(c)
             points = cv2.boxPoints(rect)  # This is the way to do it in opencv 3.1
@@ -150,41 +181,41 @@ class MobilityTracker:
                 min_point = None, None
                 min_dist = None
                 for i in range(len(self.prev_centroids)):
-                    dist = np.linalg.norm(
-                        cs - self.prev_centroids[i]
-                    )  # numpy's way to find the euclidean distance between two points
+                    dist = np.linalg.norm(cs - self.prev_centroids[i])
                     if (min_dist is None) or (dist < min_dist):
                         min_dist = dist
                         min_point = self.prev_centroids[i]
-                # This if is meant to reduce over-counting errors
+
                 if min_dist < 1.5 * w / 2:
                     prev_cx, prev_cy = min_point
                 else:
                     prev_cx, prev_cy = cx, cy
-                # prev_cx,prev_cy = min_point
 
-            _is_crossed, direction = self._is_line_crossed(cx, cy, prev_cx, prev_cy)
-            if _is_crossed:
-                detection_msg = Detection2D(
-                    header=incoming_frame.header, source_img=incoming_frame
+            crossed, direction = self._is_line_crossed(cx, cy, prev_cx, prev_cy)
+            if crossed:
+                self.detection_pub.publish(
+                    Detection2D(
+                        header=incoming_frame.header,
+                        source_img=incoming_frame,
+                        bbox=BoundingBox2D(
+                            center=Pose2D(x=cx, y=cy, theta=direction),
+                            size_x=w,
+                            size_y=h,
+                        ),
+                    )
                 )
-                detection_msg.bbox.center.x = cx
-                detection_msg.bbox.center.y = cy
-                detection_msg.bbox.size_x = w
-                detection_msg.bbox.size_y = h
-                self.detection_pub.publish(detection_msg)
 
-            box_msg = BoundingBox2D()
-            box_msg.center.x = bounding[0] + bounding[2] / 2
-            box_msg.center.y = bounding[1] + bounding[3] / 2
-            box_msg.center.theta = 0
-            box_msg.size_x = bounding[2]
-            box_msg.size_y = bounding[3]
-            boxes.append(box_msg)
-            # self.boxes_pub.publish(box_msg)
+            boxes.append(
+                BoundingBox2D(
+                    center=Pose2D(
+                        x=bounding[0] + bounding[2] / 2, y=bounding[1] + bounding[3] / 2
+                    ),
+                    size_x=0,
+                    size_y=0,
+                )
+            )
 
-            cnt_id += 1
-        self.prev_centroids = cur_centroids  # updating centroids for next frame
+        self.prev_centroids = cur_centroids
 
         return boxes
 
@@ -194,6 +225,9 @@ class MobilityTracker:
         data = np.frombuffer(frame.data, dtype=np.uint8).reshape(height, width, -1)
         frame_id = frame.header.seq  # get current frame index
         img = cv2.resize(data, (self._vid_width, self._vid_height))
+
+        if self.mask_img is not None:
+            img = cv2.bitwise_and(img, img, mask=self.mask_img)
 
         working_img = img.copy()
 
@@ -213,25 +247,34 @@ class MobilityTracker:
         _, th1 = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
 
         kernel = np.ones((7, 7), np.uint8)
-        dilated = cv2.dilate(th1, kernel)
+        dilated = cv2.dilate(th1, kernel, iterations=5)
         final_img = cv2.dilate(dilated, None)
 
-        boxes = self.bind_objects(frame, img, final_img)
+        boxes = self.bind_objects(frame, final_img)
 
-        # final_img_color = cv2.cvtColor(final_img, cv2.COLOR_GRAY2BGR)
-        # cv2.line(final_img_color, self.p1_count_line, self.p2_count_line, (0,255,0))
-        compressed_img = cv2.imencode(".jpg", final_img)[1].tostring()
-
-        compressed_img_msg = CompressedImage()
-        compressed_img_msg.header = frame.header
-        compressed_img_msg.format = "jpeg"
-        compressed_img_msg.data = compressed_img
-        header = rospy.Header()
-        header.stamp = rospy.Time.now()
         annotated_img = AnnotatedImage(
-            header=header, img=compressed_img_msg, boxes=boxes
+            header=rospy.Header(stamp=rospy.Time.now()),
+            img=CompressedImage(
+                header=frame.header,
+                format="jpeg",
+                data=cv2.imencode(".jpg", final_img)[1].tostring(),
+            ),
+            boxes=boxes,
         )
         self.animg_pub.publish(annotated_img)
+
+    def set_mask(self, mask: Polygon):
+        self.mask = mask if mask.points else None
+        self._set_up_mask()
+
+    def set_roi(self, roi: float):
+        self.rate_of_influence = roi
+
+    def set_min_area(self, min_area: float):
+        self.min_area = min_area
+
+    def set_line(self, line: Pose2D):
+        self._set_up_line(line.theta, line.y)
 
 
 if __name__ == "__main__":
