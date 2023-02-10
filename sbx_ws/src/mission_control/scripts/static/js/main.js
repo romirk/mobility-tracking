@@ -77,7 +77,6 @@ class SensorLive {
                 responsive: true, maintainAspectRatio: false
             }
         });
-
         this.los_screen();
         this.connect();
     }
@@ -88,6 +87,7 @@ class SensorLive {
      */
     connect() {
         this.startTime = Date.now();
+        this.toastInfo("Mission Control", "Connecting...");
         this.relay.connect().then(() => this.setup(), () => this.reconnect("Failed to connect"));
     }
 
@@ -102,6 +102,7 @@ class SensorLive {
     }
 
     setup() {
+        this.toastSuccess("Mission Control", "Connected");
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_count.bind(this));
         this.relay.createListener("/sbx/bboxed", "sensorbox/AnnotatedImage", this.on_image.bind(this));
@@ -140,12 +141,12 @@ class SensorLive {
         this.img.src = "data:image/jpeg;base64," + msg.img.data;
         this.on_box(msg);
         this.last_frame = Date.now();
+        this.paint = true;
+
         this.seq = msg.img.header.seq;
-        this.latency.network = this.last_frame - stamp_to_millis(msg.img.header.stamp);
-        this.latency.processing = stamp_to_millis(msg.header.stamp) - stamp_to_millis(msg.img.header.stamp);
-        this.latency.total = this.latency.network + this.latency.processing;
-        // console.log(this.latency);
-        // this.paint = true;
+        // this.latency.network = this.last_frame - stamp_to_millis(msg.img.header.stamp);
+        // this.latency.processing = stamp_to_millis(msg.header.stamp) - stamp_to_millis(msg.img.header.stamp);
+        // this.latency.total = this.latency.network + this.latency.processing;
     }
 
     on_box(msg) {
@@ -153,11 +154,10 @@ class SensorLive {
         const stamp = Date.now();
         for (const box of msg.boxes) {
             box.mstamp = stamp;
-            box.color = Y_BLUE;
+            box.color = "#1ccbed";
             this.boxes.push(box);
         }
         this.last_box = stamp;
-        this.paint = true;
     }
 
     draw_box(center_x, center_y, size_x, size_y, color = Y_BLUE) {
@@ -185,7 +185,7 @@ class SensorLive {
         const now = Date.now();
         if (now - this.last_frame > 1500 && !this.paint)
             this.los_screen();
-        else if (this.paint || now - this.last_box > 100) {
+        else if (this.boxes.length > 0 || now - this.last_box > 100) {
             this.paint = false;
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.los_screen_off();

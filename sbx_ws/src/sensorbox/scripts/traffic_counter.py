@@ -212,8 +212,8 @@ class MobilityTracker:
                     center=Pose2D(
                         x=bounding[0] + bounding[2] / 2, y=bounding[1] + bounding[3] / 2
                     ),
-                    size_x=0,
-                    size_y=0,
+                    size_x=bounding[2],
+                    size_y=bounding[3],
                 )
             )
 
