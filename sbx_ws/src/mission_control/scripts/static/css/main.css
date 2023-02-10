@@ -158,6 +158,21 @@ body {
     transform: rotate(180deg);
 }
 
+#los {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    object-fit: fill;
+    z-index: 2;
+
+    /* background-color: var(--y-dblue); */
+    /* transform: rotate(180deg); */
+
+    display: none;
+}
+
 #nav-stats {
     position: absolute;
     top: 0;

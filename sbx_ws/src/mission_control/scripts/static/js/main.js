@@ -28,6 +28,7 @@ class SensorLive {
         this.boxes = []
         this.paint = false;
         this.last_box = 0;
+        this.last_frame = 0;
         this.seq = 0;
         this.latency = { network: 0, processing: 0, total: 0 };
 
@@ -77,6 +78,7 @@ class SensorLive {
             }
         });
 
+        this.los_screen();
         this.connect();
     }
 
@@ -93,6 +95,7 @@ class SensorLive {
      * Handle disconnection.
     */
     reconnect(err) {
+        this.los_screen();
         this.toastError("Mission Control", `Disconnected: ${err}`);
         this.relay.reset();
         setTimeout(() => this.connect(), 10000);
@@ -136,8 +139,9 @@ class SensorLive {
         if (msg.img.header.seq <= this.seq) return;
         this.img.src = "data:image/jpeg;base64," + msg.img.data;
         this.on_box(msg);
+        this.last_frame = Date.now();
         this.seq = msg.img.header.seq;
-        this.latency.network = Date.now() - stamp_to_millis(msg.img.header.stamp);
+        this.latency.network = this.last_frame - stamp_to_millis(msg.img.header.stamp);
         this.latency.processing = stamp_to_millis(msg.header.stamp) - stamp_to_millis(msg.img.header.stamp);
         this.latency.total = this.latency.network + this.latency.processing;
         // console.log(this.latency);
@@ -168,18 +172,30 @@ class SensorLive {
         // this.ctx.stroke();
     }
 
+    los_screen() {
+        document.getElementById("los").style.display = "grid";
+    }
+    los_screen_off() {
+        document.getElementById("los").style.display = "none";
+    }
+
     box_anim() {
         if (!this.relay.connected) return this.reconnect("Connection lost!");
-        if (this.paint || Date.now() - this.last_box > 100) {
+
+        const now = Date.now();
+        if (now - this.last_frame > 1500 && !this.paint)
+            this.los_screen();
+        else if (this.paint || now - this.last_box > 100) {
             this.paint = false;
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.los_screen_off();
 
             if (this.boxes.length > 0) {
 
                 const new_boxes = [];
 
                 for (const box of this.boxes) {
-                    if (Date.now() - box.mstamp > 50) {
+                    if (now - box.mstamp > 50) {
                         continue;
                     }
                     new_boxes.push(box);
@@ -277,11 +293,6 @@ class SensorLive {
 
     toastWarning(module, message) {
         this.toast("Warning", module, message, Y_WARNING);
-    }
-
-    log() {
-        console.log(this.counts);
-        console.log(this.sensor_data);
     }
 }
 

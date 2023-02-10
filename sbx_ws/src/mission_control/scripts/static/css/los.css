@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css?family=Press+Start+2P');
+
+#los {
+  padding: 0;
+  /* display: grid; */
+  grid-template-rows: 6fr 1fr 3fr;
+  /* height: 100vh; */
+}
+
+.top {
+  background: red;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.middle {
+  background: blue;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.bottom {
+  background: purple;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr)
+}
+
+.grid-over {
+  display: grid;
+  height: 100vh;
+  position:absolute;
+  place-items:center;
+}
+
+.message-container {
+  display: grid;
+  width: 100vw;
+  grid-template-areas: 
+    "... ... ..."
+    "... ... ..."
+    "... ... ..."
+    "... ... ..."
+    ". message .";
+  justify-items: center;
+  padding: 0 ;
+}
+
+.message {
+  grid-area: message;
+  color: white;
+  font-size: 2rem;
+  font-family: 'Press Start 2P', cursive;
+  background: black;
+  margin: 0;
+  padding: 1rem 7rem;
+}
+
+.shell {
+  background: lightgray;
+}
+
+.yellow {
+  background: yellow;
+}
+
+.light-blue {
+  background: skyblue;
+}
+
+.green {
+  background: lightgreen;
+}
+
+.purple {
+  background: purple;
+}
+
+.red {
+  background: red;
+}
+
+.blue {
+  background: blue;
+}
+
+
+
+.black {
+  background: black;
+}
+
+.white {
+  background: white;
+}
+
+.dark-blue { 
+background: darkblue;
+}
+
+
+
