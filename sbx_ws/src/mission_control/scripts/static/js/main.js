@@ -1,5 +1,7 @@
 const screen = document.getElementById('live');
 
+const Y_BLUE = "#1cbbed";
+
 function stamp_to_millis(stamp) {
     return stamp.secs * 1000 + stamp.nsecs / 1000000;
 }
@@ -75,22 +77,32 @@ class SensorLive {
 
     relay_setup() {
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
-        this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_detect.bind(this));
+        this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_count.bind(this));
         this.relay.createListener("/sbx/bboxed", "sensorbox/AnnotatedImage", this.on_image.bind(this));
+        this.relay.createListener("/sbx/detect", "vision_msgs/Detection2D", this.on_detect.bind(this));
         window.requestAnimationFrame(this.box_anim.bind(this));
 
     }
 
-    on_sensor(data) {
-        this.sensor_data = data;
+    on_sensor(msg) {
+        this.sensor_data = msg;
         // this.log();
         this.update();
     }
 
-    on_detect(data) {
-        this.counts = data;
+    on_detect(msg) {
+        // this.draw_box(msg.bbox.center.x, msg.bbox.center.y, msg.bbox.size_x, msg.bbox.size_y, (48, 209, 88));
+        const box = msg.bbox;
+        box.mstamp = Date.now();
+        box.color = "rgb(48, 209, 88)";
+        this.boxes.push(box);
+        console.log("box", box);
+    }
+
+    on_count(msg) {
+        this.counts = msg;
         if (this.last_count === -1) {
-            this.last_count = data.total;
+            this.last_count = msg.total;
         }
         // TODO calculate rate
         // this.log();
@@ -105,28 +117,29 @@ class SensorLive {
         this.latency.network = Date.now() - stamp_to_millis(msg.img.header.stamp);
         this.latency.processing = stamp_to_millis(msg.header.stamp) - stamp_to_millis(msg.img.header.stamp);
         this.latency.total = this.latency.network + this.latency.processing;
-        console.log(this.latency);
+        // console.log(this.latency);
         // this.paint = true;
     }
 
-    on_box(data) {
-        if (data.boxes.length === 0) return;
+    on_box(msg) {
+        if (msg.boxes.length === 0) return;
         const stamp = Date.now();
-        for (const box of data.boxes) {
+        for (const box of msg.boxes) {
             box.mstamp = stamp;
+            box.color = Y_BLUE;
             this.boxes.push(box);
         }
         this.last_box = stamp;
         this.paint = true;
     }
 
-    draw_box(center_x, center_y, size_x, size_y) {
+    draw_box(center_x, center_y, size_x, size_y, color = Y_BLUE) {
         // this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         const x = center_x - size_x / 2;
         const y = center_y - size_y / 2;
         // console.log(x, y, size_x, size_y);
         this.ctx.lineWidth = 4;
-        this.ctx.strokeStyle = "#1cbbed";
+        this.ctx.strokeStyle = color;
         this.ctx.strokeRect(center_x - size_x / 2, center_y - size_y / 2, size_x, size_y);
         // this.ctx.fillRect(center_x - size_x / 2, center_y - size_y / 2, size_x, size_y);
         // this.ctx.stroke();
@@ -143,7 +156,7 @@ class SensorLive {
 
                 for (const box of this.boxes) {
                     if (Date.now() - box.mstamp > 50) {
-                        console.log("dropped", Date.now() - box.mstamp);
+                        // console.log("dropped", Date.now() - box.mstamp);
                         continue;
                     }
                     new_boxes.push(box);

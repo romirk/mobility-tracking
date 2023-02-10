@@ -16,7 +16,7 @@ import os
 
 WHITELIST = ["car", "truck", "bus", "motorbike", "bicycle"]
 WHITELIST_IDX = [coco_names.index(c) for c in WHITELIST]
-CONFIDENCE_THRESHOLD = 0
+CONFIDENCE_THRESHOLD = 0  # TODO: set this to 0.5
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -47,39 +47,6 @@ class YoloServer:
         if self.multiprocessing:
             self.executor.shutdown()
 
-    def nearest_box(
-        self, boxes: list, box: list
-    ) -> Tuple[int, float] | Tuple[None, float]:
-        if boxes is None or len(boxes) == 0 or box is None:
-            return None, float("inf")
-        if len(boxes) == 1:
-            return 0, (boxes[0][0] - box[0]) ** 2 + (boxes[0][1] - box[1]) ** 2
-
-        nearest = 0
-        min_dist = float("inf")
-        for i, b in enumerate(boxes):
-            dist = (b[0] - box[0]) ** 2 + (b[1] - box[1]) ** 2
-            if dist < min_dist:
-                min_dist = dist
-                nearest = i
-        return nearest, min_dist
-
-    def detect_callback(self, msg: Detection2D) -> None:
-        rospy.logwarn("Received detection")
-        future = self.executor.submit(self.exec_callback, msg)
-        self.tasks[future] = msg
-        future.add_done_callback(lambda f: self.done_callback)
-
-    def done_callback(self, future: Future) -> None:
-        print("Done")
-        rospy.logwarn("Done")
-        msg = self.tasks[future]
-        del self.tasks[future]
-        if future.exception():
-            rospy.logerr(f"Exception in task: {future.exception()}")
-        else:
-            self.pub.publish(Counts(*future.result()))
-
     def exec_callback(self, msg: Detection2D) -> tuple[int, int, int, int, int, int]:
         total = self.counts.total + 1
         box = msg.bbox
@@ -97,42 +64,69 @@ class YoloServer:
             (box.size_x) * scale[0],
             (box.size_y) * scale[1],
         )
-        cv2.rectangle(img, (int(x), int(y)), (int(x + w), int(y + h)), (0, 255, 0), 2)
+        cx, cy = x + w / 2, y + h / 2
+
+        # cv2.rectangle(img, (int(x), int(y)), (int(x + w), int(y + h)), (0, 255, 0), 2)
         cv2.imwrite(f"{ROOT}/out/{frame.encoding}{datetime.now().isoformat()}.png", img)
         r = self.yolo.detect(img)
-        if not self.multiprocessing:
-            rospy.logwarn(f"Received detection {r}")
         dets = [
             d
             for d in zip(r[0][0], r[1][0], r[2][0])
-            # if d[0] in WHITELIST_IDX and d[2] > CONFIDENCE_THRESHOLD
+            if d[0] in WHITELIST_IDX and d[2] > CONFIDENCE_THRESHOLD
         ]
         rospy.loginfo(f"Filtered detections: {dets}")
 
-        boxes = [d[1] for d in dets]
-        nearest, _ = self.nearest_box(boxes, [box.center.x, box.center.y])
-        nearest_class = -1
-        if nearest is not None:
-            rospy.loginfo(f"Nearest box: {nearest}")
-            nearest_class: int = dets[nearest][0]
-        cars = self.counts.cars + (nearest_class == WHITELIST_IDX[0])
-        trucks = self.counts.trucks + (nearest_class == WHITELIST_IDX[1])
-        buses = self.counts.buses + (nearest_class == WHITELIST_IDX[2])
-        motorcycles = self.counts.motorcycles + (nearest_class == WHITELIST_IDX[3])
-        bicycles = self.counts.bicycles + (nearest_class == WHITELIST_IDX[4])
-
-        if nearest_class == -1:
-            rospy.logwarn("Sensorbox reports detection, but no vehicle was detected.")
-        else:
-            rospy.loginfo(
-                f"Detected {coco_names[nearest_class]} at {box.center.x}, {box.center.y}"
+        if len(dets) == 0:
+            rospy.logwarn("No detections")
+            result = (
+                total,
+                self.counts.cars,
+                self.counts.trucks,
+                self.counts.buses,
+                self.counts.motorcycles,
+                self.counts.bicycles,
             )
+            self.counts = Counts(*result)
+            self.pub.publish(self.counts)
+            return result
+
+        boxes = [(d[1][0] - cx) ** 2 + (d[1][1] - cy) ** 2 for d in dets]
+        nearest = np.argmin(boxes)
+        rospy.loginfo(f"Nearest box: {nearest}")
+        nearest_class: int = dets[nearest][0]
+        result = (
+            total,
+            self.counts.cars + (nearest_class == 2),
+            self.counts.trucks + (nearest_class == 7),
+            self.counts.buses + (nearest_class == 5),
+            self.counts.motorcycles + (nearest_class == 4),
+            self.counts.bicycles + (nearest_class == 1),
+        )
+        rospy.loginfo(
+            f"Detected {coco_names[nearest_class]} at {box.center.x}, {box.center.y}"
+        )
 
         if not self.multiprocessing:
-            self.counts = Counts(total, cars, trucks, buses, motorcycles, bicycles)
+            self.counts = Counts(*result)
             self.pub.publish(self.counts)
 
-        return total, cars, trucks, buses, motorcycles, bicycles
+        return result
+
+    def detect_callback(self, msg: Detection2D) -> None:
+        rospy.logwarn("Received detection")
+        future = self.executor.submit(self.exec_callback, msg)
+        self.tasks[future] = msg
+        future.add_done_callback(lambda f: self.done_callback)
+
+    def done_callback(self, future: Future) -> None:
+        print("Done")
+        rospy.logwarn("Done")
+        msg = self.tasks[future]
+        del self.tasks[future]
+        if future.exception():
+            rospy.logerr(f"Exception in task: {future.exception()}")
+        else:
+            self.pub.publish(Counts(*future.result()))
 
 
 if __name__ == "__main__":
