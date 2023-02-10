@@ -13,6 +13,7 @@
         <param name="fps" value="30" />
         <param name="video_width" value="640" />
         <param name="video_height" value="480" />
+        <param name="debug_view" value="false" />
 
         <node type="aqi_node.py" name="aqi" pkg="sensorbox" />
         <node type="traffic_counter.py" name="counter" pkg="sensorbox" />
@@ -20,5 +21,6 @@
 
     <include file="$(find realsense2_camera)/launch/rs_camera.launch">
         <arg name="camera" value="$(arg prefix)/$(arg camera)" />
+        <arg name="enable_depth" value="false"/>
     </include>
 </launch>

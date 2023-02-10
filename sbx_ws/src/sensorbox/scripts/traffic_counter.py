@@ -43,8 +43,11 @@ class MobilityTracker:
         self.fps = rospy.get_param("fps", 30)
         self._vid_width = rospy.get_param("video_width", 640)
         self._vid_height = rospy.get_param("video_height", 480)
+        self.debug_view = rospy.get_param("debug_view", False)
 
         rospy.logwarn(f"Starting {self.prefix}/counter node")
+        if self.debug_view:
+            rospy.logwarn("Debug view on")
 
         self.stopped = Event()
 
@@ -236,11 +239,11 @@ class MobilityTracker:
         frame_id = frame.header.seq  # get current frame index
         img = cv2.resize(data, (self._vid_width, self._vid_height))
 
+        working_img = img.copy()
+
         if self.mask.points:
             rospy.logwarn_once("Masks enabled")
-            img = cv2.bitwise_and(img, img, mask=self.mask_img)
-
-        working_img = img.copy()
+            working_img = cv2.bitwise_and(working_img, working_img, mask=self.mask_img)
 
         cv2.accumulateWeighted(working_img, self.raw_avg, self.rate_of_influence)
         if frame_id < self.starting_frame:
@@ -268,7 +271,9 @@ class MobilityTracker:
             img=CompressedImage(
                 header=frame.header,
                 format="jpeg",
-                data=cv2.imencode(".jpg", final_img)[1].tostring(),
+                data=cv2.imencode(".jpg", final_img if self.debug_view else img)[
+                    1
+                ].tostring(),
             ),
             boxes=boxes,
         )
