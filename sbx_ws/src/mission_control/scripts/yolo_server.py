@@ -25,7 +25,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 CREATE_TABLE_STMT = "CREATE TABLE counts (timestamp TIMESTAMP, total INT, cars INT, trucks INT, buses INT, motorcycles INT, bicycles INT)"
 STORE_COUNT_STMT = "INSERT INTO counts (timestamp, total, cars, trucks, buses, motorcycles, bicycles) VALUES (?, ?, ?, ?, ?, ?, ?)"
 LOAD_COUNT_STMT = "SELECT * FROM counts ORDER BY timestamp DESC LIMIT 1"
-LOAD_ALL_COUNTS_STMT = "SELECT * FROM counts ORDER BY timestamp DESC LIMIT 10"
+LOAD_ALL_COUNTS_STMT = "SELECT * FROM counts ORDER BY timestamp DESC"
 
 
 class YoloServer:

@@ -50,18 +50,24 @@ class SensorLive {
         this.vehiclesOverTime = new Chart(this.ctxvehiclesOverTime, {
             type: 'line',
             data: {
-                labels: ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-"],
+                // labels: ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-"],
                 datasets: [{
                     label: 'Vehicle count over time',
-                    data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    data: [],
                     fill: false,
                     tension: 0.35,
                     borderWidth: 3
                 }]
             }, options: {
                 scales: {
+                    x:
+                    {
+                        type: 'time',
+                    },
+
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+
                     }
                 }, responsive: true, maintainAspectRatio: false
             }
@@ -98,7 +104,13 @@ class SensorLive {
     }
 
     /**
-     * Handle disconnection.
+     * Handle disconnection.ticks: {
+                        //     callback: function (value, index, ticks) {
+                        //         console.log(value);
+                        //         const time = new Date(value);
+                        //         return `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+                        //     }
+                        // }
     */
     reconnect(err) {
         this.los_screen();
@@ -115,6 +127,8 @@ class SensorLive {
         this.relay.createListener("/sbx/detect", "vision_msgs/Detection2D", this.on_detect.bind(this));
 
         this.relay.createServiceClient("/sbx/timeline", "mission_control/Timeline");
+        this.load_timeline();
+
 
         setInterval(this.updateGraphs.bind(this), 10000);
         window.requestAnimationFrame(this.box_anim.bind(this));
@@ -172,18 +186,27 @@ class SensorLive {
     load_timeline() {
         this.relay.callService("/sbx/timeline", {}).then((res) => {
             if (res.timeline.length === 0) return;
-            let i = 0;
-            let last = res.timeline[0].counts.total;
+            const timeline = res.timeline.reverse();
+            const last = timeline[timeline.length - 1];
+            const first = timeline[0];
+            const start = stamp_to_millis(first.stamp);
+            const end = stamp_to_millis(last.stamp);
+            const diff = end - start;
+            const step = diff / 100;
 
-            for (const entry of res.timeline.reverse()) {
-                const time = new Date(entry.stamp.secs * 1000);
-                this.vehiclesOverTime.data.labels[i] = `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
-                this.vehiclesOverTime.data.datasets[0].data[i] = entry.counts.total - last;
-                last = entry.counts.total;
-                i++;
+            this.vehiclesOverTime.data.datasets[0].data = [];
+            let p = 0;
+            for (let i = 0; i < 100; i++) {
+                const time = start + step * i;
+                let count = 0;
+                while (p < timeline.length && stamp_to_millis(timeline[p].stamp) < time) {
+                    count += timeline[p].counts.total;
+                    p++;
+                }
+                this.vehiclesOverTime.data.datasets[0].data.push({ x: new Date(time), y: count });
             }
 
-            console.log(`loaded ${i} counts`, this.vehiclesOverTime.data);
+            console.log(`loaded ${timeline.length} counts`);
             this.vehiclesOverTime.update();
         }).catch((err) => {
             this.toastError("Mission Control", `Failed to load timeline: ${err}`)
@@ -283,19 +306,12 @@ class SensorLive {
         // Update chart [VEHICLES OVER TIME]
         let date = new Date()
 
-        this.vehiclesOverTime.data.labels.shift();
-        this.vehiclesOverTime.data.labels.push(
-            date.getHours().toString() + ":" +
-            date.getMinutes().toString() + ":" +
-            date.getSeconds().toString()
-        );
-
         this.vehiclesOverTime.data.datasets.forEach((dataset) => {
             dataset.data.shift();
             if (this.last_count === -1) {
-                dataset.data.push(0);
+                dataset.data.push({ x: date, y: 0 });
             } else {
-                dataset.data.push(this.counts.total - this.last_count);
+                dataset.data.push({ x: date, y: this.counts.total - this.last_count });
                 this.last_count = this.counts.total;
             }
         });

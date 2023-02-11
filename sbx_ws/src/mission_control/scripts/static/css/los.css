@@ -7,45 +7,45 @@
   /* height: 100vh; */
 }
 
-.top {
+.los-top {
   background: red;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
 }
 
-.middle {
+.los-middle {
   background: blue;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
 }
 
-.bottom {
+.los-bottom {
   background: purple;
   display: grid;
   grid-template-columns: repeat(6, 1fr)
 }
 
-.grid-over {
+.los-grid-over {
   display: grid;
   height: 100vh;
-  position:absolute;
-  place-items:center;
+  position: absolute;
+  place-items: center;
 }
 
-.message-container {
+.los-message-container {
   display: grid;
   width: 100vw;
-  grid-template-areas: 
+  grid-template-areas:
     "... ... ..."
     "... ... ..."
     "... ... ..."
     "... ... ..."
     ". message .";
   justify-items: center;
-  padding: 0 ;
+  padding: 0;
 }
 
-.message {
+.los-message {
   grid-area: message;
   color: white;
   font-size: 2rem;
@@ -55,47 +55,44 @@
   padding: 1rem 7rem;
 }
 
-.shell {
+.los-shell {
   background: lightgray;
 }
 
-.yellow {
+.los-yellow {
   background: yellow;
 }
 
-.light-blue {
+.los-light-blue {
   background: skyblue;
 }
 
-.green {
+.los-green {
   background: lightgreen;
 }
 
-.purple {
+.los-purple {
   background: purple;
 }
 
-.red {
+.los-red {
   background: red;
 }
 
-.blue {
+.los-blue {
   background: blue;
 }
 
 
 
-.black {
+.los-black {
   background: black;
 }
 
-.white {
+.los-white {
   background: white;
 }
 
-.dark-blue { 
-background: darkblue;
+.los-dark-blue {
+  background: darkblue;
 }
-
-
-
