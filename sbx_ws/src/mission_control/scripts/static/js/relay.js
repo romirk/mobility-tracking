@@ -59,7 +59,7 @@ class Relay {
      * @param service
      * @param type
      */
-    createService(service, type) {
+    createServiceClient(service, type) {
         this.services[service] = new ROSLIB.Service({
             ros: this.ros, name: service, serviceType: type
         });
@@ -81,9 +81,9 @@ class Relay {
             ros.on('connection', (function () {
                 console.log(`Connected to ${url}.`);
                 this.connected = true;
-                this.createService("/rosapi/nodes", "rosapi/Nodes");
-                this.createService("/rosapi/topics", "rosapi/Topics");
-                this.createService("/rosapi/services", "rosapi/Services");
+                this.createServiceClient("/rosapi/nodes", "rosapi/Nodes");
+                this.createServiceClient("/rosapi/topics", "rosapi/Topics");
+                this.createServiceClient("/rosapi/services", "rosapi/Services");
                 resolve();
             }).bind(this));
 

@@ -10,7 +10,11 @@ const Y_DANGER = getComputedStyle(document.documentElement).getPropertyValue('--
 function stamp_to_millis(stamp) {
     return stamp.secs * 1000 + stamp.nsecs / 1000000;
 }
-
+function prepend(value, array) {
+    var newArray = array.slice();
+    newArray.unshift(value);
+    return newArray;
+}
 
 class SensorLive {
 
@@ -48,7 +52,7 @@ class SensorLive {
             data: {
                 labels: ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-"],
                 datasets: [{
-                    label: 'Number of vehicles over time (updates every 10 seconds)',
+                    label: 'Vehicle count over time',
                     data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     fill: false,
                     tension: 0.35,
@@ -109,6 +113,9 @@ class SensorLive {
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_count.bind(this));
         this.relay.createListener("/sbx/bboxed", "sensorbox/AnnotatedImage", this.on_image.bind(this));
         this.relay.createListener("/sbx/detect", "vision_msgs/Detection2D", this.on_detect.bind(this));
+
+        this.relay.createServiceClient("/sbx/timeline", "mission_control/Timeline");
+
         setInterval(this.updateGraphs.bind(this), 10000);
         window.requestAnimationFrame(this.box_anim.bind(this));
     }
@@ -160,6 +167,27 @@ class SensorLive {
             this.boxes.push(box);
         }
         this.last_box = stamp;
+    }
+
+    load_timeline() {
+        this.relay.callService("/sbx/timeline", {}).then((res) => {
+            if (res.timeline.length === 0) return;
+            let i = 0;
+            let last = res.timeline[0].counts.total;
+
+            for (const entry of res.timeline.reverse()) {
+                const time = new Date(entry.stamp.secs * 1000);
+                this.vehiclesOverTime.data.labels[i] = `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
+                this.vehiclesOverTime.data.datasets[0].data[i] = entry.counts.total - last;
+                last = entry.counts.total;
+                i++;
+            }
+
+            console.log(`loaded ${i} counts`, this.vehiclesOverTime.data);
+            this.vehiclesOverTime.update();
+        }).catch((err) => {
+            this.toastError("Mission Control", `Failed to load timeline: ${err}`)
+        });
     }
 
     draw_box(center_x, center_y, size_x, size_y, color = Y_BLUE) {

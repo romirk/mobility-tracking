@@ -53,15 +53,15 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Counts.msg
+  CountStamped.msg
   # Sync.msg
 )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  Timeline.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(

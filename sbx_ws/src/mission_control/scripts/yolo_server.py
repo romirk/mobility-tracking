@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import os
+import sqlite3 as sl
 from concurrent.futures import Future, ProcessPoolExecutor
-from typing import Tuple
+from datetime import datetime
+from threading import Lock
 
+import cv2
 import numpy as np
 import rospy
-import cv2
-from datetime import datetime
-from mission_control.msg import Counts
+from mission_control.msg import Counts, CountStamped
+from mission_control.srv import Timeline, TimelineResponse
 from vision_msgs.msg import Detection2D
 from yolov7_package import Yolov7Detector
 from yolov7_package.model_utils import coco_names
-import sqlite3 as sl
-import os
-from threading import Lock
 
 WHITELIST = ["car", "truck", "bus", "motorbike", "bicycle"]
 WHITELIST_IDX = [coco_names.index(c) for c in WHITELIST]
@@ -22,8 +22,10 @@ CONFIDENCE_THRESHOLD = 0  # TODO: set this to 0.5
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
+CREATE_TABLE_STMT = "CREATE TABLE counts (timestamp TIMESTAMP, total INT, cars INT, trucks INT, buses INT, motorcycles INT, bicycles INT)"
 STORE_COUNT_STMT = "INSERT INTO counts (timestamp, total, cars, trucks, buses, motorcycles, bicycles) VALUES (?, ?, ?, ?, ?, ?, ?)"
 LOAD_COUNT_STMT = "SELECT * FROM counts ORDER BY timestamp DESC LIMIT 1"
+LOAD_ALL_COUNTS_STMT = "SELECT * FROM counts ORDER BY timestamp DESC LIMIT 10"
 
 
 class YoloServer:
@@ -65,6 +67,10 @@ class YoloServer:
         else:
             self.sub = rospy.Subscriber("/sbx/detect", Detection2D, self.exec_callback)
 
+        self.timeline_srv = rospy.Service(
+            "/sbx/timeline", Timeline, self.timeline_callback
+        )
+
     def __del__(self) -> None:
         self.con.close()
         if self.multiprocessing:
@@ -75,15 +81,49 @@ class YoloServer:
             try:
                 self.cur.execute(LOAD_COUNT_STMT)
             except sl.OperationalError:
-                self.cur.execute(
-                    "CREATE TABLE counts (timestamp DATETIME, total INT, cars INT, trucks INT, buses INT, motorcycles INT, bicycles INT)"
-                )
+                self.cur.execute(CREATE_TABLE_STMT)
                 self.cur.execute(STORE_COUNT_STMT, (datetime.now(), 0, 0, 0, 0, 0, 0))
                 self.con.commit()
                 self.cur.execute(LOAD_COUNT_STMT)
             row = self.cur.fetchone()
             if row:
                 self.counts = Counts(*row[1:])
+
+    def store_count(self, counts: Counts):
+        with self.lock:
+            try:
+                self.cur.execute(
+                    STORE_COUNT_STMT,
+                    (
+                        datetime.now(),
+                        counts.total,
+                        counts.cars,
+                        counts.trucks,
+                        counts.buses,
+                        counts.motorcycles,
+                        counts.bicycles,
+                    ),
+                )
+            except sl.OperationalError:
+                self.cur.execute(CREATE_TABLE_STMT)
+                self.cur.execute(
+                    STORE_COUNT_STMT,
+                    (
+                        datetime.now(),
+                        counts.total,
+                        counts.cars,
+                        counts.trucks,
+                        counts.buses,
+                        counts.motorcycles,
+                        counts.bicycles,
+                    ),
+                )
+            self.con.commit()
+
+    def load_all_counts(self) -> list[tuple[str, int, int, int, int, int, int]]:
+        with self.lock:
+            self.cur.execute(LOAD_ALL_COUNTS_STMT)
+            return self.cur.fetchall()
 
     def exec_callback(self, msg: Detection2D) -> tuple[int, int, int, int, int, int]:
         box = msg.bbox
@@ -181,6 +221,17 @@ class YoloServer:
             with self.lock:
                 self.cur.execute(STORE_COUNT_STMT, (datetime.now(), *result))
                 self.con.commit()
+
+    def timeline_callback(self, _: Timeline) -> TimelineResponse:
+        rospy.loginfo("Received timeline request")
+        timeline = [
+            CountStamped(
+                rospy.Time(int(datetime.fromisoformat(r[0]).timestamp())),
+                Counts(*r[1:]),
+            )
+            for r in self.load_all_counts()
+        ]
+        return TimelineResponse(timeline)
 
 
 if __name__ == "__main__":
