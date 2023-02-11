@@ -193,14 +193,17 @@ class SensorLive {
             const end = stamp_to_millis(last.stamp);
             const diff = end - start;
             const step = diff / 100;
+            let prev = timeline[0].counts.total;
 
             this.vehiclesOverTime.data.datasets[0].data = [];
             let p = 0;
             for (let i = 0; i < 100; i++) {
                 const time = start + step * i;
                 let count = 0;
+
                 while (p < timeline.length && stamp_to_millis(timeline[p].stamp) < time) {
-                    count += timeline[p].counts.total;
+                    count += timeline[p].counts.total - prev;
+                    prev = timeline[p].counts.total;
                     p++;
                 }
                 this.vehiclesOverTime.data.datasets[0].data.push({ x: new Date(time), y: count });
