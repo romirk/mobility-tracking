@@ -412,5 +412,25 @@ class SensorLive {
     }
 }
 
+const triggerTabList = document.querySelectorAll('#selector button')
+const tabs = [];
+
+triggerTabList.forEach(triggerEl => {
+    const tabTrigger = new bootstrap.Tab(triggerEl)
+
+    tabs.push(tabTrigger);
+});
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        if (triggerTabList[0].classList.contains('active')) {
+            tabs[1].show();
+        }
+        else if (triggerTabList[1].classList.contains('active')) {
+            tabs[0].show();
+        }
+    }
+});
 
 const sensor_live = new SensorLive();

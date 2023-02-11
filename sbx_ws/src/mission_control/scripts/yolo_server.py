@@ -134,7 +134,6 @@ class YoloServer:
             f"Detected object moving {direction} at {box.center.x}, {box.center.y}"
         )
 
-        total = self.counts.total + 1
         img = cv2.cvtColor(
             np.frombuffer(frame.data, dtype=np.uint8).reshape(
                 frame.height, frame.width, -1
@@ -151,10 +150,7 @@ class YoloServer:
         cx, cy = x + w / 2, y + h / 2
 
         # cv2.rectangle(img, (int(x), int(y)), (int(x + w), int(y + h)), (0, 255, 0), 2)
-        cv2.imwrite(
-            f"{ROOT}/out/{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_{total:04}.png",
-            img,
-        )
+
         r = self.yolo.detect(img)
         dets = [
             d
@@ -168,7 +164,7 @@ class YoloServer:
                 "Sensorbox reports a detection, but YOLO did not detect a vehicle"
             )
             result = (
-                total,
+                self.counts.total + 1,
                 self.counts.cars,
                 self.counts.trucks,
                 self.counts.buses,
@@ -181,7 +177,7 @@ class YoloServer:
             rospy.loginfo(f"Nearest box: {nearest}")
             nearest_class: int = dets[nearest][0]
             result = (
-                total,
+                self.counts.total + 1,
                 self.counts.cars + (nearest_class == 2),
                 self.counts.trucks + (nearest_class == 7),
                 self.counts.buses + (nearest_class == 5),
@@ -199,6 +195,11 @@ class YoloServer:
             with self.lock:
                 self.cur.execute(STORE_COUNT_STMT, (datetime.now(), *result))
                 self.con.commit()
+
+            cv2.imwrite(
+                f"{ROOT}/out/{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_{self.counts.total:04}.png",
+                img,
+            )
 
         return result
 
