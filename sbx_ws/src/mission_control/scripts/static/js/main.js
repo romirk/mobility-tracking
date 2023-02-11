@@ -39,6 +39,9 @@ class SensorLive {
         this.sensorData = {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
         };
+        this.prevSensorData = {
+            pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
+        };
 
         this.lastCount = -1;
         this.timeline = [];
@@ -197,6 +200,8 @@ class SensorLive {
         this.losScreenOff();
         this.navIn();
         this.loadTimeline();
+
+        this.prevSensorData = structuredClone(this.sensorData);
 
         setInterval(() => {
             this.graphView = (this.graphView + 1) % this.graphViews.length;
@@ -428,8 +433,34 @@ class SensorLive {
         const end = date.getTime();
         const diff = end - start;
         this.vehiclesOverTime.data.datasets[0].data = this.sliceTimeline(start, end);
+        // this.rate = this.vehiclesOverTime.data.datasets[0].data.reduce((a, b) => a + b.y, 0) * 60000 / diff;
         this.vehiclesOverTime.data.datasets[0].label = `Vehicles per ${Math.round(Math.max(diff / 60000, 10))} seconds`;
         this.vehiclesOverTime.update();
+
+        // Update chart [temperature]
+        this.temperatureChart.data.datasets[0].data = this.temperatureChart.data.datasets[0].data.filter(d => d.x > start);
+        this.temperatureChart.data.datasets[0].data.push({ x: date.getTime(), y: this.sensorData.tmp });
+        this.temperatureChart.update();
+
+        // Update chart [humidity]
+        this.humidityChart.data.datasets[0].data = this.humidityChart.data.datasets[0].data.filter(d => d.x > start);
+        this.humidityChart.data.datasets[0].data.push({ x: date.getTime(), y: this.sensorData.hum });
+        this.humidityChart.update();
+
+        // Update chart [co2]
+        this.co2Chart.data.datasets[0].data = this.co2Chart.data.datasets[0].data.filter(d => d.x > start);
+        this.co2Chart.data.datasets[0].data.push({ x: date.getTime(), y: this.sensorData.co2 });
+        this.co2Chart.update();
+
+        // Update chart [pm10]
+        this.pm10Chart.data.datasets[0].data = this.pm10Chart.data.datasets[0].data.filter(d => d.x > start);
+        this.pm10Chart.data.datasets[0].data.push({ x: date.getTime(), y: this.sensorData.pm10 });
+        this.pm10Chart.update();
+
+        // Update chart [pm25]
+        this.pm25Chart.data.datasets[0].data = this.pm25Chart.data.datasets[0].data.filter(d => d.x > start);
+        this.pm25Chart.data.datasets[0].data.push({ x: date.getTime(), y: this.sensorData.pm25 });
+        this.pm25Chart.update();
     }
 
     // utilities

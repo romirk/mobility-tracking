@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import http.server
-import socketserver
 import os
+import socketserver
 
 PORT = 8000
 DIRECTORY = os.path.dirname(os.path.realpath(__file__))
