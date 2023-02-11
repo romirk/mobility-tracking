@@ -36,17 +36,23 @@ class SensorLive {
         this.counts = {
             total: 0, cars: 0, trucks: 0, buses: 0, motorcycles: 0, bicycles: 0,
         };
+        this.timeline = [];
+        this.lastCount = -1;
+        this.rate = 0;
+        this.boxes = []
+
+
         this.sensorData = {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
         };
         this.prevSensorData = {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
         };
+        this.sensorTimeline = {
+            pm10: [], pm25: [], pm50: [], pm100: [], tmp: [], hum: [], co2: []
+        };
 
-        this.lastCount = -1;
-        this.timeline = [];
-        this.rate = 0;
-        this.boxes = []
+
         this.paint = true;
         this.lastBox = 0;
         this.lastFrame = 0;
@@ -212,7 +218,14 @@ class SensorLive {
 
     onSensor(msg) {
         this.sensorData = msg;
-        // this.log();
+        const date = new Date();
+        this.sensorTimeline.tmp.push({ x: date.getTime(), y: this.sensorData.tmp });
+        this.sensorTimeline.hum.push({ x: date.getTime(), y: this.sensorData.hum });
+        this.sensorTimeline.co2.push({ x: date.getTime(), y: this.sensorData.co2 });
+        this.sensorTimeline.pm10.push({ x: date.getTime(), y: this.sensorData.pm10 });
+        this.sensorTimeline.pm25.push({ x: date.getTime(), y: this.sensorData.pm25 });
+        this.sensorTimeline.pm50.push({ x: date.getTime(), y: this.sensorData.pm50 });
+        this.sensorTimeline.pm100.push({ x: date.getTime(), y: this.sensorData.pm100 });
         this.update();
     }
 
@@ -438,29 +451,29 @@ class SensorLive {
         this.vehiclesOverTime.update();
 
         // Update chart [temperature]
-        this.temperatureChart.data.datasets[0].data = this.temperatureChart.data.datasets[0].data.filter(d => d.x > start);
-        this.temperatureChart.data.datasets[0].data.push({ x: date.getTime(), y: this.sensorData.tmp });
+        this.temperatureChart.data.datasets[0].data = this.sensorTimeline.tmp.filter(d => d.x > start);
+        this.temperatureChart.data.datasets[0].label = `Temperature [°C] (last ${nhours} hours)`;
         this.temperatureChart.update();
 
         // Update chart [humidity]
-        this.humidityChart.data.datasets[0].data = this.humidityChart.data.datasets[0].data.filter(d => d.x > start);
-        this.humidityChart.data.datasets[0].data.push({ x: date.getTime(), y: this.sensorData.hum });
+        this.humidityChart.data.datasets[0].data = this.sensorTimeline.hum.filter(d => d.x > start);
+        this.humidityChart.data.datasets[0].label = `Humidity [%] (last ${nhours} hours)`;
         this.humidityChart.update();
 
-        // Update chart [co2]
-        this.co2Chart.data.datasets[0].data = this.co2Chart.data.datasets[0].data.filter(d => d.x > start);
-        this.co2Chart.data.datasets[0].data.push({ x: date.getTime(), y: this.sensorData.co2 });
-        this.co2Chart.update();
-
         // Update chart [pm10]
-        this.pm10Chart.data.datasets[0].data = this.pm10Chart.data.datasets[0].data.filter(d => d.x > start);
-        this.pm10Chart.data.datasets[0].data.push({ x: date.getTime(), y: this.sensorData.pm10 });
+        this.pm10Chart.data.datasets[0].data = this.sensorTimeline.pm10.filter(d => d.x > start);
+        this.pm10Chart.data.datasets[0].label = `PM10 [µg/m³] (last ${nhours} hours)`;
         this.pm10Chart.update();
 
         // Update chart [pm25]
-        this.pm25Chart.data.datasets[0].data = this.pm25Chart.data.datasets[0].data.filter(d => d.x > start);
-        this.pm25Chart.data.datasets[0].data.push({ x: date.getTime(), y: this.sensorData.pm25 });
+        this.pm25Chart.data.datasets[0].data = this.sensorTimeline.pm25.filter(d => d.x > start);
+        this.pm25Chart.data.datasets[0].label = `PM2.5 [µg/m³] (last ${nhours} hours)`;
         this.pm25Chart.update();
+
+        // Update chart [co2]
+        this.co2Chart.data.datasets[0].data = this.sensorTimeline.co2.filter(d => d.x > start);
+        this.co2Chart.data.datasets[0].label = `CO2 [ppm] (last ${nhours} hours)`;
+        this.co2Chart.update();
     }
 
     // utilities
