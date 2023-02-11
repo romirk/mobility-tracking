@@ -52,7 +52,7 @@
                     <div class="me-3 mb-3 grid d-flex align-items-center" id="stats">
                         <div class="g-col-4 mx-3 d-flex align-items-center">
                             <span class="me-2 lblue" id="total_count"
-                                style="font-weight: bold;">0</span>&nbsp;detections
+                                style="font-weight: bold;">0</span>&nbsp;detections<sub>/second</sub>
                         </div>
                     </div>
                 </div>
@@ -217,7 +217,9 @@
                                     </div>
                                 </div>
                                 <div class="row gx-0" style="height: 34%">
-                                    <div class="mx-auto bg-light" style="height: 100%; width: 80%;"></div>
+                                    <div class="mx-auto bg-light" style="height: 100%; width: 80%;">
+                                        <canvas id="temperaturechart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -242,7 +244,9 @@
                                     </div>
                                 </div>
                                 <div class="row gx-0" style="height: 34%">
-                                    <div class="mx-auto bg-light" style="height: 100%; width: 80%;"></div>
+                                    <div class="mx-auto bg-light" style="height: 100%; width: 80%;">
+                                        <canvas id="humiditychart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -267,7 +271,9 @@
                                     </div>
                                 </div>
                                 <div class="row gx-0" style="height: 34%">
-                                    <div class="mx-auto bg-light" style="height: 100%; width: 80%;"></div>
+                                    <div class="mx-auto bg-light" style="height: 100%; width: 80%;">
+                                        <canvas id="co2chart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -291,6 +297,7 @@
                                             <div class="row gx-0 py-3" style="height: 72%;">
                                                 <div class="col-xl-8 col-9">
                                                     <div class="ms-auto bg-light" style="height: 100%; width: 95%;">
+                                                        <canvas id="pm25chart"></canvas>
                                                     </div>
                                                 </div>
                                                 <div
@@ -319,6 +326,7 @@
                                             <div class="row gx-0 py-3 pt-3" style="height: 72%;">
                                                 <div class="col-xl-8 col-9">
                                                     <div class="ms-auto bg-light" style="height: 100%; width: 95%;">
+                                                        <canvas id="pm10chart"></canvas>
                                                     </div>
                                                 </div>
                                                 <div
@@ -332,60 +340,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <!--                            <div class="row gx-0" style="height: 50%;">-->
-                            <!--                                <div class="card shadow">-->
-                            <!--                                    <div class="col">-->
-                            <!--                                        <div class="row gx-0 px-3 pt-3">-->
-                            <!--                                            <div class="d-flex align-items-center justify-content-between">-->
-                            <!--                                                <div class="me-2">-->
-                            <!--                                                    <h2>PM<sub>2.5</sub></h2>-->
-                            <!--                                                </div>-->
-                            <!--                                                <div>-->
-                            <!--                                                    <div>-->
-                            <!--                                                        <span class="material-symbols-rounded">error</span>-->
-                            <!--                                                    </div>-->
-                            <!--                                                </div>-->
-                            <!--                                            </div>-->
-                            <!--                                        </div>-->
-                            <!--                                        <div class="row gx-0 py-3" style="height: 72%;">-->
-                            <!--                                            <div class="col-xl-8 col-10">-->
-                            <!--                                                <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>-->
-                            <!--                                            </div>-->
-                            <!--                                            <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">-->
-                            <!--                                                <div>-->
-                            <!--                                                    <span class="medium-number">70</span>-->
-                            <!--                                                </div>-->
-                            <!--                                            </div>-->
-                            <!--                                        </div>-->
-                            <!--                                    </div>-->
-                            <!--                                </div>-->
-                            <!--                            </div>-->
-                            <!--                            <div class="row gx-0" style="height: 50%;">-->
-                            <!--                                 <div class="card shadow">-->
-                            <!--                                     <div class="col">-->
-                            <!--                                        <div class="row gx-0 px-3 pt-3">-->
-                            <!--                                            <div class="d-flex align-items-center justify-content-between">-->
-                            <!--                                                <div class="me-2">-->
-                            <!--                                                    <h2>PM<sub>10</sub></h2>-->
-                            <!--                                                </div>-->
-                            <!--                                                <div>-->
-                            <!--                                                    <span class="material-symbols-rounded">error</span>-->
-                            <!--                                                </div>-->
-                            <!--                                            </div>-->
-                            <!--                                        </div>-->
-                            <!--                                        <div class="row gx-0 py-3 pt-3" style="height: 72%;">-->
-                            <!--                                            <div class="col-xl-8 col-10">-->
-                            <!--                                                <div class="ms-auto bg-light" style="height: 100%; width: 95%;"></div>-->
-                            <!--                                            </div>-->
-                            <!--                                            <div class="col-xl-4 col-2 d-flex align-items-center justify-content-center">-->
-                            <!--                                                <div>-->
-                            <!--                                                    <span class="medium-number">20</span>-->
-                            <!--                                                </div>-->
-                            <!--                                            </div>-->
-                            <!--                                        </div>-->
-                            <!--                                    </div>-->
-                            <!--                                </div>-->
-                            <!--                            </div>-->
                         </div>
                         <div id="extra-space" class="row"></div>
                     </div>

@@ -2,6 +2,7 @@ const screen = document.getElementById('live');
 
 // get colors from css
 const Y_BLUE = getComputedStyle(document.documentElement).getPropertyValue('--y-blue');
+const Y_DBLUE = getComputedStyle(document.documentElement).getPropertyValue('--y-dblue');
 const Y_SUCCESS = getComputedStyle(document.documentElement).getPropertyValue('--y-success');
 const Y_WARNING = getComputedStyle(document.documentElement).getPropertyValue('--y-warning');
 const Y_DANGER = getComputedStyle(document.documentElement).getPropertyValue('--y-danger');
@@ -16,6 +17,10 @@ function prepend(value, array) {
     return newArray;
 }
 
+Chart.defaults.backgroundColor = Y_DBLUE;
+// Chart.defaults.borderColor = Y_BLUE;
+Chart.defaults.color = 'white';
+
 class SensorLive {
 
     canvas = document.getElementById('canvas');
@@ -29,6 +34,7 @@ class SensorLive {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
         };
         this.last_count = -1;
+        this.timeline = [];
         this.boxes = []
         this.paint = true;
         this.last_box = 0;
@@ -45,33 +51,42 @@ class SensorLive {
 
         this.relay = new Relay(window.location.hostname, 9090);
 
+        this.initGraphs();
 
-        this.ctxvehiclesOverTime = document.getElementById('numberOfVehicles');
-        this.vehiclesOverTime = new Chart(this.ctxvehiclesOverTime, {
+        this.los_screen();
+        this.connect();
+    }
+
+    initGraphs() {
+        const lineChartConfig = {
             type: 'line',
             data: {
-                // labels: ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-"],
                 datasets: [{
-                    label: 'Vehicle count over time',
+                    label: 'measurement over time',
                     data: [],
                     fill: false,
                     tension: 0.35,
                     borderWidth: 3
                 }]
-            }, options: {
+            },
+            options: {
                 scales: {
-                    x:
-                    {
+                    x: {
                         type: 'time',
                     },
-
                     y: {
                         beginAtZero: true,
-
                     }
-                }, responsive: true, maintainAspectRatio: false
+                },
+                responsive: true,
+                maintainAspectRatio: false
             }
-        });
+        };
+
+        this.ctxvehiclesOverTime = document.getElementById('numberOfVehicles');
+        this.vehiclesOverTime = new Chart(this.ctxvehiclesOverTime, structuredClone(lineChartConfig));
+        this.vehiclesOverTime.data.datasets[0].label = 'Number of vehicles over time';
+        // this.vehiclesOverTime.data.datasets[0].borderColor = Y_BLUE;
 
         this.ctxNumberOfVehicles = document.getElementById('typesOfVehicles');
         this.numberOfVehicles = new Chart(this.ctxNumberOfVehicles, {
@@ -88,8 +103,42 @@ class SensorLive {
                 responsive: true, maintainAspectRatio: false
             }
         });
-        this.los_screen();
-        this.connect();
+
+        this.ctxPM10 = document.getElementById('pm10chart');
+        this.pm10Chart = new Chart(this.ctxPM10, structuredClone(lineChartConfig));
+        this.pm10Chart.data.datasets[0].label = 'PM1.0 over time';
+        // this.pm10Chart.data.datasets[0].borderColor = 'rgb(2, 159, 227)';
+
+        this.ctxPM25 = document.getElementById('pm25chart');
+        this.pm25Chart = new Chart(this.ctxPM25, structuredClone(lineChartConfig));
+        this.pm25Chart.data.datasets[0].label = 'PM2.5 over time';
+        // this.pm25Chart.data.datasets[0].borderColor = 'rgb(26,122,165)';
+
+        // this.ctxPM50 = document.getElementById('pm50chart');
+        // this.pm50Chart = new Chart(this.ctxPM50, lineChartconfig);
+        // this.pm50Chart.data.datasets[0].label = 'PM5.0 over time';
+
+        // this.ctxPM100 = document.getElementById('pm100chart');
+        // this.pm100Chart = new Chart(this.ctxPM100, lineChartconfig);
+        // this.pm100Chart.data.datasets[0].label = 'PM10.0 over time';
+        // this.pm100Chart.data.datasets[0].borderColor = 'rgb(31,84,108)';
+
+        this.ctxTemperature = document.getElementById('temperaturechart');
+        this.temperatureChart = new Chart(this.ctxTemperature, structuredClone(lineChartConfig));
+        this.temperatureChart.data.datasets[0].label = 'Temperature over time';
+        // this.temperatureChart.data.datasets[0].borderColor = 'rgb(2, 159, 227)';
+
+        this.ctxHumidity = document.getElementById('humiditychart');
+        this.humidityChart = new Chart(this.ctxHumidity, structuredClone(lineChartConfig));
+        this.humidityChart.data.datasets[0].label = 'Humidity over time';
+        // this.humidityChart.data.datasets[0].borderColor = 'rgb(26,122,165)';
+
+        this.ctxCO2 = document.getElementById('co2chart');
+        this.co2Chart = new Chart(this.ctxCO2, structuredClone(lineChartConfig));
+        this.co2Chart.data.datasets[0].label = 'CO2 over time';
+        // this.co2Chart.data.datasets[0].borderColor = 'rgb(31,84,108)';
+
+        // TODO this.ctxLatency = document.getElementById('latencychart');
     }
 
 
@@ -154,8 +203,7 @@ class SensorLive {
         if (this.last_count === -1) {
             this.last_count = msg.total;
         }
-        // TODO calculate rate
-        // this.log();
+        this.timeline.push({ stamp: { secs: Date.now() / 1000, nsecs: 0 }, counts: msg });
         this.update();
     }
 
@@ -186,7 +234,8 @@ class SensorLive {
     load_timeline() {
         this.relay.callService("/sbx/timeline", {}).then((res) => {
             if (res.timeline.length === 0) return;
-            const timeline = res.timeline.reverse();
+            const timeline = res.timeline.slice(0, 50).reverse();
+            this.timeline = timeline;
             const last = timeline[timeline.length - 1];
             const first = timeline[0];
             const start = stamp_to_millis(first.stamp);
@@ -215,6 +264,16 @@ class SensorLive {
             this.toastError("Mission Control", `Failed to load timeline: ${err}`)
         });
     }
+
+    computeRate() {
+        let rate = 0;
+        const diff = stamp_to_millis(this.timeline[this.timeline.length - 1].stamp) - stamp_to_millis(this.timeline[this.timeline.length - 10].stamp);
+        this.timeline.slice(-10).forEach((item) => {
+            rate += item.counts.total;
+        });
+        return rate / diff;
+    }
+
 
     draw_box(center_x, center_y, size_x, size_y, color = Y_BLUE) {
         // this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -279,10 +338,7 @@ class SensorLive {
     update() {
         // uncomment as you implement
 
-        document.getElementById('total_count').innerHTML = this.counts.total;
-        // document.getElementById('counts_car').innerHTML = this.counts.cars;
-        // document.getElementById('counts_bus').innerHTML = this.counts.buses;
-        // document.getElementById('counts_truck').innerHTML = this.counts.trucks;
+        document.getElementById('total_count').innerHTML = this.computeRate().toFixed(2);
         document.getElementById('total_count_2').innerHTML = this.counts.total;
         document.getElementById('counts_car_2').innerHTML = this.counts.cars;
         document.getElementById('counts_bus_2').innerHTML = this.counts.buses;
