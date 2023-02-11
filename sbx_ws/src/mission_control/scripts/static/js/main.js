@@ -42,6 +42,7 @@ class SensorLive {
 
         this.lastCount = -1;
         this.timeline = [];
+        this.rate = 0;
         this.boxes = []
         this.paint = true;
         this.lastBox = 0;
@@ -225,6 +226,7 @@ class SensorLive {
             this.lastCount = msg.total;
         }
         this.timeline.push({ stamp: { secs: Date.now() / 1000, nsecs: 0 }, counts: msg });
+        this.rate = this.computeRate();
         this.update();
     }
 
@@ -257,6 +259,8 @@ class SensorLive {
         this.relay.callService("/sbx/timeline", {}).then((res) => {
             if (res.timeline.length === 0) return;
             this.timeline = res.timeline.reverse();
+            this.rate = this.computeRate();
+            this.lastCount = this.timeline[this.timeline.length - 1].counts.total;
             const end = this.timeline[this.timeline.length - 1].stamp.secs * 1000;
             const start = end - 3600000 * 6;
             const step = Math.max((end - start) / 100, 10000);
@@ -392,7 +396,7 @@ class SensorLive {
     update() {
         // uncomment as you implement
 
-        document.getElementById('total_count').innerHTML = this.computeRate().toFixed(2);
+        document.getElementById('total_count').innerHTML = this.rate.toFixed(2);
         document.getElementById('total_count_2').innerHTML = this.counts.total;
         document.getElementById('counts_car_2').innerHTML = this.counts.cars;
         document.getElementById('counts_bus_2').innerHTML = this.counts.buses;
