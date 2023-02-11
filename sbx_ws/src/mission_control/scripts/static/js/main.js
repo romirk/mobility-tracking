@@ -41,6 +41,7 @@ class SensorLive {
         this.last_frame = 0;
         this.seq = 0;
         this.los = false;
+        this.frozen = false;
         this.latency = { network: 0, processing: 0, total: 0 };
 
         this.canvas.width = 640;
@@ -180,7 +181,7 @@ class SensorLive {
 
 
         setInterval(this.updateGraphs.bind(this), 10000);
-        window.requestAnimationFrame(this.box_anim.bind(this));
+        window.requestAnimationFrame(this.getFrame.bind(this));
     }
 
     on_sensor(msg) {
@@ -209,12 +210,13 @@ class SensorLive {
 
     on_image(msg) {
         if (msg.img.header.seq <= this.seq) return;
+        this.last_frame = Date.now();
+        this.seq = msg.img.header.seq;
+        if (this.frozen) return;
         this.img.src = "data:image/jpeg;base64," + msg.img.data;
         this.on_box(msg);
-        this.last_frame = Date.now();
         this.paint = true;
 
-        this.seq = msg.img.header.seq;
         // this.latency.network = this.last_frame - stamp_to_millis(msg.img.header.stamp);
         // this.latency.processing = stamp_to_millis(msg.header.stamp) - stamp_to_millis(msg.img.header.stamp);
         // this.latency.total = this.latency.network + this.latency.processing;
@@ -267,7 +269,8 @@ class SensorLive {
 
     computeRate() {
         let rate = 0;
-        const diff = stamp_to_millis(this.timeline[this.timeline.length - 1].stamp) - stamp_to_millis(this.timeline[this.timeline.length - 10].stamp);
+        const diff = stamp_to_millis(this.timeline[this.timeline.length - 1].stamp)
+            - stamp_to_millis(this.timeline[this.timeline.length - Math.min(this.timeline.length, 10)].stamp);
         this.timeline.slice(-10).forEach((item) => {
             rate += item.counts.total;
         });
@@ -298,40 +301,51 @@ class SensorLive {
         // console.log("los off");
     }
 
-    box_anim() {
+    toggleFreeze() {
+        this.frozen = !this.frozen;
+        if (this.frozen) {
+            this.toastInfo("Mission Control", "Freeze");
+        }
+        else {
+            this.toastInfo("Mission Control", "Unfreeze");
+        }
+    }
+
+    getFrame() {
         if (!this.relay.connected) return this.reconnect("Connection lost!");
 
         const now = Date.now();
-        if (!this.los) {
-            if (now - this.last_frame > 5000 && !this.paint) {
-                this.boxes = [];
-                this.los_screen();
-                this.toastWarning("Mission Control", "No frames received");
-            }
-            else if (this.boxes.length > 0 || now - this.last_box > 100) {
-                this.paint = false;
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        if (!this.frozen) {
+            if (!this.los) {
+                if (now - this.last_frame > 5000 && !this.paint) {
+                    this.boxes = [];
+                    this.los_screen();
+                    this.toastWarning("Mission Control", "No frames received");
+                }
+                else if (this.boxes.length > 0 || now - this.last_box > 100) {
+                    this.paint = false;
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-                if (this.boxes.length > 0) {
+                    if (this.boxes.length > 0) {
 
-                    const new_boxes = [];
+                        const new_boxes = [];
 
-                    for (const box of this.boxes) {
-                        if (now - box.mstamp > 50) {
-                            continue;
+                        for (const box of this.boxes) {
+                            if (now - box.mstamp > 50) {
+                                continue;
+                            }
+                            new_boxes.push(box);
+                            this.draw_box(box.center.x, box.center.y, box.size_x, box.size_y, box.color);
                         }
-                        new_boxes.push(box);
-                        this.draw_box(box.center.x, box.center.y, box.size_x, box.size_y, box.color);
+                        this.boxes = new_boxes;
                     }
-                    this.boxes = new_boxes;
                 }
             }
+            else if (this.paint) {
+                this.los_screen_off();
+            }
         }
-        else if (this.paint) {
-            this.los_screen_off();
-        }
-
-        window.requestAnimationFrame(this.box_anim.bind(this));
+        window.requestAnimationFrame(this.getFrame.bind(this));
     }
 
 
@@ -421,6 +435,8 @@ triggerTabList.forEach(triggerEl => {
     tabs.push(tabTrigger);
 });
 
+const sensor_live = new SensorLive();
+
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
         e.preventDefault();
@@ -431,6 +447,11 @@ window.addEventListener('keydown', (e) => {
             tabs[0].show();
         }
     }
+    else if (e.key === 'Escape') {
+        // tabs[0].show();
+        sensor_live.toastElement.hide();
+    }
+    else if (e.key === ' ') {
+        sensor_live.toggleFreeze();
+    }
 });
-
-const sensor_live = new SensorLive();
