@@ -95,7 +95,6 @@ class SensorLive {
 
         this.ctxvehiclesOverTime = document.getElementById('numberOfVehicles');
         this.vehiclesOverTime = new Chart(this.ctxvehiclesOverTime, structuredClone(lineChartConfig));
-        this.vehiclesOverTime.data.datasets[0].label = 'vehicles over time';
         // this.vehiclesOverTime.data.datasets[0].borderColor = Y_BLUE;
 
         this.ctxNumberOfVehicles = document.getElementById('typesOfVehicles');
@@ -265,6 +264,8 @@ class SensorLive {
             console.log(start, end, step, end - start);
 
             this.vehiclesOverTime.data.datasets[0].data = this.sliceTimeline(start, end, step);
+            this.vehiclesOverTime.data.datasets[0].label = `Vehicles over ${(end - start) / 3600000} hours`;
+
             this.vehiclesOverTime.update();
         }).catch((err) => {
             this.toastError("Mission Control", `Failed to load timeline: ${err}`)
@@ -273,7 +274,7 @@ class SensorLive {
 
     sliceTimeline(startTime, endTime, step = -1) {
         const diff = endTime - startTime;
-        if (step === -1) step = Math.max(diff / 100, 10000);
+        if (step === -1) step = Math.max(diff / 60, 10000);
 
         console.log(startTime, endTime, diff, step);
         let p = 0;
@@ -419,8 +420,11 @@ class SensorLive {
         let date = new Date()
 
         const nhours = this.graphViews[this.graphView];
-        this.vehiclesOverTime.data.datasets[0].data = this.sliceTimeline(date.getTime() - 3600000 * nhours, date.getTime());
-        this.vehiclesOverTime.data.datasets[0].label = `Vehicles (last ${nhours} hours)`;
+        const start = date.getTime() - 3600000 * nhours;
+        const end = date.getTime();
+        const diff = end - start;
+        this.vehiclesOverTime.data.datasets[0].data = this.sliceTimeline(start, end);
+        this.vehiclesOverTime.data.datasets[0].label = `Vehicles per ${Math.round(Math.max(diff / 60000, 10))} seconds`;
         this.vehiclesOverTime.update();
     }
 
