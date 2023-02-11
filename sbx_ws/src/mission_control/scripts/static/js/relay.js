@@ -138,6 +138,7 @@ class Relay {
     reset() {
         this.disconnect();
         this.listeners = {};
+        this.services = {};
     }
 
 }

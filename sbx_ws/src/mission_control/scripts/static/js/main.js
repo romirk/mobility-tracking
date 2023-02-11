@@ -17,6 +17,10 @@ function prepend(value, array) {
     return newArray;
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 Chart.defaults.backgroundColor = Y_DBLUE;
 // Chart.defaults.borderColor = Y_BLUE;
 Chart.defaults.color = 'white';
@@ -27,12 +31,15 @@ class SensorLive {
     toastElement = new bootstrap.Toast(document.getElementById("errorToast"));
 
     constructor() {
+        this.connected = false;
+
         this.counts = {
             total: 0, cars: 0, trucks: 0, buses: 0, motorcycles: 0, bicycles: 0,
         };
         this.sensor_data = {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
         };
+
         this.last_count = -1;
         this.timeline = [];
         this.boxes = []
@@ -148,9 +155,12 @@ class SensorLive {
      */
     connect() {
         this.startTime = Date.now();
-        this.los_screen_off();
         this.toastInfo("Mission Control", "Connecting...");
-        this.relay.connect().then(() => this.setup(), () => this.reconnect("Failed to connect"));
+        this.relay.connect()
+            .then(this.rosSetup.bind(this))
+            .then(() => sleep(2000)) // wait for connection to stabilize
+            .then(this.setup.bind(this))
+            .catch(() => this.reconnect("Failed to connect"));
     }
 
     /**
@@ -163,22 +173,28 @@ class SensorLive {
                         // }
     */
     reconnect(err) {
+        this.connected = false;
         this.los_screen();
+        this.navOut();
         this.toastError("Mission Control", `Disconnected: ${err}`);
         this.relay.reset();
         setTimeout(() => this.connect(), 10000);
     }
 
-    setup() {
-        this.toastSuccess("Mission Control", "Connected");
+    rosSetup() {
         this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_count.bind(this));
         this.relay.createListener("/sbx/bboxed", "sensorbox/AnnotatedImage", this.on_image.bind(this));
         this.relay.createListener("/sbx/detect", "vision_msgs/Detection2D", this.on_detect.bind(this));
-
         this.relay.createServiceClient("/sbx/timeline", "mission_control/Timeline");
-        this.load_timeline();
+    }
 
+    setup() {
+        this.connected = true;
+        this.toastSuccess("Mission Control", "Connected");
+        this.los_screen_off();
+        this.navIn();
+        this.load_timeline();
 
         setInterval(this.updateGraphs.bind(this), 10000);
         window.requestAnimationFrame(this.getFrame.bind(this));
@@ -299,6 +315,19 @@ class SensorLive {
         document.getElementById("los").style.display = "none";
         this.los = false;
         // console.log("los off");
+    }
+
+    navIn() {
+        document.querySelectorAll(".nav-float").forEach((el) => {
+            el.classList.remove("nav-out");
+            el.classList.add("nav-in");
+        });
+    }
+    navOut() {
+        document.querySelectorAll(".nav-float").forEach((el) => {
+            el.classList.remove("nav-in");
+            el.classList.add("nav-out");
+        });
     }
 
     toggleFreeze() {
@@ -438,7 +467,7 @@ triggerTabList.forEach(triggerEl => {
 const sensor_live = new SensorLive();
 
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') {
+    if (e.key === 'Tab' && sensor_live.connected) {
         e.preventDefault();
         if (triggerTabList[0].classList.contains('active')) {
             tabs[1].show();
@@ -455,3 +484,4 @@ window.addEventListener('keydown', (e) => {
         sensor_live.toggleFreeze();
     }
 });
+

@@ -14,6 +14,8 @@
         integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" rel="stylesheet">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0" />
+
+    <link href="static/css/anim.css" rel="stylesheet" />
     <link href="static/css/main.css" rel="stylesheet">
     <link href="static/css/los.css" rel="stylesheet">
 </head>
@@ -22,7 +24,7 @@
     <div class="video-container" id="main">
         <div id="viewer">
             <nav>
-                <div class="ms-3 mb-3 btn-group nav nav-pills fixed-bottom" id="selector" role="tablist">
+                <div class="ms-3 mb-3 btn-group nav nav-pills nav-float fixed-bottom" id="selector" role="tablist">
                     <button class="btn btn-primary nav-link text-white active"
                         style="border-radius: var(--y-button-radius) 0 0 var(--y-button-radius);" type="button"
                         data-bs-toggle="tab" data-bs-target="#nav-video" role="tab" aria-controls="nav-video"
@@ -49,10 +51,11 @@
         <div class="tab-content" id="nav-tabContent">
             <div class="tab-pane fade show active" id="nav-video" role="tabpanel" aria-labelledby="nav-video-tab">
                 <div class="fixed-bottom d-flex justify-content-end" style="z-index: 5;">
-                    <div class="me-3 mb-3 grid d-flex align-items-center" id="stats">
+                    <div class="me-3 mb-3 grid d-flex align-items-center nav-float" id="stats">
                         <div class="g-col-4 mx-3 d-flex align-items-center">
                             <span class="me-2 lblue" id="total_count"
-                                style="font-weight: bold;">0</span>&nbsp;detections<sub style="opacity: 0.6;">/second</sub>
+                                style="font-weight: bold;">0</span>&nbsp;detections<sub
+                                style="opacity: 0.6;">/second</sub>
                         </div>
                     </div>
                 </div>
