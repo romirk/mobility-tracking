@@ -8,7 +8,7 @@ const Y_WARNING = getComputedStyle(document.documentElement).getPropertyValue('-
 const Y_DANGER = getComputedStyle(document.documentElement).getPropertyValue('--y-danger');
 
 
-function stamp_to_millis(stamp) {
+function stampToMillis(stamp) {
     return stamp.secs * 1000 + stamp.nsecs / 1000000;
 }
 function prepend(value, array) {
@@ -36,16 +36,16 @@ class SensorLive {
         this.counts = {
             total: 0, cars: 0, trucks: 0, buses: 0, motorcycles: 0, bicycles: 0,
         };
-        this.sensor_data = {
+        this.sensorData = {
             pm10: 0, pm25: 0, pm50: 0, pm100: 0, tmp: 0, hum: 0, co2: 0
         };
 
-        this.last_count = -1;
+        this.lastCount = -1;
         this.timeline = [];
         this.boxes = []
         this.paint = true;
-        this.last_box = 0;
-        this.last_frame = 0;
+        this.lastBox = 0;
+        this.lastFrame = 0;
         this.seq = 0;
         this.los = false;
         this.frozen = false;
@@ -60,8 +60,10 @@ class SensorLive {
         this.relay = new Relay(window.location.hostname, 9090);
 
         this.initGraphs();
+        this.graphViews = [0.1, 1, 3, 8];
+        this.graphView = 0;
 
-        this.los_screen();
+        this.losScreen();
         this.connect();
     }
 
@@ -93,7 +95,7 @@ class SensorLive {
 
         this.ctxvehiclesOverTime = document.getElementById('numberOfVehicles');
         this.vehiclesOverTime = new Chart(this.ctxvehiclesOverTime, structuredClone(lineChartConfig));
-        this.vehiclesOverTime.data.datasets[0].label = 'Number of vehicles over time';
+        this.vehiclesOverTime.data.datasets[0].label = 'vehicles over time';
         // this.vehiclesOverTime.data.datasets[0].borderColor = Y_BLUE;
 
         this.ctxNumberOfVehicles = document.getElementById('typesOfVehicles');
@@ -174,7 +176,7 @@ class SensorLive {
     */
     reconnect(err) {
         this.connected = false;
-        this.los_screen();
+        this.losScreen();
         this.navOut();
         this.toastError("Mission Control", `Disconnected: ${err}`);
         this.relay.reset();
@@ -182,31 +184,34 @@ class SensorLive {
     }
 
     rosSetup() {
-        this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.on_sensor.bind(this));
-        this.relay.createListener("/sbx/result", "mission_control/Counts", this.on_count.bind(this));
-        this.relay.createListener("/sbx/bboxed", "sensorbox/AnnotatedImage", this.on_image.bind(this));
-        this.relay.createListener("/sbx/detect", "vision_msgs/Detection2D", this.on_detect.bind(this));
+        this.relay.createListener("/sbx/aqdata", "sensorbox/AQI", this.onSensor.bind(this));
+        this.relay.createListener("/sbx/result", "mission_control/Counts", this.onCount.bind(this));
+        this.relay.createListener("/sbx/bboxed", "sensorbox/AnnotatedImage", this.onImage.bind(this));
+        this.relay.createListener("/sbx/detect", "vision_msgs/Detection2D", this.onDetect.bind(this));
         this.relay.createServiceClient("/sbx/timeline", "mission_control/Timeline");
     }
 
     setup() {
         this.connected = true;
         this.toastSuccess("Mission Control", "Connected");
-        this.los_screen_off();
+        this.losScreenOff();
         this.navIn();
-        this.load_timeline();
+        this.loadTimeline();
 
-        setInterval(this.updateGraphs.bind(this), 10000);
+        setInterval(() => {
+            this.graphView = (this.graphView + 1) % this.graphViews.length;
+            this.updateGraphs()
+        }, 10000);
         window.requestAnimationFrame(this.getFrame.bind(this));
     }
 
-    on_sensor(msg) {
-        this.sensor_data = msg;
+    onSensor(msg) {
+        this.sensorData = msg;
         // this.log();
         this.update();
     }
 
-    on_detect(msg) {
+    onDetect(msg) {
         // this.draw_box(msg.bbox.center.x, msg.bbox.center.y, msg.bbox.size_x, msg.bbox.size_y, (48, 209, 88));
         const box = msg.bbox;
         box.mstamp = Date.now();
@@ -215,22 +220,22 @@ class SensorLive {
         console.log("box", box);
     }
 
-    on_count(msg) {
+    onCount(msg) {
         this.counts = msg;
-        if (this.last_count === -1) {
-            this.last_count = msg.total;
+        if (this.lastCount === -1) {
+            this.lastCount = msg.total;
         }
         this.timeline.push({ stamp: { secs: Date.now() / 1000, nsecs: 0 }, counts: msg });
         this.update();
     }
 
-    on_image(msg) {
+    onImage(msg) {
         if (msg.img.header.seq <= this.seq) return;
-        this.last_frame = Date.now();
+        this.lastFrame = Date.now();
         this.seq = msg.img.header.seq;
         if (this.frozen) return;
         this.img.src = "data:image/jpeg;base64," + msg.img.data;
-        this.on_box(msg);
+        this.onBox(msg);
         this.paint = true;
 
         // this.latency.network = this.last_frame - stamp_to_millis(msg.img.header.stamp);
@@ -238,7 +243,7 @@ class SensorLive {
         // this.latency.total = this.latency.network + this.latency.processing;
     }
 
-    on_box(msg) {
+    onBox(msg) {
         if (msg.boxes.length === 0) return;
         const stamp = Date.now();
         for (const box of msg.boxes) {
@@ -246,72 +251,77 @@ class SensorLive {
             box.color = "#1ccbed";
             this.boxes.push(box);
         }
-        this.last_box = stamp;
+        this.lastBox = stamp;
     }
 
-    load_timeline() {
+    loadTimeline() {
         this.relay.callService("/sbx/timeline", {}).then((res) => {
             if (res.timeline.length === 0) return;
-            const timeline = res.timeline.slice(0, 50).reverse();
-            this.timeline = timeline;
-            const last = timeline[timeline.length - 1];
-            const first = timeline[0];
-            const start = stamp_to_millis(first.stamp);
-            const end = stamp_to_millis(last.stamp);
-            const diff = end - start;
-            const step = diff / 100;
-            let prev = timeline[0].counts.total;
+            this.timeline = res.timeline.reverse();
+            const end = this.timeline[this.timeline.length - 1].stamp.secs * 1000;
+            const start = end - 3600000 * 6;
+            const step = Math.max((end - start) / 100, 10000);
 
-            this.vehiclesOverTime.data.datasets[0].data = [];
-            let p = 0;
-            for (let i = 0; i < 100; i++) {
-                const time = start + step * i;
-                let count = 0;
+            console.log(start, end, step, end - start);
 
-                while (p < timeline.length && stamp_to_millis(timeline[p].stamp) < time) {
-                    count += timeline[p].counts.total - prev;
-                    prev = timeline[p].counts.total;
-                    p++;
-                }
-                this.vehiclesOverTime.data.datasets[0].data.push({ x: new Date(time), y: count });
-            }
-
-            console.log(`loaded ${timeline.length} counts`);
+            this.vehiclesOverTime.data.datasets[0].data = this.sliceTimeline(start, end, step);
             this.vehiclesOverTime.update();
         }).catch((err) => {
             this.toastError("Mission Control", `Failed to load timeline: ${err}`)
         });
     }
 
+    sliceTimeline(startTime, endTime, step = -1) {
+        const diff = endTime - startTime;
+        if (step === -1) step = Math.max(diff / 100, 10000);
+
+        console.log(startTime, endTime, diff, step);
+        let p = 0;
+        while (p < this.timeline.length && stampToMillis(this.timeline[p].stamp) < startTime)
+            p++;
+        if (p === this.timeline.length) return [];
+
+        let prev = this.timeline[p].counts.total;
+        const data = [];
+
+        for (let i = startTime; i <= endTime && p < this.timeline.length; i += step) {
+            let count = 0;
+
+            while (p < this.timeline.length && stampToMillis(this.timeline[p].stamp) < i) {
+                count += this.timeline[p].counts.total - prev;
+                prev = this.timeline[p].counts.total;
+                p++;
+            }
+            data.push({ x: new Date(i), y: count });
+        }
+        return data;
+    }
+
     computeRate() {
-        let rate = 0;
-        const diff = stamp_to_millis(this.timeline[this.timeline.length - 1].stamp)
-            - stamp_to_millis(this.timeline[this.timeline.length - Math.min(this.timeline.length, 10)].stamp);
-        this.timeline.slice(-10).forEach((item) => {
-            rate += item.counts.total;
-        });
-        return rate / diff;
+        const end = this.timeline[this.timeline.length - 1].stamp.secs;
+        const start = end - 3600;
+        return this.sliceTimeline(start * 1000, end * 1000).reduce((acc, cur) => acc + cur.y, 0);
     }
 
 
-    draw_box(center_x, center_y, size_x, size_y, color = Y_BLUE) {
+    drawBox(centerX, centerY, sizeX, sizeY, color = Y_BLUE) {
         // this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        const x = center_x - size_x / 2;
-        const y = center_y - size_y / 2;
+        const x = centerX - sizeX / 2;
+        const y = centerY - sizeY / 2;
         // console.log(x, y, size_x, size_y);
         this.ctx.lineWidth = 4;
         this.ctx.strokeStyle = color;
-        this.ctx.strokeRect(center_x - size_x / 2, center_y - size_y / 2, size_x, size_y);
+        this.ctx.strokeRect(centerX - sizeX / 2, centerY - sizeY / 2, sizeX, sizeY);
         // this.ctx.fillRect(center_x - size_x / 2, center_y - size_y / 2, size_x, size_y);
         // this.ctx.stroke();
     }
 
-    los_screen() {
+    losScreen() {
         document.getElementById("los").style.display = "grid";
         this.los = true;
         // console.log("los");
     }
-    los_screen_off() {
+    losScreenOff() {
         document.getElementById("los").style.display = "none";
         this.los = false;
         // console.log("los off");
@@ -346,32 +356,32 @@ class SensorLive {
         const now = Date.now();
         if (!this.frozen) {
             if (!this.los) {
-                if (now - this.last_frame > 5000 && !this.paint) {
+                if (now - this.lastFrame > 5000 && !this.paint) {
                     this.boxes = [];
-                    this.los_screen();
+                    this.losScreen();
                     this.toastWarning("Mission Control", "No frames received");
                 }
-                else if (this.boxes.length > 0 || now - this.last_box > 100) {
+                else if (this.boxes.length > 0 || now - this.lastBox > 100) {
                     this.paint = false;
                     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
                     if (this.boxes.length > 0) {
 
-                        const new_boxes = [];
+                        const newBoxes = [];
 
                         for (const box of this.boxes) {
                             if (now - box.mstamp > 50) {
                                 continue;
                             }
-                            new_boxes.push(box);
-                            this.draw_box(box.center.x, box.center.y, box.size_x, box.size_y, box.color);
+                            newBoxes.push(box);
+                            this.drawBox(box.center.x, box.center.y, box.size_x, box.size_y, box.color);
                         }
-                        this.boxes = new_boxes;
+                        this.boxes = newBoxes;
                     }
                 }
             }
             else if (this.paint) {
-                this.los_screen_off();
+                this.losScreenOff();
             }
         }
         window.requestAnimationFrame(this.getFrame.bind(this));
@@ -389,13 +399,13 @@ class SensorLive {
 
         // sensor data
 
-        document.getElementById('pm10').innerHTML = Math.round(this.sensor_data.pm10 * 100) / 100;
-        document.getElementById('pm25').innerHTML = Math.round(this.sensor_data.pm25 * 100) / 100;
+        document.getElementById('pm10').innerHTML = Math.round(this.sensorData.pm10 * 100) / 100;
+        document.getElementById('pm25').innerHTML = Math.round(this.sensorData.pm25 * 100) / 100;
         // document.getElementById('pm50').innerHTML = this.sensor_data.pm50;
         // document.getElementById('pm100').innerHTML = this.sensor_data.pm100;
-        document.getElementById('tmp').innerHTML = Math.round(this.sensor_data.tmp * 100) / 100;
-        document.getElementById('hum').innerHTML = Math.round(this.sensor_data.hum * 100) / 100;
-        document.getElementById('co2').innerHTML = Math.round(this.sensor_data.co2 * 100) / 100;
+        document.getElementById('tmp').innerHTML = Math.round(this.sensorData.tmp * 100) / 100;
+        document.getElementById('hum').innerHTML = Math.round(this.sensorData.hum * 100) / 100;
+        document.getElementById('co2').innerHTML = Math.round(this.sensorData.co2 * 100) / 100;
 
         this.numberOfVehicles.data.datasets.forEach((dataset) => {
             dataset.data = [this.counts.cars, this.counts.trucks, this.counts.buses, this.counts.total - this.counts.cars - this.counts.trucks - this.counts.buses];
@@ -408,16 +418,9 @@ class SensorLive {
         // Update chart [VEHICLES OVER TIME]
         let date = new Date()
 
-        this.vehiclesOverTime.data.datasets.forEach((dataset) => {
-            dataset.data.shift();
-            if (this.last_count === -1) {
-                dataset.data.push({ x: date, y: 0 });
-            } else {
-                dataset.data.push({ x: date, y: this.counts.total - this.last_count });
-                this.last_count = this.counts.total;
-            }
-        });
-
+        const nhours = this.graphViews[this.graphView];
+        this.vehiclesOverTime.data.datasets[0].data = this.sliceTimeline(date.getTime() - 3600000 * nhours, date.getTime());
+        this.vehiclesOverTime.data.datasets[0].label = `Vehicles (last ${nhours} hours)`;
         this.vehiclesOverTime.update();
     }
 
@@ -464,10 +467,10 @@ triggerTabList.forEach(triggerEl => {
     tabs.push(tabTrigger);
 });
 
-const sensor_live = new SensorLive();
+const sensorLive = new SensorLive();
 
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab' && sensor_live.connected) {
+    if (e.key === 'Tab' && sensorLive.connected) {
         e.preventDefault();
         if (triggerTabList[0].classList.contains('active')) {
             tabs[1].show();
@@ -478,10 +481,10 @@ window.addEventListener('keydown', (e) => {
     }
     else if (e.key === 'Escape') {
         // tabs[0].show();
-        sensor_live.toastElement.hide();
+        sensorLive.toastElement.hide();
     }
     else if (e.key === ' ') {
-        sensor_live.toggleFreeze();
+        sensorLive.toggleFreeze();
     }
 });
 
