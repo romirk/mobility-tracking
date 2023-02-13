@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from __future__ import annotations
 
 import os
@@ -11,7 +12,7 @@ import cv2
 import numpy as np
 import rospy
 from mission_control.msg import Counts, CountStamped
-from mission_control.srv import Timeline, TimelineResponse
+from mission_control.srv import Timeline, TimelineRequest
 from vision_msgs.msg import Detection2D
 from yolov7_package import Yolov7Detector
 from yolov7_package.model_utils import coco_names
@@ -25,6 +26,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 class YoloServer:
     def __init__(self) -> None:
         rospy.init_node("detector")
+        # TODO move to config
         self.frame_width = rospy.get_param("/sbx/video_width", 640)
         self.frame_height = rospy.get_param("/sbx/video_height", 480)
 
@@ -36,7 +38,7 @@ class YoloServer:
         self.yolo = Yolov7Detector(traced=True)
         self.counts = Counts(0, 0, 0, 0, 0, 0)
 
-        self.timeline_srv = rospy.ServiceProxy("/sbx/last_count", Counts)
+        self.timeline_srv = rospy.ServiceProxy("/sbx/timetravel/last", Timeline)
         self.timeline_srv.wait_for_service()
 
         # load last count
@@ -63,7 +65,8 @@ class YoloServer:
             self.executor.shutdown()
 
     def load_last_count(self) -> Counts:
-        return self.timeline_srv()
+        req = TimelineRequest()
+        return self.timeline_srv(req)
 
     def exec_callback(self, msg: Detection2D) -> tuple[int, int, int, int, int, int]:
         box = msg.bbox

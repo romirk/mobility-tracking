@@ -167,6 +167,7 @@ include_directories(
 catkin_install_python(PROGRAMS
   scripts/http_server.py
   scripts/yolo_server.py
+  scripts/db.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
