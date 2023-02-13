@@ -51,7 +51,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   AQI.msg
-  BoxArray.msg
+  AQIStamped.msg
   AnnotatedImage.msg
 #   Message2.msg
 )

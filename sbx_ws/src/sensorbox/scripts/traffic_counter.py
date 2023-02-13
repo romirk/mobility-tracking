@@ -93,6 +93,9 @@ class MobilityTracker:
         )
 
     def _set_up_line(self, theta, position):
+        """
+        Defines the line that will be used to count the number of objects
+        """
         if theta > 90 or theta < -90:
             raise ValueError("Theta must be between -90 and 90")
         if position > 1 or position < 0:
@@ -149,8 +152,6 @@ class MobilityTracker:
         Draws bounding boxes and detects when cars are crossing the line frame: numpy image where boxes will be
         drawn onto thresh_img: numpy image after subtracting the background and all thresholds and noise reduction
         operations are applied
-
-        See https://github.com/andresberejnoi/ComputerVision
         """
         contours, _ = cv2.findContours(
             thresh_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
@@ -233,6 +234,9 @@ class MobilityTracker:
         return boxes
 
     def frame_callback(self, frame: Image):
+        """
+        Main callback for the video stream. This is where the magic happens(?)
+        """
         height = frame.height
         width = frame.width
         data = np.frombuffer(frame.data, dtype=np.uint8).reshape(height, width, -1)

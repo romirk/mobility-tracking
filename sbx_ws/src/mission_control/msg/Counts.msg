@@ -3,4 +3,3 @@ int32 cars
 int32 trucks
 int32 buses
 int32 motorcycles
-int32 bicycles

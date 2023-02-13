@@ -175,13 +175,7 @@ class SensorLive {
     }
 
     /**
-     * Handle disconnection.ticks: {
-                        //     callback: function (value, index, ticks) {
-                        //         console.log(value);
-                        //         const time = new Date(value);
-                        //         return `${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`;
-                        //     }
-                        // }
+     * Handle disconnection.
     */
     reconnect(err) {
         this.connected = false;
@@ -197,7 +191,7 @@ class SensorLive {
         this.relay.createListener("/sbx/result", "mission_control/Counts", this.onCount.bind(this));
         this.relay.createListener("/sbx/bboxed", "sensorbox/AnnotatedImage", this.onImage.bind(this));
         this.relay.createListener("/sbx/detect", "vision_msgs/Detection2D", this.onDetect.bind(this));
-        this.relay.createServiceClient("/sbx/timeline", "mission_control/Timeline");
+        this.relay.createServiceClient("/sbx/timetravel/history", "mission_control/Timeline");
     }
 
     setup() {
@@ -274,7 +268,7 @@ class SensorLive {
     }
 
     loadTimeline() {
-        this.relay.callService("/sbx/timeline", {}).then((res) => {
+        this.relay.callService("/sbx/timetravel/history", {}).then((res) => {
             if (res.timeline.length === 0) return;
             this.timeline = res.timeline.reverse();
             this.rate = this.computeRate();
@@ -282,8 +276,6 @@ class SensorLive {
             const end = this.timeline[this.timeline.length - 1].stamp.secs * 1000;
             const start = end - 3600000 * 6;
             const step = Math.max((end - start) / 100, 10000);
-
-            console.log(start, end, step, end - start);
 
             this.vehiclesOverTime.data.datasets[0].data = this.sliceTimeline(start, end, step);
             this.vehiclesOverTime.data.datasets[0].label = `Vehicles over ${(end - start) / 3600000} hours`;
@@ -298,7 +290,6 @@ class SensorLive {
         const diff = endTime - startTime;
         if (step === -1) step = Math.max(diff / 60, 10000);
 
-        console.log(startTime, endTime, diff, step);
         let p = 0;
         while (p < this.timeline.length && stampToMillis(this.timeline[p].stamp) < startTime)
             p++;

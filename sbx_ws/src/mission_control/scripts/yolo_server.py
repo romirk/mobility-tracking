@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 import os
-import sqlite3 as sl
 from concurrent.futures import Future, ProcessPoolExecutor
 from datetime import datetime
-from threading import Lock
 
 import cv2
 import numpy as np
 import rospy
-from mission_control.msg import Counts, CountStamped
-from mission_control.srv import Timeline, TimelineRequest
+from mission_control.msg import Counts
+from mission_control.srv import Timeline, TimelineRequest, TimelineResponse
 from vision_msgs.msg import Detection2D
 from yolov7_package import Yolov7Detector
 from yolov7_package.model_utils import coco_names
@@ -36,17 +34,23 @@ class YoloServer:
         self.multiprocessing = False
 
         self.yolo = Yolov7Detector(traced=True)
-        self.counts = Counts(0, 0, 0, 0, 0, 0)
+        self.counts = Counts(0, 0, 0, 0, 0)
 
         self.timeline_srv = rospy.ServiceProxy("/sbx/timetravel/last", Timeline)
         self.timeline_srv.wait_for_service()
 
         # load last count
-        self.counts = self.load_last_count()
+        last_count = self.load_last_count()
+        self.counts = (
+            last_count.timeline[0].counts if last_count.timeline else self.counts
+        )
+        self.last_stamp = (
+            last_count.timeline[0].stamp
+            if last_count.timeline
+            else rospy.Time(secs=int(datetime.now().timestamp()))
+        )
 
-        # self.con.close()
-
-        rospy.loginfo(f"Loaded last count: {self.counts.total}")
+        rospy.loginfo(f"Loaded last count:\n{self.counts}")
 
         if self.multiprocessing:
             self.executor = ProcessPoolExecutor(max_workers=5)
@@ -64,8 +68,8 @@ class YoloServer:
         if self.multiprocessing:
             self.executor.shutdown()
 
-    def load_last_count(self) -> Counts:
-        req = TimelineRequest()
+    def load_last_count(self) -> TimelineResponse:
+        req = TimelineRequest(route=0)  # TODO: get route from config
         return self.timeline_srv(req)
 
     def exec_callback(self, msg: Detection2D) -> tuple[int, int, int, int, int, int]:
@@ -133,6 +137,7 @@ class YoloServer:
 
         if not self.multiprocessing:
             self.counts = Counts(*result)
+            self.last_stamp = msg.header.stamp
             self.pub.publish(self.counts)
 
             cv2.imwrite(
@@ -161,5 +166,8 @@ class YoloServer:
 
 
 if __name__ == "__main__":
-    server = YoloServer()
-    rospy.spin()
+    try:
+        server = YoloServer()
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        exit(0)
