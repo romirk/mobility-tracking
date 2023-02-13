@@ -2,3 +2,4 @@ yolov7_package
 flask
 flask_socketio
 flask-classful
+pymongo

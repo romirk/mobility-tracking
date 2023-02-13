@@ -22,12 +22,6 @@ CONFIDENCE_THRESHOLD = 0  # TODO: set this to 0.5
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
-CREATE_TABLE_STMT = "CREATE TABLE counts (timestamp TIMESTAMP, total INT, cars INT, trucks INT, buses INT, motorcycles INT, bicycles INT)"
-STORE_COUNT_STMT = "INSERT INTO counts (timestamp, total, cars, trucks, buses, motorcycles, bicycles) VALUES (?, ?, ?, ?, ?, ?, ?)"
-LOAD_COUNT_STMT = "SELECT * FROM counts ORDER BY timestamp DESC LIMIT 1"
-LOAD_ALL_COUNTS_STMT = "SELECT * FROM counts ORDER BY timestamp DESC"
-
-
 class YoloServer:
     def __init__(self) -> None:
         rospy.init_node("detector")
@@ -42,13 +36,11 @@ class YoloServer:
         self.yolo = Yolov7Detector(traced=True)
         self.counts = Counts(0, 0, 0, 0, 0, 0)
 
-        # TODO move this to a more robust database
-        self.con = sl.connect("mobility-tracking.db", check_same_thread=False)
-        self.cur = self.con.cursor()
-        self.lock = Lock()
+        self.timeline_srv = rospy.ServiceProxy("/sbx/last_count", Counts)
+        self.timeline_srv.wait_for_service()
 
         # load last count
-        self.load_last_count()
+        self.counts = self.load_last_count()
 
         # self.con.close()
 
@@ -60,70 +52,18 @@ class YoloServer:
 
         self.pub = rospy.Publisher("/sbx/result", Counts, queue_size=10, latch=True)
         self.pub.publish(self.counts)
-        if self.multiprocessing:
-            self.sub = rospy.Subscriber(
-                "/sbx/detect", Detection2D, self.detect_callback
-            )
-        else:
-            self.sub = rospy.Subscriber("/sbx/detect", Detection2D, self.exec_callback)
-
-        self.timeline_srv = rospy.Service(
-            "/sbx/timeline", Timeline, self.timeline_callback
+        self.sub = rospy.Subscriber(
+            "/sbx/detect",
+            Detection2D,
+            self.detect_callback if self.multiprocessing else self.exec_callback,
         )
 
     def __del__(self) -> None:
-        self.con.close()
         if self.multiprocessing:
             self.executor.shutdown()
 
-    def load_last_count(self):
-        with self.lock:
-            try:
-                self.cur.execute(LOAD_COUNT_STMT)
-            except sl.OperationalError:
-                self.cur.execute(CREATE_TABLE_STMT)
-                self.cur.execute(STORE_COUNT_STMT, (datetime.now(), 0, 0, 0, 0, 0, 0))
-                self.con.commit()
-                self.cur.execute(LOAD_COUNT_STMT)
-            row = self.cur.fetchone()
-            if row:
-                self.counts = Counts(*row[1:])
-
-    def store_count(self, counts: Counts):
-        with self.lock:
-            try:
-                self.cur.execute(
-                    STORE_COUNT_STMT,
-                    (
-                        datetime.now(),
-                        counts.total,
-                        counts.cars,
-                        counts.trucks,
-                        counts.buses,
-                        counts.motorcycles,
-                        counts.bicycles,
-                    ),
-                )
-            except sl.OperationalError:
-                self.cur.execute(CREATE_TABLE_STMT)
-                self.cur.execute(
-                    STORE_COUNT_STMT,
-                    (
-                        datetime.now(),
-                        counts.total,
-                        counts.cars,
-                        counts.trucks,
-                        counts.buses,
-                        counts.motorcycles,
-                        counts.bicycles,
-                    ),
-                )
-            self.con.commit()
-
-    def load_all_counts(self) -> list[tuple[str, int, int, int, int, int, int]]:
-        with self.lock:
-            self.cur.execute(LOAD_ALL_COUNTS_STMT)
-            return self.cur.fetchall()
+    def load_last_count(self) -> Counts:
+        return self.timeline_srv()
 
     def exec_callback(self, msg: Detection2D) -> tuple[int, int, int, int, int, int]:
         box = msg.bbox
@@ -192,10 +132,6 @@ class YoloServer:
             self.counts = Counts(*result)
             self.pub.publish(self.counts)
 
-            with self.lock:
-                self.cur.execute(STORE_COUNT_STMT, (datetime.now(), *result))
-                self.con.commit()
-
             cv2.imwrite(
                 f"{ROOT}/out/{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_{self.counts.total:04}.png",
                 img,
@@ -219,20 +155,6 @@ class YoloServer:
         else:
             result = future.result()
             self.pub.publish(Counts(*result))
-            with self.lock:
-                self.cur.execute(STORE_COUNT_STMT, (datetime.now(), *result))
-                self.con.commit()
-
-    def timeline_callback(self, _: Timeline) -> TimelineResponse:
-        rospy.loginfo("Received timeline request")
-        timeline = [
-            CountStamped(
-                rospy.Time(int(datetime.fromisoformat(r[0]).timestamp())),
-                Counts(*r[1:]),
-            )
-            for r in self.load_all_counts()
-        ]
-        return TimelineResponse(timeline)
 
 
 if __name__ == "__main__":
