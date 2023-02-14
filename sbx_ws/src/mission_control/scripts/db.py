@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
+
 import pymongo
 import rospy
 from mission_control.msg import Counts, CountStamped
 from mission_control.srv import Timeline, TimelineResponse
 from sensorbox.msg import AQI, AQIStamped
-from vision_msgs.msg import Detection2D
 
 
 def record_to_count_stamped(record):
@@ -23,8 +24,8 @@ def record_to_count_stamped(record):
 
 def record_to_sensor_data(record):
     return AQIStamped(
-        header=rospy.Header(stamp=rospy.Time(record["stamp"].timestamp())),
-        aqinfo=AQI(
+        rospy.Time(record["stamp"].timestamp()),
+        AQI(
             pm25=record["pm25"],
             pm10=record["pm10"],
             pm50=record["pm50"],
@@ -61,10 +62,10 @@ class MissionArchives:
 
         # subscribers
         self.traffic_sub = rospy.Subscriber(
-            f"/{prefix}/detect", Detection2D, self.traffic_callback
+            f"/{prefix}/result", Counts, self.traffic_callback
         )
         self.sensor_sub = rospy.Subscriber(
-            f"/{prefix}/aqdata", AQI, self.sensor_callback
+            f"/{prefix}/aqdata", AQIStamped, self.sensor_callback
         )
 
         rospy.logwarn(f"Started {rospy.get_name()}")
@@ -97,16 +98,16 @@ class MissionArchives:
         )
         return TimelineResponse(list(res))
 
-    def traffic_callback(self, msg):
+    def traffic_callback(self, msg: Counts):
         self.traffic_collection.insert_one(
             {
-                "stamp": msg.header.stamp.to_sec(),
-                "total": msg.count.total,
+                "stamp": datetime.now(),
+                "total": msg.total,
                 "counts": {
-                    "cars": msg.count.cars,
-                    "trucks": msg.count.trucks,
-                    "buses": msg.count.buses,
-                    "motorcycles": msg.count.motorcycles,
+                    "cars": msg.cars,
+                    "trucks": msg.trucks,
+                    "buses": msg.buses,
+                    "motorcycles": msg.motorcycles,
                 },
                 # TODO: get route from somewhere
                 "route": 0,
@@ -114,18 +115,18 @@ class MissionArchives:
             }
         )
 
-    def sensor_callback(self, msg):
+    def sensor_callback(self, msg: AQIStamped):
         self.traffic_collection.insert_one(
             {
                 "stamp": msg.header.stamp.to_sec(),
                 "sensor": {
-                    "pm25": msg.pm25,
-                    "pm10": msg.pm10,
-                    "tmp": msg.temp,
-                    "hum": msg.hum,
-                    "co2": msg.co2,
-                    "pm100": msg.pm100,
-                    "pm50": msg.pm50,
+                    "pm25": msg.aqinfo.pm25,
+                    "pm10": msg.aqinfo.pm10,
+                    "tmp": msg.aqinfo.tmp,
+                    "hum": msg.aqinfo.hum,
+                    "co2": msg.aqinfo.co2,
+                    "pm100": msg.aqinfo.pm100,
+                    "pm50": msg.aqinfo.pm50,
                 },
                 # TODO: get route from somewhere
                 "route": 0,

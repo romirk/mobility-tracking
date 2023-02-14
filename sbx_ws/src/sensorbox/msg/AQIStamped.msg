@@ -1,2 +1,2 @@
-Header header
+time stamp
 sensorbox/AQI aqinfo
