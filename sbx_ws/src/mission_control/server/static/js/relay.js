@@ -117,7 +117,6 @@ class Relay {
 
         const req = new ROSLIB.ServiceRequest(args);
         const client = this.services[service];
-        console.log(client, req);
         return new Promise((resolve, reject) => {
             client.callService(req, resolve, reject);
         });

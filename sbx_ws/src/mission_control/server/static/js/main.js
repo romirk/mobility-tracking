@@ -7,10 +7,20 @@ const Y_SUCCESS = getComputedStyle(document.documentElement).getPropertyValue('-
 const Y_WARNING = getComputedStyle(document.documentElement).getPropertyValue('--y-warning');
 const Y_DANGER = getComputedStyle(document.documentElement).getPropertyValue('--y-danger');
 
+const triggerTabList = document.querySelectorAll('#selector button')
+const tabs = [];
+
+triggerTabList.forEach(triggerEl => {
+    const tabTrigger = new bootstrap.Tab(triggerEl)
+
+    tabs.push(tabTrigger);
+});
+
 
 function stampToMillis(stamp) {
     return stamp.secs * 1000 + stamp.nsecs / 1000000;
 }
+
 function prepend(value, array) {
     var newArray = array.slice();
     newArray.unshift(value);
@@ -59,7 +69,7 @@ class SensorLive {
         this.seq = 0;
         this.los = false;
         this.frozen = false;
-        this.latency = { network: 0, processing: 0, total: 0 };
+        this.latency = {network: 0, processing: 0, total: 0};
 
         this.canvas.width = 640;
         this.canvas.height = 480;
@@ -79,27 +89,18 @@ class SensorLive {
 
     initGraphs() {
         const lineChartConfig = {
-            type: 'line',
-            data: {
+            type: 'line', data: {
                 datasets: [{
-                    label: 'measurement over time',
-                    data: [],
-                    fill: false,
-                    tension: 0.35,
-                    borderWidth: 3
+                    label: 'measurement over time', data: [], fill: false, tension: 0.35, borderWidth: 3
                 }]
-            },
-            options: {
+            }, options: {
                 scales: {
                     x: {
                         type: 'time',
-                    },
-                    y: {
+                    }, y: {
                         beginAtZero: true,
                     }
-                },
-                responsive: true,
-                maintainAspectRatio: false
+                }, responsive: true, maintainAspectRatio: false
             }
         };
 
@@ -109,10 +110,8 @@ class SensorLive {
 
         this.ctxNumberOfVehicles = document.getElementById('typesOfVehicles');
         this.numberOfVehicles = new Chart(this.ctxNumberOfVehicles, {
-            type: 'doughnut',
-            data: {
-                labels: ['Cars', 'Trucks', 'Buses', 'Other'],
-                datasets: [{
+            type: 'doughnut', data: {
+                labels: ['Cars', 'Trucks', 'Buses', 'Other'], datasets: [{
                     label: 'Types of vehicles',
                     data: [0.0000001, 0.0000001, 0.0000001, 0.0000001],
                     backgroundColor: ['rgb(2, 159, 227)', 'rgb(26,122,165)', 'rgb(31,84,108)'],
@@ -176,9 +175,10 @@ class SensorLive {
 
     /**
      * Handle disconnection.
-    */
+     */
     reconnect(err) {
         this.connected = false;
+        tabs[0].show();
         this.losScreen();
         this.navOut();
         this.toastError("Mission Control", `Disconnected: ${err}`);
@@ -197,7 +197,7 @@ class SensorLive {
     setup() {
         this.connected = true;
         this.toastSuccess("Mission Control", "Connected");
-        this.losScreenOff();
+        // this.losScreenOff();
         this.navIn();
         this.loadTimeline();
 
@@ -212,14 +212,14 @@ class SensorLive {
 
     onSensor(msg) {
         this.sensorData = msg;
-        const date = new Date();
-        this.sensorTimeline.tmp.push({ x: date.getTime(), y: this.sensorData.tmp });
-        this.sensorTimeline.hum.push({ x: date.getTime(), y: this.sensorData.hum });
-        this.sensorTimeline.co2.push({ x: date.getTime(), y: this.sensorData.co2 });
-        this.sensorTimeline.pm10.push({ x: date.getTime(), y: this.sensorData.pm10 });
-        this.sensorTimeline.pm25.push({ x: date.getTime(), y: this.sensorData.pm25 });
-        this.sensorTimeline.pm50.push({ x: date.getTime(), y: this.sensorData.pm50 });
-        this.sensorTimeline.pm100.push({ x: date.getTime(), y: this.sensorData.pm100 });
+        const time = (new Date()).getTime();
+        this.sensorTimeline.tmp.push({x: time, y: this.sensorData.tmp});
+        this.sensorTimeline.hum.push({x: time, y: this.sensorData.hum});
+        this.sensorTimeline.co2.push({x: time, y: this.sensorData.co2});
+        this.sensorTimeline.pm10.push({x: time, y: this.sensorData.pm10});
+        this.sensorTimeline.pm25.push({x: time, y: this.sensorData.pm25});
+        this.sensorTimeline.pm50.push({x: time, y: this.sensorData.pm50});
+        this.sensorTimeline.pm100.push({x: time, y: this.sensorData.pm100});
         this.update();
     }
 
@@ -237,7 +237,7 @@ class SensorLive {
         if (this.lastCount === -1) {
             this.lastCount = msg.total;
         }
-        this.timeline.push({ stamp: { secs: Date.now() / 1000, nsecs: 0 }, counts: msg });
+        this.timeline.push({stamp: {secs: Date.now() / 1000, nsecs: 0}, counts: msg});
         this.rate = this.computeRate();
         this.update();
     }
@@ -267,6 +267,9 @@ class SensorLive {
         this.lastBox = stamp;
     }
 
+    /**
+     * Load timeline from ROS
+     */
     loadTimeline() {
         this.relay.callService("/sbx/timetravel/history", {}).then((res) => {
             if (res.timeline.length === 0) return;
@@ -286,13 +289,19 @@ class SensorLive {
         });
     }
 
+    /**
+     * Slice timeline into data points
+     * @param {number} startTime slice start time in milliseconds
+     * @param {number} endTime slice end time in milliseconds
+     * @param {number} step step size in milliseconds
+     * @returns {Array} array of {x: Date, y: number}
+     */
     sliceTimeline(startTime, endTime, step = -1) {
         const diff = endTime - startTime;
         if (step === -1) step = Math.max(diff / 60, 10000);
 
         let p = 0;
-        while (p < this.timeline.length && stampToMillis(this.timeline[p].stamp) < startTime)
-            p++;
+        while (p < this.timeline.length && stampToMillis(this.timeline[p].stamp) < startTime) p++;
         if (p === this.timeline.length) return [];
 
         let prev = this.timeline[p].counts.total;
@@ -306,11 +315,15 @@ class SensorLive {
                 prev = this.timeline[p].counts.total;
                 p++;
             }
-            data.push({ x: new Date(i), y: count });
+            data.push({x: new Date(i), y: count});
         }
         return data;
     }
 
+    /**
+     * Computes the number of vehicles per hour
+     * @returns {number} the number of vehicles detected per hour
+     */
     computeRate() {
         const end = this.timeline[this.timeline.length - 1].stamp.secs;
         const start = end - 3600;
@@ -335,6 +348,7 @@ class SensorLive {
         this.los = true;
         // console.log("los");
     }
+
     losScreenOff() {
         document.getElementById("los").style.display = "none";
         this.los = false;
@@ -347,6 +361,7 @@ class SensorLive {
             el.classList.add("nav-in");
         });
     }
+
     navOut() {
         document.querySelectorAll(".nav-float").forEach((el) => {
             el.classList.remove("nav-in");
@@ -358,12 +373,14 @@ class SensorLive {
         this.frozen = !this.frozen;
         if (this.frozen) {
             this.toastInfo("Mission Control", "Freeze");
-        }
-        else {
+        } else {
             this.toastInfo("Mission Control", "Unfreeze");
         }
     }
 
+    /**
+     * generates animation frame for video rendering
+     */
     getFrame() {
         if (!this.relay.connected) return this.reconnect("Connection lost!");
 
@@ -374,8 +391,7 @@ class SensorLive {
                     this.boxes = [];
                     this.losScreen();
                     this.toastWarning("Mission Control", "No frames received");
-                }
-                else if (this.boxes.length > 0 || now - this.lastBox > 100) {
+                } else if (this.boxes.length > 0 || now - this.lastBox > 100) {
                     this.paint = false;
                     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -393,8 +409,7 @@ class SensorLive {
                         this.boxes = newBoxes;
                     }
                 }
-            }
-            else if (this.paint) {
+            } else if (this.paint) {
                 this.losScreenOff();
             }
         }
@@ -402,6 +417,9 @@ class SensorLive {
     }
 
 
+    /**
+     * Updates various UI elements
+     */
     update() {
         // uncomment as you implement
 
@@ -429,15 +447,15 @@ class SensorLive {
     }
 
     updateGraphs() {
-        // Update chart [VEHICLES OVER TIME]
+        // setup
         let date = new Date()
-
         const nhours = this.graphViews[this.graphView];
         const start = date.getTime() - 3600000 * nhours;
         const end = date.getTime();
         const diff = end - start;
+
+        // Update chart [VEHICLES OVER TIME]
         this.vehiclesOverTime.data.datasets[0].data = this.sliceTimeline(start, end);
-        // this.rate = this.vehiclesOverTime.data.datasets[0].data.reduce((a, b) => a + b.y, 0) * 60000 / diff;
         this.vehiclesOverTime.data.datasets[0].label = `Vehicles per ${Math.round(Math.max(diff / 60000, 10))} seconds`;
         this.vehiclesOverTime.update();
 
@@ -470,7 +488,7 @@ class SensorLive {
     // utilities
 
     /**
-     * Displays a temporary notification at the bottom of the screen.
+     * Displays a temporary notification
      * @param title
      * @param module
      * @param msg
@@ -501,14 +519,6 @@ class SensorLive {
     }
 }
 
-const triggerTabList = document.querySelectorAll('#selector button')
-const tabs = [];
-
-triggerTabList.forEach(triggerEl => {
-    const tabTrigger = new bootstrap.Tab(triggerEl)
-
-    tabs.push(tabTrigger);
-});
 
 const sensorLive = new SensorLive();
 
@@ -517,16 +527,13 @@ window.addEventListener('keydown', (e) => {
         e.preventDefault();
         if (triggerTabList[0].classList.contains('active')) {
             tabs[1].show();
-        }
-        else if (triggerTabList[1].classList.contains('active')) {
+        } else if (triggerTabList[1].classList.contains('active')) {
             tabs[0].show();
         }
-    }
-    else if (e.key === 'Escape') {
+    } else if (e.key === 'Escape') {
         // tabs[0].show();
         sensorLive.toastElement.hide();
-    }
-    else if (e.key === ' ') {
+    } else if (e.key === ' ') {
         sensorLive.toggleFreeze();
     }
 });

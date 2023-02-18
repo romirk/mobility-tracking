@@ -32,7 +32,7 @@ The system provides a large amount of high-quality labelled images that can be u
 
 Created by Romir Kulshrestha and Anthony Nikolaidis.  
 
-<img src="sbx_ws/src/mission_control/scripts/static/img/yd_mono.png" height=30 />
-<img src="sbx_ws/src/mission_control/scripts/static/img/MRDH.png" height=30 />
+<img src="sbx_ws/src/mission_control/scripts/server/static/img/yd_mono.png" height=30 />
+<img src="sbx_ws/src/mission_control/scripts/server/static/img/MRDH.png" height=30 />
 
 [regionofthefuture.nl](https://regionofthefuture.nl/)

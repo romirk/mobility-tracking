@@ -13,15 +13,17 @@ from mission_control.msg import Counts
 from mission_control.srv import Timeline, TimelineRequest, TimelineResponse
 from vision_msgs.msg import Detection2D
 from yolov7_package import Yolov7Detector
-from yolov7_package.model_utils import coco_names
 
-WHITELIST = ["car", "truck", "bus", "motorbike", "bicycle"]
-WHITELIST_IDX = [coco_names.index(c) for c in WHITELIST]
-CONFIDENCE_THRESHOLD = 0  # TODO: set this to 0.5
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
+COCO_NAMES = open(os.path.join(ROOT, "coco.names.txt")).read().splitlines()
 
-class YoloServer:
+WHITELIST = ["car", "truck", "bus", "motorbike", "bicycle"]
+WHITELIST_IDX = [COCO_NAMES.index(c) for c in WHITELIST]
+CONFIDENCE_THRESHOLD = 0  # TODO: set this to 0.5
+
+
+class Detector:
     def __init__(self) -> None:
         rospy.init_node("detector")
         # TODO move to config
@@ -33,7 +35,7 @@ class YoloServer:
 
         self.multiprocessing = False
 
-        self.yolo = Yolov7Detector(traced=True)
+        self.detector = Yolov7Detector(traced=True)
         self.counts = Counts(0, 0, 0, 0, 0)
 
         self.timeline_srv = rospy.ServiceProxy("/sbx/timetravel/last", Timeline)
@@ -72,7 +74,7 @@ class YoloServer:
         req = TimelineRequest(route=0)  # TODO: get route from config
         return self.timeline_srv(req)
 
-    def exec_callback(self, msg: Detection2D) -> tuple[int, int, int, int, int, int]:
+    def exec_callback(self, msg: Detection2D) -> tuple[int, int, int, int, int]:
         box = msg.bbox
         direction = "backward" if box.center.theta else "forward"
         frame = msg.source_img
@@ -98,7 +100,7 @@ class YoloServer:
 
         # cv2.rectangle(img, (int(x), int(y)), (int(x + w), int(y + h)), (0, 255, 0), 2)
 
-        r = self.yolo.detect(img)
+        r = self.detector.detect(img)
         dets = [
             d
             for d in zip(r[0][0], r[1][0], r[2][0])
@@ -116,7 +118,6 @@ class YoloServer:
                 self.counts.trucks,
                 self.counts.buses,
                 self.counts.motorcycles,
-                self.counts.bicycles,
             )
         else:
             boxes = [(d[1][0] - cx) ** 2 + (d[1][1] - cy) ** 2 for d in dets]
@@ -129,10 +130,9 @@ class YoloServer:
                 self.counts.trucks + (nearest_class == 7),
                 self.counts.buses + (nearest_class == 5),
                 self.counts.motorcycles + (nearest_class == 4),
-                self.counts.bicycles + (nearest_class == 1),
             )
             rospy.loginfo(
-                f"Detected {coco_names[nearest_class]} at {box.center.x}, {box.center.y}"
+                f"Detected {COCO_NAMES[nearest_class]} at {box.center.x}, {box.center.y}"
             )
 
         if not self.multiprocessing:
@@ -167,7 +167,7 @@ class YoloServer:
 
 if __name__ == "__main__":
     try:
-        server = YoloServer()
+        server = Detector()
         rospy.spin()
     except rospy.ROSInterruptException:
         exit(0)

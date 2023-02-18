@@ -1,8 +1,8 @@
 <launch>
     <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" />
     <group ns="mc">
-        <node name="detector" pkg="mission_control" type="yolo_server.py" output="screen" />
-        <node name="server" pkg="mission_control" type="http_server.py" output="screen" />
+        <node name="detector" pkg="mission_control" type="detector.py" output="screen" />
+        <node name="server" pkg="mission_control" type="server.py" output="screen" />
         <node name="time_machine" pkg="mission_control" type="db.py" output="screen" />
     </group>
 </launch>

@@ -1,24 +1,25 @@
  -r sbx_ws/src/mission_control/requirements.txt
-Cython
-Flask
-Jinja2
-Pillow
-Sphinx
+ -r sbx_ws/src/sensorbox/requirements.txt
 attrs
 cryptography
+Cython
 distro
 docutils
+Flask
 future
 genpy
+Jinja2
 keyring
 numpy
 opencv-python
 packaging
+Pillow
 pip
 pyparsing
 pyserial
 requests
 setuptools
+Sphinx
 tornado
 wheel
 zipp
