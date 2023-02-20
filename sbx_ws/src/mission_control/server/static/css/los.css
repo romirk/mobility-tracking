@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css?family=Press+Start+2P');
+
+#los {
+  padding: 0;
+  /* display: grid; */
+  grid-template-rows: 6fr 1fr 3fr;
+  /* height: 100vh; */
+}
+
+.los-top {
+  background: red;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.los-middle {
+  background: blue;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.los-bottom {
+  background: purple;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr)
+}
+
+.los-grid-over {
+  display: grid;
+  height: 100vh;
+  position: absolute;
+  place-items: center;
+}
+
+.los-message-container {
+  display: grid;
+  width: 100vw;
+  grid-template-areas:
+    "... ... ..."
+    "... ... ..."
+    "... ... ..."
+    "... ... ..."
+    ". message .";
+  justify-items: center;
+  padding: 0;
+}
+
+.los-message {
+  grid-area: message;
+  color: white;
+  font-size: 2rem;
+  font-family: 'Press Start 2P', cursive;
+  background: black;
+  margin: 0;
+  padding: 1rem 7rem;
+}
+
+.los-shell {
+  background: lightgray;
+}
+
+.los-yellow {
+  background: yellow;
+}
+
+.los-light-blue {
+  background: skyblue;
+}
+
+.los-green {
+  background: lightgreen;
+}
+
+.los-purple {
+  background: purple;
+}
+
+.los-red {
+  background: red;
+}
+
+.los-blue {
+  background: blue;
+}
+
+
+
+.los-black {
+  background: black;
+}
+
+.los-white {
+  background: white;
+}
+
+.los-dark-blue {
+  background: darkblue;
+}

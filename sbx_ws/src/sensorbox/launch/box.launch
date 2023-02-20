@@ -1,0 +1,26 @@
+<launch>
+    <arg name="prefix" default="sbx" />
+    <arg name="camera" default="camera" />
+
+    <group ns="$(arg prefix)">
+        <param name="prefix" value="$(arg prefix)" />
+        <param name="camera_name" value="$(arg prefix)/$(arg camera)" />
+        <param name="theta" value="90" />
+        <param name="line_position" value="0.5" />
+        <param name="min_area" value="1750" />
+        <param name="num_contours" value="10" />
+        <param name="starting_frame" value="30" />
+        <param name="fps" value="30" />
+        <param name="video_width" value="640" />
+        <param name="video_height" value="480" />
+        <param name="debug_view" value="false" />
+
+        <node type="aqi_node.py" name="aqi" pkg="sensorbox" />
+        <node type="traffic_counter.py" name="counter" pkg="sensorbox" />
+    </group>
+
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+        <arg name="camera" value="$(arg prefix)/$(arg camera)" />
+        <arg name="enable_depth" value="false"/>
+    </include>
+</launch>

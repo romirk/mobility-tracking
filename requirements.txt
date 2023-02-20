@@ -1,12 +1,25 @@
+ -r sbx_ws/src/mission_control/requirements.txt
+ -r sbx_ws/src/sensorbox/requirements.txt
+attrs
+cryptography
+Cython
+distro
+docutils
 Flask
-celery
-flask-socketio
-imutils
+future
+genpy
+Jinja2
+keyring
 numpy
 opencv-python
-pandas
+packaging
+Pillow
+pip
+pyparsing
 pyserial
-pytest
 requests
-scipy
-yolov7_package
+setuptools
+Sphinx
+tornado
+wheel
+zipp
